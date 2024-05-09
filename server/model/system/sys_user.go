@@ -20,6 +20,7 @@ type SysUser struct {
 	Authorities []SysAuthority `json:"authorities" gorm:"many2many:sys_user_authority;"`
 	Phone       string         `json:"phone"  gorm:"comment:用户手机号"`                     // 用户手机号
 	Email       string         `json:"email"  gorm:"comment:用户邮箱"`                      // 用户邮箱
+	InviteCode  string         `json:"invitecode" gorm:"not null"`                      // 用户邀请码
 	Enable      int            `json:"enable" gorm:"default:1;comment:用户是否被冻结 1正常 2冻结"` //用户是否被冻结 1正常 2冻结
 }
 

@@ -1,0 +1,12 @@
+package EngineeringEducationDatabase
+
+type ServiceGroup struct {
+	ProfessionalConstructionDatabaseService
+	TalentTrainingDatabaseService
+	SocialServiceDatabaseService
+	ConditionalGuaranteeDatabaseService
+	SubjectConstructionDatabaseService
+	PolicyDatabaseService
+	InternationalExchangeDatabaseService
+	BasicInfomationDatabaseService
+}

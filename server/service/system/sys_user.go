@@ -245,3 +245,34 @@ func (userService *UserService) ResetPassword(ID uint) (err error) {
 	err = global.GVA_DB.Model(&system.SysUser{}).Where("id = ?", ID).Update("password", utils.BcryptHash("123456")).Error
 	return err
 }
+
+// GetInvitationCode
+// @author: yuboLee
+// @function: GetInvitationCode
+// @description: 获取邀请码
+// @param: u *model.SysUser
+// @return: err error
+func (userService *UserService) GetInvitationCode(uuid uuid.UUID) (string, error) {
+	// var u system.SysUser
+	var count int64
+	// 查询当前用户的邀请码数量
+	var IC string // 生成的邀请码
+	global.GVA_DB.Model(&system.InviteCode{}).Where("UUID = ?", uuid.String()).Count(&count)
+	fmt.Println(count)
+	// 如果数量小于5个则可以继续生成验证码
+	if count < 5 {
+		IC = utils.RandomString(6) // 生成一个随机验证码
+		newCode := system.InviteCode{
+			UUID:   uuid,
+			Code:   IC,
+			Status: 0,
+		}
+		// 将新的邀请码保存到数据库
+		if err := global.GVA_DB.Create(&newCode).Error; err != nil {
+			return "", err // 如果数据库操作出错，返回错误
+		}
+	} else {
+		return "", errors.New("一人只能生成5个邀请码")
+	}
+	return IC, nil
+}

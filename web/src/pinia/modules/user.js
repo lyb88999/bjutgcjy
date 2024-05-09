@@ -1,4 +1,4 @@
-import { login, getUserInfo, setSelfInfo } from '@/api/user'
+import { login, getUserInfo, setSelfInfo, register, userRegister } from '@/api/user'
 import { jsonInBlacklist } from '@/api/jwt'
 import router from '@/router/index'
 import { ElLoading, ElMessage } from 'element-plus'
@@ -48,6 +48,33 @@ export const useUserStore = defineStore('user', () => {
     }
     return res
   }
+  /* 注册*/
+
+  const Register = async (loginInfo) => {
+    loadingInstance.value = ElLoading.service({
+        fullscreen: true,
+        text: "注册中，请稍候...",
+    });
+    try {
+        const res = await userRegister(loginInfo);
+        if (res.code === 0) {
+            setUserInfo(res.data.user);
+            setToken(res.data.token);
+            const routerStore = useRouterStore();
+            await routerStore.SetAsyncRouter();
+            const asyncRouters = routerStore.asyncRouters;
+            asyncRouters.forEach((asyncRouter) => {
+                router.addRoute(asyncRouter);
+            });
+            router.push({name: userInfo.value.authority.defaultRouter});
+            return true;
+        }
+    } catch (e) {
+        loadingInstance.value.close();
+    }
+    loadingInstance.value.close();
+};
+
   /* 登录*/
   const LoginIn = async(loginInfo) => {
     loadingInstance.value = ElLoading.service({
@@ -56,6 +83,7 @@ export const useUserStore = defineStore('user', () => {
     })
     try {
       const res = await login(loginInfo)
+      console.log(res)
       if (res.code === 0) {
         setUserInfo(res.data.user)
         setToken(res.data.token)
@@ -148,6 +176,7 @@ export const useUserStore = defineStore('user', () => {
     NeedInit,
     ResetUserInfo,
     GetUserInfo,
+    Register,
     LoginIn,
     LoginOut,
     changeSideMode,

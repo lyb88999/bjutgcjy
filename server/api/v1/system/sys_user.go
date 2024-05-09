@@ -1,6 +1,7 @@
 package system
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -463,4 +464,23 @@ func (b *BaseApi) ResetPassword(c *gin.Context) {
 		return
 	}
 	response.OkWithMessage("重置成功", c)
+}
+
+// GetInvitationCode
+// @Tags      SysUser
+// @Summary   获取邀请码
+// @Security  ApiKeyAuth
+// @Produce  application/json
+// @Param     data  body      system.SysUser                 true  "ID"
+// @Success   200   {object}  response.Response{msg=string}  "成功获取邀请码"
+// @Router    /user/getInvitationCode [post]
+func (b *BaseApi) GetInvitationCode(c *gin.Context) {
+	uuid := utils.GetUserUuid(c)
+	IC, err := userService.GetInvitationCode(uuid)
+	if err != nil {
+		global.GVA_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage("获取失败: "+err.Error(), c)
+		return
+	}
+	response.OkWithMessage(fmt.Sprintf("获取成功, 邀请码: %s", IC), c) // 添加成功响应
 }

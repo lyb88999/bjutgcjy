@@ -7,6 +7,3041 @@
         "version": "v2.6.1"
     },
     "paths": {
+        "/BID/createBasicInfomationDatabase": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BasicInfomationDatabase"
+                ],
+                "summary": "创建基础信息库",
+                "parameters": [
+                    {
+                        "description": "创建基础信息库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.BasicInfomationDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"创建成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/BID/deleteBasicInfomationDatabase": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BasicInfomationDatabase"
+                ],
+                "summary": "删除基础信息库",
+                "parameters": [
+                    {
+                        "description": "删除基础信息库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.BasicInfomationDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/BID/deleteBasicInfomationDatabaseByIds": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BasicInfomationDatabase"
+                ],
+                "summary": "批量删除基础信息库",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"批量删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/BID/findBasicInfomationDatabase": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BasicInfomationDatabase"
+                ],
+                "summary": "用id查询基础信息库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "主键ID",
+                        "name": "ID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间",
+                        "name": "createdAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "createdBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "deletedBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "区划代码",
+                        "name": "divisionCode",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "博士授权点数",
+                        "name": "doctoralAuthorizationPointerNumber",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "博士专业学位类别数",
+                        "name": "doctoralDegreeCategoryNumber",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "在校博士生数",
+                        "name": "doctoralStudentNumber",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "学校层次",
+                        "name": "educationLevel",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "在校教职员工数",
+                        "name": "facultyStaffNumber",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "在校专任教师数",
+                        "name": "fullTimeTeacherNumber",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "地理区域",
+                        "name": "geographicArea",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "在校硕士生数",
+                        "name": "graduateStudentNumber",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "在校留学生数",
+                        "name": "internationalStudentNumber",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否双一流",
+                        "name": "isDoubleFirstClass",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "所在地区",
+                        "name": "locatedRegion",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "硕士授权点数",
+                        "name": "mastersAutorizationPointerNumber",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "硕士专业学位类别数",
+                        "name": "mastersDegreeCategoryNumber",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "博士后流动站数",
+                        "name": "postDoctoralMobileStationNumber",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "地区生产总值",
+                        "name": "regionGDP",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "省区市名称",
+                        "name": "regionName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "学校类别",
+                        "name": "schoolCategory",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "学校代码",
+                        "name": "schoolCode",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "学校名称",
+                        "name": "schoolName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "学校类型",
+                        "name": "schoolType",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "软科排名",
+                        "name": "softScienceRanking",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "在校本科生数",
+                        "name": "undergraduateNumber",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "本科专业数",
+                        "name": "undergraduateProgramNumber",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "更新时间",
+                        "name": "updatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "updatedBy",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"查询成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/BID/getBasicInfomationDatabaseList": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BasicInfomationDatabase"
+                ],
+                "summary": "分页获取基础信息库列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "divisionCode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "educationLevel",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "endCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "geographicArea",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "isDoubleFirstClass",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "locatedRegion",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "regionName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "schoolCategory",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "schoolCode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "schoolName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "schoolType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "startCreatedAt",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"获取成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/BID/updateBasicInfomationDatabase": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "BasicInfomationDatabase"
+                ],
+                "summary": "更新基础信息库",
+                "parameters": [
+                    {
+                        "description": "更新基础信息库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.BasicInfomationDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"更新成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/CGD/createConditionalGuaranteeDatabase": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ConditionalGuaranteeDatabase"
+                ],
+                "summary": "创建条件保障库",
+                "parameters": [
+                    {
+                        "description": "创建条件保障库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.ConditionalGuaranteeDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"创建成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/CGD/deleteConditionalGuaranteeDatabase": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ConditionalGuaranteeDatabase"
+                ],
+                "summary": "删除条件保障库",
+                "parameters": [
+                    {
+                        "description": "删除条件保障库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.ConditionalGuaranteeDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/CGD/deleteConditionalGuaranteeDatabaseByIds": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ConditionalGuaranteeDatabase"
+                ],
+                "summary": "批量删除条件保障库",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"批量删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/CGD/findConditionalGuaranteeDatabase": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ConditionalGuaranteeDatabase"
+                ],
+                "summary": "用id查询条件保障库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "主键ID",
+                        "name": "ID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "院士人数",
+                        "name": "academicianCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间",
+                        "name": "createdAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "createdBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "deletedBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "外籍高层次人才数",
+                        "name": "foreignHighLevelTalentCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "专任教师数",
+                        "name": "fullTimeFacultyCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "大型仪器设备共享系统平台数",
+                        "name": "largeEquipmentSharingPlatformCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "国家级实验教学示范中心数",
+                        "name": "nationalExperimentalTeachingDemoCenterCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "国家级人才项目获得者人次",
+                        "name": "nationalTalentProjectWinnerCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "校外实习、实践、实训基地数",
+                        "name": "offCampusInternshipBaseCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "省部级人才项目获得者人次",
+                        "name": "provincialTalentProjectWinnerCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "学校名称",
+                        "name": "universityName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "更新时间",
+                        "name": "updatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "updatedBy",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"查询成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/CGD/getConditionalGuaranteeDatabaseList": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ConditionalGuaranteeDatabase"
+                ],
+                "summary": "分页获取条件保障库列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "endCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "startCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "universityName",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"获取成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/CGD/updateConditionalGuaranteeDatabase": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ConditionalGuaranteeDatabase"
+                ],
+                "summary": "更新条件保障库",
+                "parameters": [
+                    {
+                        "description": "更新条件保障库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.ConditionalGuaranteeDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"更新成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/IED/createInternationalExchangeDatabase": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InternationalExchangeDatabase"
+                ],
+                "summary": "创建国际交流库",
+                "parameters": [
+                    {
+                        "description": "创建国际交流库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.InternationalExchangeDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"创建成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/IED/deleteInternationalExchangeDatabase": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InternationalExchangeDatabase"
+                ],
+                "summary": "删除国际交流库",
+                "parameters": [
+                    {
+                        "description": "删除国际交流库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.InternationalExchangeDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/IED/deleteInternationalExchangeDatabaseByIds": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InternationalExchangeDatabase"
+                ],
+                "summary": "批量删除国际交流库",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"批量删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/IED/findInternationalExchangeDatabase": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InternationalExchangeDatabase"
+                ],
+                "summary": "用id查询国际交流库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "主键ID",
+                        "name": "ID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间",
+                        "name": "createdAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "createdBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "deletedBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "外籍教师数",
+                        "name": "foreignFacultyCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "举办的国际会议数",
+                        "name": "internationalConferencesHosted",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "来华留学生数",
+                        "name": "internationalStudentsCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "出国交流学生数",
+                        "name": "studentsAbroadExchangeCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "学校名称",
+                        "name": "universityName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "更新时间",
+                        "name": "updatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "updatedBy",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"查询成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/IED/getInternationalExchangeDatabaseList": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InternationalExchangeDatabase"
+                ],
+                "summary": "分页获取国际交流库列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "endCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "startCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "universityName",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"获取成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/IED/updateInternationalExchangeDatabase": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InternationalExchangeDatabase"
+                ],
+                "summary": "更新国际交流库",
+                "parameters": [
+                    {
+                        "description": "更新国际交流库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.InternationalExchangeDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"更新成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/PCD/createProfessionalConstructionDatabase": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ProfessionalConstructionDatabase"
+                ],
+                "summary": "创建专业建设库",
+                "parameters": [
+                    {
+                        "description": "创建专业建设库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.ProfessionalConstructionDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"创建成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/PCD/deleteProfessionalConstructionDatabase": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ProfessionalConstructionDatabase"
+                ],
+                "summary": "删除专业建设库",
+                "parameters": [
+                    {
+                        "description": "删除专业建设库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.ProfessionalConstructionDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/PCD/deleteProfessionalConstructionDatabaseByIds": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ProfessionalConstructionDatabase"
+                ],
+                "summary": "批量删除专业建设库",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"批量删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/PCD/findProfessionalConstructionDatabase": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ProfessionalConstructionDatabase"
+                ],
+                "summary": "用id查询专业建设库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "主键ID",
+                        "name": "ID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "招生专业",
+                        "name": "admissionMajor",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间",
+                        "name": "createdAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "createdBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "授予学位类别",
+                        "name": "degreeType",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "deletedBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否大类招生",
+                        "name": "isBroadAdmissionCategory",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否双学位",
+                        "name": "isDoubleDegree",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否一流专业",
+                        "name": "isFirstClassMajor",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否专业认证",
+                        "name": "isMajorAccredited",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否新工科",
+                        "name": "isNewEngineeringDiscipline",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否新专业",
+                        "name": "isNewMajor",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否入选卓越计划",
+                        "name": "isSelectedForExcellenceProgram",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "专业代码",
+                        "name": "majorCode",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "专业名称",
+                        "name": "majorName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "专业满意度",
+                        "name": "majorSatisfaction",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划招生数",
+                        "name": "plannedEnrollment",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "所在学校",
+                        "name": "universityName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "更新时间",
+                        "name": "updatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "updatedBy",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"查询成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/PCD/getProfessionalConstructionDatabaseList": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ProfessionalConstructionDatabase"
+                ],
+                "summary": "分页获取专业建设库列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "admissionMajor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "degreeType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "endCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "isBroadAdmissionCategory",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "isDoubleDegree",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "isFirstClassMajor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "isMajorAccredited",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "isNewEngineeringDiscipline",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "isNewMajor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "isSelectedForExcellenceProgram",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "majorCode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "majorName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "majorSatisfaction",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "startCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "universityName",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"获取成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/PCD/updateProfessionalConstructionDatabase": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ProfessionalConstructionDatabase"
+                ],
+                "summary": "更新专业建设库",
+                "parameters": [
+                    {
+                        "description": "更新专业建设库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.ProfessionalConstructionDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"更新成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/PD/createPolicyDatabase": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PolicyDatabase"
+                ],
+                "summary": "创建政策数据库",
+                "parameters": [
+                    {
+                        "description": "创建政策数据库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.PolicyDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"创建成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/PD/deletePolicyDatabase": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PolicyDatabase"
+                ],
+                "summary": "删除政策数据库",
+                "parameters": [
+                    {
+                        "description": "删除政策数据库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.PolicyDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/PD/deletePolicyDatabaseByIds": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PolicyDatabase"
+                ],
+                "summary": "批量删除政策数据库",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"批量删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/PD/findPolicyDatabase": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PolicyDatabase"
+                ],
+                "summary": "用id查询政策数据库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "主键ID",
+                        "name": "ID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "acquisitionTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "其他备注",
+                        "name": "additionalRemarks",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间",
+                        "name": "createdAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "createdBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "数据来源",
+                        "name": "dataSource",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "deletedBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "政策内容",
+                        "name": "policyContent",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "政策国家或地区",
+                        "name": "policyCountryOrRegion",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "政策名称",
+                        "name": "policyName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "政策发布时间",
+                        "name": "policyReleaseDate",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "更新时间",
+                        "name": "updatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "updatedBy",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"查询成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/PD/getPolicyDatabaseList": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PolicyDatabase"
+                ],
+                "summary": "分页获取政策数据库列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "endCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "endPolicyReleaseDate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "policyCountryOrRegion",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "startCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "startPolicyReleaseDate",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"获取成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/PD/updatePolicyDatabase": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PolicyDatabase"
+                ],
+                "summary": "更新政策数据库",
+                "parameters": [
+                    {
+                        "description": "更新政策数据库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.PolicyDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"更新成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/SCD/createSubjectConstructionDatabase": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubjectConstructionDatabase"
+                ],
+                "summary": "创建学科建设库",
+                "parameters": [
+                    {
+                        "description": "创建学科建设库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.SubjectConstructionDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"创建成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/SCD/deleteSubjectConstructionDatabase": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubjectConstructionDatabase"
+                ],
+                "summary": "删除学科建设库",
+                "parameters": [
+                    {
+                        "description": "删除学科建设库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.SubjectConstructionDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/SCD/deleteSubjectConstructionDatabaseByIds": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubjectConstructionDatabase"
+                ],
+                "summary": "批量删除学科建设库",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"批量删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/SCD/findSubjectConstructionDatabase": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubjectConstructionDatabase"
+                ],
+                "summary": "用id查询学科建设库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "主键ID",
+                        "name": "ID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间",
+                        "name": "createdAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "招生人数",
+                        "name": "masterAdmissionNumber",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否一流学科",
+                        "name": "masterIsFirstClass",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "软科排名",
+                        "name": "masterSoftScienceRanking",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "学科门类",
+                        "name": "masterSubjectCategory",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "学科代码",
+                        "name": "masterSubjectCode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "类型",
+                        "name": "masterType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "所在学校",
+                        "name": "masterUniversityName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "招生人数",
+                        "name": "phdAdmissionNumber",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否一流学科",
+                        "name": "phdIsFirstClass",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "软科排名",
+                        "name": "phdSoftScienceRanking",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "学科门类",
+                        "name": "phdSubjectCategory",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "学科代码",
+                        "name": "phdSubjectCode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "类型",
+                        "name": "phdType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "所在学校",
+                        "name": "phdUniversityName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "博士后流动站数",
+                        "name": "postdocStationCount",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "流动站名称",
+                        "name": "postdocStationName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "学科门类",
+                        "name": "postdocSubjectCategory",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "更新时间",
+                        "name": "updatedAt",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"查询成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/SCD/getSubjectConstructionDatabaseList": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubjectConstructionDatabase"
+                ],
+                "summary": "分页获取学科建设库列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "endCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "masterIsFirstClass",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "masterSubjectCategory",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "masterSubjectCode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "masterType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "masterUniversityName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "phdIsFirstClass",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "phdSubjectCategory",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "phdSubjectCode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "phdType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "phdUniversityName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "postdocStationName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "postdocSubjectCategory",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "startCreatedAt",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"获取成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/SCD/updateSubjectConstructionDatabase": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubjectConstructionDatabase"
+                ],
+                "summary": "更新学科建设库",
+                "parameters": [
+                    {
+                        "description": "更新学科建设库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.SubjectConstructionDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"更新成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/SSD/createSocialServiceDatabase": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SocialServiceDatabase"
+                ],
+                "summary": "创建社会服务库",
+                "parameters": [
+                    {
+                        "description": "创建社会服务库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.SocialServiceDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"创建成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/SSD/deleteSocialServiceDatabase": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SocialServiceDatabase"
+                ],
+                "summary": "删除社会服务库",
+                "parameters": [
+                    {
+                        "description": "删除社会服务库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.SocialServiceDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/SSD/deleteSocialServiceDatabaseByIds": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SocialServiceDatabase"
+                ],
+                "summary": "批量删除社会服务库",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"批量删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/SSD/findSocialServiceDatabase": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SocialServiceDatabase"
+                ],
+                "summary": "用id查询社会服务库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "主键ID",
+                        "name": "ID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间",
+                        "name": "createdAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "createdBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "deletedBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "行业协同创新中心数或产学研基地数",
+                        "name": "industryInnovationCenterCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "区域协同创新中心数或产学研基地数",
+                        "name": "regionalInnovationCenterCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "学校名称",
+                        "name": "universityName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "更新时间",
+                        "name": "updatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "updatedBy",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"查询成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/SSD/getSocialServiceDatabaseList": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SocialServiceDatabase"
+                ],
+                "summary": "分页获取社会服务库列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "endCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "startCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "universityName",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"获取成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/SSD/updateSocialServiceDatabase": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SocialServiceDatabase"
+                ],
+                "summary": "更新社会服务库",
+                "parameters": [
+                    {
+                        "description": "更新社会服务库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.SocialServiceDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"更新成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/TTD/createTalentTrainingDatabase": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TalentTrainingDatabase"
+                ],
+                "summary": "创建人才培养库",
+                "parameters": [
+                    {
+                        "description": "创建人才培养库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.TalentTrainingDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"创建成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/TTD/deleteTalentTrainingDatabase": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TalentTrainingDatabase"
+                ],
+                "summary": "删除人才培养库",
+                "parameters": [
+                    {
+                        "description": "删除人才培养库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.TalentTrainingDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/TTD/deleteTalentTrainingDatabaseByIds": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TalentTrainingDatabase"
+                ],
+                "summary": "批量删除人才培养库",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"批量删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/TTD/findTalentTrainingDatabase": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TalentTrainingDatabase"
+                ],
+                "summary": "用id查询人才培养库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "主键ID",
+                        "name": "ID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "国家级教学示范中心",
+                        "name": "ationalTeachingDemonstrationCenterCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间",
+                        "name": "createdAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "createdBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "deletedBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "博士生平均毕业去向落实率",
+                        "name": "doctoralEmploymentRate",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "博士生数",
+                        "name": "doctoralStudentCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "学生获国际奖项数",
+                        "name": "internationalAwardsCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "硕士生平均毕业去向落实率",
+                        "name": "masterEmploymentRate",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "硕士生数",
+                        "name": "masterStudentCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "学生获国家级奖项数",
+                        "name": "nationalAwardsCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "全国优秀教材数",
+                        "name": "nationalExcellentTextbookCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "国家级一流课程数",
+                        "name": "nationalFirstClassCourseCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "国家级规划教材数",
+                        "name": "nationalPlanningTextbookCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "参与学生数",
+                        "name": "participatingStudentCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "项目数",
+                        "name": "projectCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "学生获省部级奖项数",
+                        "name": "provincialAwardsCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "省级优秀教材数",
+                        "name": "provincialExcellentTextbookCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "省部级一流课程数",
+                        "name": "provincialFirstClassCourseCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "省部级教学示范中心",
+                        "name": "provincialTeachingDemonstrationCenterCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "转入工科学生数",
+                        "name": "transferredIntoEngineeringCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "转出工科学生数",
+                        "name": "transferredOutOfEngineeringCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "本科生数",
+                        "name": "undergraduateCount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "本科生平均毕业去向落实率",
+                        "name": "undergraduateEmploymentRate",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "所在学校",
+                        "name": "universityName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "更新时间",
+                        "name": "updatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "updatedBy",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"查询成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/TTD/getTalentTrainingDatabaseList": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TalentTrainingDatabase"
+                ],
+                "summary": "分页获取人才培养库列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "endCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "startCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "universityName",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"获取成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/TTD/updateTalentTrainingDatabase": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TalentTrainingDatabase"
+                ],
+                "summary": "更新人才培养库",
+                "parameters": [
+                    {
+                        "description": "更新人才培养库",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/EngineeringEducationDatabase.TalentTrainingDatabase"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"更新成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/createApi": {
             "post": {
                 "security": [
@@ -2996,6 +6031,25 @@
                 }
             }
         },
+        "/register": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Register"
+                ],
+                "summary": "普通用户注册",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"发送成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/sysDictionary/createSysDictionary": {
             "post": {
                 "security": [
@@ -3635,6 +6689,388 @@
                                     }
                                 }
                             ]
+                        }
+                    }
+                }
+            }
+        },
+        "/sysExportTemplate/createSysExportTemplate": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SysExportTemplate"
+                ],
+                "summary": "创建导出模板",
+                "parameters": [
+                    {
+                        "description": "创建导出模板",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/system.SysExportTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"创建成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/sysExportTemplate/deleteSysExportTemplate": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SysExportTemplate"
+                ],
+                "summary": "删除导出模板",
+                "parameters": [
+                    {
+                        "description": "删除导出模板",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/system.SysExportTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/sysExportTemplate/deleteSysExportTemplateByIds": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SysExportTemplate"
+                ],
+                "summary": "批量删除导出模板",
+                "parameters": [
+                    {
+                        "description": "批量删除导出模板",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.IdsReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"批量删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/sysExportTemplate/exportExcel": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SysExportTemplate"
+                ],
+                "summary": "导出表格模板",
+                "responses": {}
+            }
+        },
+        "/sysExportTemplate/findSysExportTemplate": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SysExportTemplate"
+                ],
+                "summary": "用id查询导出模板",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "主键ID",
+                        "name": "ID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间",
+                        "name": "createdAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "模板名称",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "表名称",
+                        "name": "tableName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "模板标识",
+                        "name": "templateID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "模板信息",
+                        "name": "templateInfo",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "更新时间",
+                        "name": "updatedAt",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"查询成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/sysExportTemplate/getSysExportTemplateList": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SysExportTemplate"
+                ],
+                "summary": "分页获取导出模板列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "主键ID",
+                        "name": "ID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间",
+                        "name": "createdAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "endCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "模板名称",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "startCreatedAt",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "表名称",
+                        "name": "tableName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "模板标识",
+                        "name": "templateID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "模板信息",
+                        "name": "templateInfo",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "更新时间",
+                        "name": "updatedAt",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"获取成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/sysExportTemplate/importExcel": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SysImportTemplate"
+                ],
+                "summary": "导入表格",
+                "responses": {}
+            }
+        },
+        "/sysExportTemplate/updateSysExportTemplate": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SysExportTemplate"
+                ],
+                "summary": "更新导出模板",
+                "parameters": [
+                    {
+                        "description": "更新导出模板",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/system.SysExportTemplate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"更新成功\"}",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -4411,6 +7847,53 @@
                 }
             }
         },
+        "/user/getInvitationCode": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SysUser"
+                ],
+                "summary": "获取邀请码",
+                "parameters": [
+                    {
+                        "description": "ID",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/system.SysUser"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功获取邀请码",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "msg": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/user/getUserInfo": {
             "get": {
                 "security": [
@@ -4710,6 +8193,699 @@
         }
     },
     "definitions": {
+        "EngineeringEducationDatabase.BasicInfomationDatabase": {
+            "type": "object",
+            "required": [
+                "divisionCode",
+                "doctoralAuthorizationPointerNumber",
+                "doctoralDegreeCategoryNumber",
+                "doctoralStudentNumber",
+                "educationLevel",
+                "facultyStaffNumber",
+                "fullTimeTeacherNumber",
+                "geographicArea",
+                "graduateStudentNumber",
+                "internationalStudentNumber",
+                "isDoubleFirstClass",
+                "locatedRegion",
+                "mastersAutorizationPointerNumber",
+                "mastersDegreeCategoryNumber",
+                "postDoctoralMobileStationNumber",
+                "regionGDP",
+                "regionName",
+                "schoolCategory",
+                "schoolCode",
+                "schoolName",
+                "schoolType",
+                "softScienceRanking",
+                "undergraduateNumber",
+                "undergraduateProgramNumber"
+            ],
+            "properties": {
+                "ID": {
+                    "description": "主键ID",
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "integer"
+                },
+                "deletedBy": {
+                    "type": "integer"
+                },
+                "divisionCode": {
+                    "description": "区划代码",
+                    "type": "string"
+                },
+                "doctoralAuthorizationPointerNumber": {
+                    "description": "博士授权点数",
+                    "type": "integer"
+                },
+                "doctoralDegreeCategoryNumber": {
+                    "description": "博士专业学位类别数",
+                    "type": "integer"
+                },
+                "doctoralStudentNumber": {
+                    "description": "在校博士生数",
+                    "type": "integer"
+                },
+                "educationLevel": {
+                    "description": "学校层次",
+                    "type": "string"
+                },
+                "facultyStaffNumber": {
+                    "description": "在校教职员工数",
+                    "type": "integer"
+                },
+                "fullTimeTeacherNumber": {
+                    "description": "在校专任教师数",
+                    "type": "integer"
+                },
+                "geographicArea": {
+                    "description": "地理区域",
+                    "type": "string"
+                },
+                "graduateStudentNumber": {
+                    "description": "在校硕士生数",
+                    "type": "integer"
+                },
+                "internationalStudentNumber": {
+                    "description": "在校留学生数",
+                    "type": "integer"
+                },
+                "isDoubleFirstClass": {
+                    "description": "是否双一流",
+                    "type": "boolean"
+                },
+                "locatedRegion": {
+                    "description": "所在地区",
+                    "type": "string"
+                },
+                "mastersAutorizationPointerNumber": {
+                    "description": "硕士授权点数",
+                    "type": "integer"
+                },
+                "mastersDegreeCategoryNumber": {
+                    "description": "硕士专业学位类别数",
+                    "type": "integer"
+                },
+                "postDoctoralMobileStationNumber": {
+                    "description": "博士后流动站数",
+                    "type": "integer"
+                },
+                "regionGDP": {
+                    "description": "地区生产总值",
+                    "type": "number"
+                },
+                "regionName": {
+                    "description": "省区市名称",
+                    "type": "string"
+                },
+                "schoolCategory": {
+                    "description": "学校类别",
+                    "type": "string"
+                },
+                "schoolCode": {
+                    "description": "学校代码",
+                    "type": "string"
+                },
+                "schoolName": {
+                    "description": "学校名称",
+                    "type": "string"
+                },
+                "schoolType": {
+                    "description": "学校类型",
+                    "type": "string"
+                },
+                "softScienceRanking": {
+                    "description": "软科排名",
+                    "type": "integer"
+                },
+                "undergraduateNumber": {
+                    "description": "在校本科生数",
+                    "type": "integer"
+                },
+                "undergraduateProgramNumber": {
+                    "description": "本科专业数",
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "updatedBy": {
+                    "type": "integer"
+                }
+            }
+        },
+        "EngineeringEducationDatabase.ConditionalGuaranteeDatabase": {
+            "type": "object",
+            "required": [
+                "academicianCount",
+                "foreignHighLevelTalentCount",
+                "fullTimeFacultyCount",
+                "largeEquipmentSharingPlatformCount",
+                "nationalExperimentalTeachingDemoCenterCount",
+                "nationalTalentProjectWinnerCount",
+                "offCampusInternshipBaseCount",
+                "provincialTalentProjectWinnerCount",
+                "universityName"
+            ],
+            "properties": {
+                "ID": {
+                    "description": "主键ID",
+                    "type": "integer"
+                },
+                "academicianCount": {
+                    "description": "院士人数",
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "integer"
+                },
+                "deletedBy": {
+                    "type": "integer"
+                },
+                "foreignHighLevelTalentCount": {
+                    "description": "外籍高层次人才数",
+                    "type": "integer"
+                },
+                "fullTimeFacultyCount": {
+                    "description": "专任教师数",
+                    "type": "integer"
+                },
+                "largeEquipmentSharingPlatformCount": {
+                    "description": "大型仪器设备共享系统平台数",
+                    "type": "integer"
+                },
+                "nationalExperimentalTeachingDemoCenterCount": {
+                    "description": "国家级实验教学示范中心数",
+                    "type": "integer"
+                },
+                "nationalTalentProjectWinnerCount": {
+                    "description": "国家级人才项目获得者人次",
+                    "type": "integer"
+                },
+                "offCampusInternshipBaseCount": {
+                    "description": "校外实习、实践、实训基地数",
+                    "type": "integer"
+                },
+                "provincialTalentProjectWinnerCount": {
+                    "description": "省部级人才项目获得者人次",
+                    "type": "integer"
+                },
+                "universityName": {
+                    "description": "学校名称",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "updatedBy": {
+                    "type": "integer"
+                }
+            }
+        },
+        "EngineeringEducationDatabase.InternationalExchangeDatabase": {
+            "type": "object",
+            "required": [
+                "foreignFacultyCount",
+                "internationalConferencesHosted",
+                "internationalStudentsCount",
+                "studentsAbroadExchangeCount",
+                "universityName"
+            ],
+            "properties": {
+                "ID": {
+                    "description": "主键ID",
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "integer"
+                },
+                "deletedBy": {
+                    "type": "integer"
+                },
+                "foreignFacultyCount": {
+                    "description": "外籍教师数",
+                    "type": "integer"
+                },
+                "internationalConferencesHosted": {
+                    "description": "举办的国际会议数",
+                    "type": "integer"
+                },
+                "internationalStudentsCount": {
+                    "description": "来华留学生数",
+                    "type": "integer"
+                },
+                "studentsAbroadExchangeCount": {
+                    "description": "出国交流学生数",
+                    "type": "integer"
+                },
+                "universityName": {
+                    "description": "学校名称",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "updatedBy": {
+                    "type": "integer"
+                }
+            }
+        },
+        "EngineeringEducationDatabase.PolicyDatabase": {
+            "type": "object",
+            "required": [
+                "dataSource",
+                "policyContent",
+                "policyCountryOrRegion",
+                "policyName",
+                "policyReleaseDate"
+            ],
+            "properties": {
+                "ID": {
+                    "description": "主键ID",
+                    "type": "integer"
+                },
+                "acquisitionTime": {
+                    "type": "string"
+                },
+                "additionalRemarks": {
+                    "description": "其他备注",
+                    "type": "string"
+                },
+                "createdAt": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "integer"
+                },
+                "dataSource": {
+                    "description": "数据来源",
+                    "type": "string"
+                },
+                "deletedBy": {
+                    "type": "integer"
+                },
+                "policyContent": {
+                    "description": "政策内容",
+                    "type": "string"
+                },
+                "policyCountryOrRegion": {
+                    "description": "政策国家或地区",
+                    "type": "string"
+                },
+                "policyName": {
+                    "description": "政策名称",
+                    "type": "string"
+                },
+                "policyReleaseDate": {
+                    "description": "政策发布时间",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "updatedBy": {
+                    "type": "integer"
+                }
+            }
+        },
+        "EngineeringEducationDatabase.ProfessionalConstructionDatabase": {
+            "type": "object",
+            "required": [
+                "admissionMajor",
+                "degreeType",
+                "isBroadAdmissionCategory",
+                "isDoubleDegree",
+                "isFirstClassMajor",
+                "isMajorAccredited",
+                "isNewEngineeringDiscipline",
+                "isNewMajor",
+                "isSelectedForExcellenceProgram",
+                "majorCode",
+                "majorName",
+                "majorSatisfaction",
+                "plannedEnrollment",
+                "universityName"
+            ],
+            "properties": {
+                "ID": {
+                    "description": "主键ID",
+                    "type": "integer"
+                },
+                "admissionMajor": {
+                    "description": "招生专业",
+                    "type": "string"
+                },
+                "createdAt": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "integer"
+                },
+                "degreeType": {
+                    "description": "授予学位类别",
+                    "type": "string"
+                },
+                "deletedBy": {
+                    "type": "integer"
+                },
+                "isBroadAdmissionCategory": {
+                    "description": "是否大类招生",
+                    "type": "boolean"
+                },
+                "isDoubleDegree": {
+                    "description": "是否双学位",
+                    "type": "boolean"
+                },
+                "isFirstClassMajor": {
+                    "description": "是否一流专业",
+                    "type": "boolean"
+                },
+                "isMajorAccredited": {
+                    "description": "是否专业认证",
+                    "type": "boolean"
+                },
+                "isNewEngineeringDiscipline": {
+                    "description": "是否新工科",
+                    "type": "boolean"
+                },
+                "isNewMajor": {
+                    "description": "是否新专业",
+                    "type": "boolean"
+                },
+                "isSelectedForExcellenceProgram": {
+                    "description": "是否入选卓越计划",
+                    "type": "boolean"
+                },
+                "majorCode": {
+                    "description": "专业代码",
+                    "type": "string"
+                },
+                "majorName": {
+                    "description": "专业名称",
+                    "type": "string"
+                },
+                "majorSatisfaction": {
+                    "description": "专业满意度",
+                    "type": "string"
+                },
+                "plannedEnrollment": {
+                    "description": "计划招生数",
+                    "type": "integer"
+                },
+                "universityName": {
+                    "description": "所在学校",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "updatedBy": {
+                    "type": "integer"
+                }
+            }
+        },
+        "EngineeringEducationDatabase.SocialServiceDatabase": {
+            "type": "object",
+            "required": [
+                "industryInnovationCenterCount",
+                "regionalInnovationCenterCount",
+                "universityName"
+            ],
+            "properties": {
+                "ID": {
+                    "description": "主键ID",
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "integer"
+                },
+                "deletedBy": {
+                    "type": "integer"
+                },
+                "industryInnovationCenterCount": {
+                    "description": "行业协同创新中心数或产学研基地数",
+                    "type": "integer"
+                },
+                "regionalInnovationCenterCount": {
+                    "description": "区域协同创新中心数或产学研基地数",
+                    "type": "integer"
+                },
+                "universityName": {
+                    "description": "学校名称",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "updatedBy": {
+                    "type": "integer"
+                }
+            }
+        },
+        "EngineeringEducationDatabase.SubjectConstructionDatabase": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "description": "主键ID",
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "masterAdmissionNumber": {
+                    "description": "招生人数",
+                    "type": "integer"
+                },
+                "masterIsFirstClass": {
+                    "description": "是否一流学科",
+                    "type": "boolean"
+                },
+                "masterSoftScienceRanking": {
+                    "description": "软科排名",
+                    "type": "integer"
+                },
+                "masterSubjectCategory": {
+                    "description": "学科门类",
+                    "type": "string"
+                },
+                "masterSubjectCode": {
+                    "description": "学科代码",
+                    "type": "string"
+                },
+                "masterType": {
+                    "description": "类型",
+                    "type": "string"
+                },
+                "masterUniversityName": {
+                    "description": "所在学校",
+                    "type": "string"
+                },
+                "phdAdmissionNumber": {
+                    "description": "招生人数",
+                    "type": "integer"
+                },
+                "phdIsFirstClass": {
+                    "description": "是否一流学科",
+                    "type": "boolean"
+                },
+                "phdSoftScienceRanking": {
+                    "description": "软科排名",
+                    "type": "integer"
+                },
+                "phdSubjectCategory": {
+                    "description": "学科门类",
+                    "type": "string"
+                },
+                "phdSubjectCode": {
+                    "description": "学科代码",
+                    "type": "string"
+                },
+                "phdType": {
+                    "description": "类型",
+                    "type": "string"
+                },
+                "phdUniversityName": {
+                    "description": "所在学校",
+                    "type": "string"
+                },
+                "postdocStationCount": {
+                    "description": "博士后流动站数",
+                    "type": "integer"
+                },
+                "postdocStationName": {
+                    "description": "流动站名称",
+                    "type": "string"
+                },
+                "postdocSubjectCategory": {
+                    "description": "学科门类",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
+        "EngineeringEducationDatabase.TalentTrainingDatabase": {
+            "type": "object",
+            "required": [
+                "ationalTeachingDemonstrationCenterCount",
+                "doctoralEmploymentRate",
+                "doctoralStudentCount",
+                "internationalAwardsCount",
+                "masterEmploymentRate",
+                "masterStudentCount",
+                "nationalAwardsCount",
+                "nationalExcellentTextbookCount",
+                "nationalFirstClassCourseCount",
+                "nationalPlanningTextbookCount",
+                "participatingStudentCount",
+                "projectCount",
+                "provincialAwardsCount",
+                "provincialExcellentTextbookCount",
+                "provincialFirstClassCourseCount",
+                "provincialTeachingDemonstrationCenterCount",
+                "transferredIntoEngineeringCount",
+                "transferredOutOfEngineeringCount",
+                "undergraduateCount",
+                "undergraduateEmploymentRate",
+                "universityName"
+            ],
+            "properties": {
+                "ID": {
+                    "description": "主键ID",
+                    "type": "integer"
+                },
+                "ationalTeachingDemonstrationCenterCount": {
+                    "description": "国家级教学示范中心",
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "integer"
+                },
+                "deletedBy": {
+                    "type": "integer"
+                },
+                "doctoralEmploymentRate": {
+                    "description": "博士生平均毕业去向落实率",
+                    "type": "number"
+                },
+                "doctoralStudentCount": {
+                    "description": "博士生数",
+                    "type": "integer"
+                },
+                "internationalAwardsCount": {
+                    "description": "学生获国际奖项数",
+                    "type": "integer"
+                },
+                "masterEmploymentRate": {
+                    "description": "硕士生平均毕业去向落实率",
+                    "type": "number"
+                },
+                "masterStudentCount": {
+                    "description": "硕士生数",
+                    "type": "integer"
+                },
+                "nationalAwardsCount": {
+                    "description": "学生获国家级奖项数",
+                    "type": "integer"
+                },
+                "nationalExcellentTextbookCount": {
+                    "description": "全国优秀教材数",
+                    "type": "integer"
+                },
+                "nationalFirstClassCourseCount": {
+                    "description": "国家级一流课程数",
+                    "type": "integer"
+                },
+                "nationalPlanningTextbookCount": {
+                    "description": "国家级规划教材数",
+                    "type": "integer"
+                },
+                "participatingStudentCount": {
+                    "description": "参与学生数",
+                    "type": "integer"
+                },
+                "projectCount": {
+                    "description": "项目数",
+                    "type": "integer"
+                },
+                "provincialAwardsCount": {
+                    "description": "学生获省部级奖项数",
+                    "type": "integer"
+                },
+                "provincialExcellentTextbookCount": {
+                    "description": "省级优秀教材数",
+                    "type": "integer"
+                },
+                "provincialFirstClassCourseCount": {
+                    "description": "省部级一流课程数",
+                    "type": "integer"
+                },
+                "provincialTeachingDemonstrationCenterCount": {
+                    "description": "省部级教学示范中心",
+                    "type": "integer"
+                },
+                "transferredIntoEngineeringCount": {
+                    "description": "转入工科学生数",
+                    "type": "integer"
+                },
+                "transferredOutOfEngineeringCount": {
+                    "description": "转出工科学生数",
+                    "type": "integer"
+                },
+                "undergraduateCount": {
+                    "description": "本科生数",
+                    "type": "integer"
+                },
+                "undergraduateEmploymentRate": {
+                    "description": "本科生平均毕业去向落实率",
+                    "type": "number"
+                },
+                "universityName": {
+                    "description": "所在学校",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "updatedBy": {
+                    "type": "integer"
+                }
+            }
+        },
         "config.AliyunOSS": {
             "type": "object",
             "properties": {
@@ -4936,6 +9112,10 @@
         "config.Mongo": {
             "type": "object",
             "properties": {
+                "auth-source": {
+                    "description": "验证数据库",
+                    "type": "string"
+                },
                 "coll": {
                     "description": "collection name",
                     "type": "string"
@@ -5492,10 +9672,6 @@
                     "description": "数据库类型:mysql(默认)|sqlite|sqlserver|postgresql",
                     "type": "string"
                 },
-                "env": {
-                    "description": "环境值",
-                    "type": "string"
-                },
                 "iplimit-count": {
                     "type": "integer"
                 },
@@ -5510,7 +9686,7 @@
                     "type": "string"
                 },
                 "use-mongo": {
-                    "description": "使用redis",
+                    "description": "使用mongo",
                     "type": "boolean"
                 },
                 "use-multipoint": {
@@ -6332,7 +10508,8 @@
                         "$ref": "#/definitions/system.Field"
                     }
                 },
-                "hasTimer": {
+                "gvaModel": {
+                    "description": "是否使用gva默认Model",
                     "type": "boolean"
                 },
                 "humpPackageName": {
@@ -6346,12 +10523,44 @@
                     "description": "文件名称",
                     "type": "string"
                 },
+                "primaryField": {
+                    "$ref": "#/definitions/system.Field"
+                },
                 "structName": {
                     "description": "Struct名称",
                     "type": "string"
                 },
                 "tableName": {
                     "description": "表名",
+                    "type": "string"
+                }
+            }
+        },
+        "system.Condition": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "description": "主键ID",
+                    "type": "integer"
+                },
+                "column": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "from": {
+                    "type": "string"
+                },
+                "operator": {
+                    "type": "string"
+                },
+                "templateID": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "description": "更新时间",
                     "type": "string"
                 }
             }
@@ -6402,6 +10611,10 @@
                 "fieldType": {
                     "description": "Field数据类型",
                     "type": "string"
+                },
+                "primaryKey": {
+                    "description": "是否主键",
+                    "type": "boolean"
                 },
                 "require": {
                     "description": "是否必填",
@@ -6761,6 +10974,51 @@
                 }
             }
         },
+        "system.SysExportTemplate": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "description": "主键ID",
+                    "type": "integer"
+                },
+                "conditions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/system.Condition"
+                    }
+                },
+                "createdAt": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "模板名称",
+                    "type": "string"
+                },
+                "order": {
+                    "type": "string"
+                },
+                "tableName": {
+                    "description": "表名称",
+                    "type": "string"
+                },
+                "templateID": {
+                    "description": "模板标识",
+                    "type": "string"
+                },
+                "templateInfo": {
+                    "description": "模板信息",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "description": "更新时间",
+                    "type": "string"
+                }
+            }
+        },
         "system.SysMenu": {
             "type": "object",
             "properties": {
@@ -6945,6 +11203,10 @@
                 },
                 "headerImg": {
                     "description": "用户头像",
+                    "type": "string"
+                },
+                "invitecode": {
+                    "description": "用户邀请码",
                     "type": "string"
                 },
                 "nickName": {

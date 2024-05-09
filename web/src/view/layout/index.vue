@@ -16,11 +16,11 @@
           <img
             alt
             class="w-9 h-9 p-1 bg-white rounded-full"
-            :src="$GIN_VUE_ADMIN.appLogo"
+            src="@/assets/logoNew.png"
           >
           <div
             v-if="isSider"
-            class="inline-flex font-bold text-2xl"
+            class="inline-flex font-bold text-xl"
             :style="{color:textColor}"
           >{{ $GIN_VUE_ADMIN.appName }}</div>
         </div>

@@ -73,7 +73,7 @@ type Field struct {
 	PrimaryKey      bool   `json:"primaryKey"`      // 是否主键
 }
 
-var ErrAutoMove error = errors.New("创建代码成功并移动文件成功")
+var ErrAutoMove = errors.New("创建代码成功并移动文件成功")
 
 type SysAutoCode struct {
 	global.GVA_MODEL

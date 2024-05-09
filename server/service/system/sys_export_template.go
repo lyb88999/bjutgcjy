@@ -141,7 +141,7 @@ func (sysExportTemplateService *SysExportTemplateService) ExportExcel(templateID
 	}
 	selects := strings.Join(columns, ", ")
 	var tableMap []map[string]interface{}
-	db := global.GVA_DB.Select(selects).Table(template.TableName)
+	db := global.GVA_DB.Where("deleted_at IS NULL").Select(selects).Table(template.TableName)
 
 	if len(template.Conditions) > 0 {
 		for _, condition := range template.Conditions {
@@ -178,7 +178,14 @@ func (sysExportTemplateService *SysExportTemplateService) ExportExcel(templateID
 	}
 
 	// 通过参数传入order
+	// major_code DESC 按照major_code降序排序
+	sort := values.Get("sort")
 	order := values.Get("order")
+	if order == "descending" {
+		order = sort + " DESC"
+	} else {
+		order = sort
+	}
 	if order != "" {
 		db = db.Order(order)
 	}

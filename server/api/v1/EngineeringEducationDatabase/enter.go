@@ -1,0 +1,12 @@
+package EngineeringEducationDatabase
+
+type ApiGroup struct {
+	ProfessionalConstructionDatabaseApi
+	TalentTrainingDatabaseApi
+	SocialServiceDatabaseApi
+	ConditionalGuaranteeDatabaseApi
+	SubjectConstructionDatabaseApi
+	PolicyDatabaseApi
+	InternationalExchangeDatabaseApi
+	BasicInfomationDatabaseApi
+}

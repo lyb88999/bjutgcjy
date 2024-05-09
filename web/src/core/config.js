@@ -3,8 +3,8 @@
  */
 
 const config = {
-  appName: 'Gin-Vue-Admin',
-  appLogo: 'https://www.gin-vue-admin.com/img/logo.png',
+  appName: '工程教育发展监测数据采集',
+  appLogo: '/assets/logoNew.png',
   showViteLogo: true,
   logs: [],
 }

@@ -1,0 +1,12 @@
+package EngineeringEducationDatabase
+
+type RouterGroup struct {
+	ProfessionalConstructionDatabaseRouter
+	TalentTrainingDatabaseRouter
+	SocialServiceDatabaseRouter
+	ConditionalGuaranteeDatabaseRouter
+	SubjectConstructionDatabaseRouter
+	PolicyDatabaseRouter
+	InternationalExchangeDatabaseRouter
+	BasicInfomationDatabaseRouter
+}

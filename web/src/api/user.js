@@ -26,7 +26,7 @@ export const captcha = (data) => {
 // @Summary 用户注册
 // @Produce  application/json
 // @Param data body {username:"string",password:"string"}
-// @Router /base/resige [post]
+// @Router /base/resiger [post]
 export const register = (data) => {
   return service({
     url: '/user/admin_register',
@@ -34,6 +34,18 @@ export const register = (data) => {
     data: data
   })
 }
+
+// @Summary 用户自主注册
+// @Produce  application/json
+// @Param data body {username:"string",password:"string"}
+// @Router /register [post]
+export const userRegister = (data) => {
+  return service({
+      url: "/register",
+      method: "post",
+      data: data,
+  });
+};
 
 // @Summary 修改密码
 // @Produce  application/json
@@ -161,6 +173,22 @@ export const resetPassword = (data) => {
   return service({
     url: '/user/resetPassword',
     method: 'post',
+    data: data
+  })
+}
+
+
+// @Tags      User
+// @Summary   获取邀请码
+// @Security  ApiKeyAuth
+// @Produce  application/json
+// @Param     data  body      system.SysUser                 true  "ID"
+// @Success   200   {object}  response.Response{msg=string}  "成功获取邀请码"
+// @Router    /user/getInvitationCode [post]
+export const getInvitationCode = (data) => {
+  return service({
+    url:'/user/getInvitationCode',
+    method:'post',
     data: data
   })
 }

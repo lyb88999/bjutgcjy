@@ -1,4 +1,529 @@
 definitions:
+  EngineeringEducationDatabase.BasicInfomationDatabase:
+    properties:
+      ID:
+        description: 主键ID
+        type: integer
+      createdAt:
+        description: 创建时间
+        type: string
+      createdBy:
+        type: integer
+      deletedBy:
+        type: integer
+      divisionCode:
+        description: 区划代码
+        type: string
+      doctoralAuthorizationPointerNumber:
+        description: 博士授权点数
+        type: integer
+      doctoralDegreeCategoryNumber:
+        description: 博士专业学位类别数
+        type: integer
+      doctoralStudentNumber:
+        description: 在校博士生数
+        type: integer
+      educationLevel:
+        description: 学校层次
+        type: string
+      facultyStaffNumber:
+        description: 在校教职员工数
+        type: integer
+      fullTimeTeacherNumber:
+        description: 在校专任教师数
+        type: integer
+      geographicArea:
+        description: 地理区域
+        type: string
+      graduateStudentNumber:
+        description: 在校硕士生数
+        type: integer
+      internationalStudentNumber:
+        description: 在校留学生数
+        type: integer
+      isDoubleFirstClass:
+        description: 是否双一流
+        type: boolean
+      locatedRegion:
+        description: 所在地区
+        type: string
+      mastersAutorizationPointerNumber:
+        description: 硕士授权点数
+        type: integer
+      mastersDegreeCategoryNumber:
+        description: 硕士专业学位类别数
+        type: integer
+      postDoctoralMobileStationNumber:
+        description: 博士后流动站数
+        type: integer
+      regionGDP:
+        description: 地区生产总值
+        type: number
+      regionName:
+        description: 省区市名称
+        type: string
+      schoolCategory:
+        description: 学校类别
+        type: string
+      schoolCode:
+        description: 学校代码
+        type: string
+      schoolName:
+        description: 学校名称
+        type: string
+      schoolType:
+        description: 学校类型
+        type: string
+      softScienceRanking:
+        description: 软科排名
+        type: integer
+      undergraduateNumber:
+        description: 在校本科生数
+        type: integer
+      undergraduateProgramNumber:
+        description: 本科专业数
+        type: integer
+      updatedAt:
+        description: 更新时间
+        type: string
+      updatedBy:
+        type: integer
+    required:
+    - divisionCode
+    - doctoralAuthorizationPointerNumber
+    - doctoralDegreeCategoryNumber
+    - doctoralStudentNumber
+    - educationLevel
+    - facultyStaffNumber
+    - fullTimeTeacherNumber
+    - geographicArea
+    - graduateStudentNumber
+    - internationalStudentNumber
+    - isDoubleFirstClass
+    - locatedRegion
+    - mastersAutorizationPointerNumber
+    - mastersDegreeCategoryNumber
+    - postDoctoralMobileStationNumber
+    - regionGDP
+    - regionName
+    - schoolCategory
+    - schoolCode
+    - schoolName
+    - schoolType
+    - softScienceRanking
+    - undergraduateNumber
+    - undergraduateProgramNumber
+    type: object
+  EngineeringEducationDatabase.ConditionalGuaranteeDatabase:
+    properties:
+      ID:
+        description: 主键ID
+        type: integer
+      academicianCount:
+        description: 院士人数
+        type: integer
+      createdAt:
+        description: 创建时间
+        type: string
+      createdBy:
+        type: integer
+      deletedBy:
+        type: integer
+      foreignHighLevelTalentCount:
+        description: 外籍高层次人才数
+        type: integer
+      fullTimeFacultyCount:
+        description: 专任教师数
+        type: integer
+      largeEquipmentSharingPlatformCount:
+        description: 大型仪器设备共享系统平台数
+        type: integer
+      nationalExperimentalTeachingDemoCenterCount:
+        description: 国家级实验教学示范中心数
+        type: integer
+      nationalTalentProjectWinnerCount:
+        description: 国家级人才项目获得者人次
+        type: integer
+      offCampusInternshipBaseCount:
+        description: 校外实习、实践、实训基地数
+        type: integer
+      provincialTalentProjectWinnerCount:
+        description: 省部级人才项目获得者人次
+        type: integer
+      universityName:
+        description: 学校名称
+        type: string
+      updatedAt:
+        description: 更新时间
+        type: string
+      updatedBy:
+        type: integer
+    required:
+    - academicianCount
+    - foreignHighLevelTalentCount
+    - fullTimeFacultyCount
+    - largeEquipmentSharingPlatformCount
+    - nationalExperimentalTeachingDemoCenterCount
+    - nationalTalentProjectWinnerCount
+    - offCampusInternshipBaseCount
+    - provincialTalentProjectWinnerCount
+    - universityName
+    type: object
+  EngineeringEducationDatabase.InternationalExchangeDatabase:
+    properties:
+      ID:
+        description: 主键ID
+        type: integer
+      createdAt:
+        description: 创建时间
+        type: string
+      createdBy:
+        type: integer
+      deletedBy:
+        type: integer
+      foreignFacultyCount:
+        description: 外籍教师数
+        type: integer
+      internationalConferencesHosted:
+        description: 举办的国际会议数
+        type: integer
+      internationalStudentsCount:
+        description: 来华留学生数
+        type: integer
+      studentsAbroadExchangeCount:
+        description: 出国交流学生数
+        type: integer
+      universityName:
+        description: 学校名称
+        type: string
+      updatedAt:
+        description: 更新时间
+        type: string
+      updatedBy:
+        type: integer
+    required:
+    - foreignFacultyCount
+    - internationalConferencesHosted
+    - internationalStudentsCount
+    - studentsAbroadExchangeCount
+    - universityName
+    type: object
+  EngineeringEducationDatabase.PolicyDatabase:
+    properties:
+      ID:
+        description: 主键ID
+        type: integer
+      acquisitionTime:
+        type: string
+      additionalRemarks:
+        description: 其他备注
+        type: string
+      createdAt:
+        description: 创建时间
+        type: string
+      createdBy:
+        type: integer
+      dataSource:
+        description: 数据来源
+        type: string
+      deletedBy:
+        type: integer
+      policyContent:
+        description: 政策内容
+        type: string
+      policyCountryOrRegion:
+        description: 政策国家或地区
+        type: string
+      policyName:
+        description: 政策名称
+        type: string
+      policyReleaseDate:
+        description: 政策发布时间
+        type: string
+      updatedAt:
+        description: 更新时间
+        type: string
+      updatedBy:
+        type: integer
+    required:
+    - dataSource
+    - policyContent
+    - policyCountryOrRegion
+    - policyName
+    - policyReleaseDate
+    type: object
+  EngineeringEducationDatabase.ProfessionalConstructionDatabase:
+    properties:
+      ID:
+        description: 主键ID
+        type: integer
+      admissionMajor:
+        description: 招生专业
+        type: string
+      createdAt:
+        description: 创建时间
+        type: string
+      createdBy:
+        type: integer
+      degreeType:
+        description: 授予学位类别
+        type: string
+      deletedBy:
+        type: integer
+      isBroadAdmissionCategory:
+        description: 是否大类招生
+        type: boolean
+      isDoubleDegree:
+        description: 是否双学位
+        type: boolean
+      isFirstClassMajor:
+        description: 是否一流专业
+        type: boolean
+      isMajorAccredited:
+        description: 是否专业认证
+        type: boolean
+      isNewEngineeringDiscipline:
+        description: 是否新工科
+        type: boolean
+      isNewMajor:
+        description: 是否新专业
+        type: boolean
+      isSelectedForExcellenceProgram:
+        description: 是否入选卓越计划
+        type: boolean
+      majorCode:
+        description: 专业代码
+        type: string
+      majorName:
+        description: 专业名称
+        type: string
+      majorSatisfaction:
+        description: 专业满意度
+        type: string
+      plannedEnrollment:
+        description: 计划招生数
+        type: integer
+      universityName:
+        description: 所在学校
+        type: string
+      updatedAt:
+        description: 更新时间
+        type: string
+      updatedBy:
+        type: integer
+    required:
+    - admissionMajor
+    - degreeType
+    - isBroadAdmissionCategory
+    - isDoubleDegree
+    - isFirstClassMajor
+    - isMajorAccredited
+    - isNewEngineeringDiscipline
+    - isNewMajor
+    - isSelectedForExcellenceProgram
+    - majorCode
+    - majorName
+    - majorSatisfaction
+    - plannedEnrollment
+    - universityName
+    type: object
+  EngineeringEducationDatabase.SocialServiceDatabase:
+    properties:
+      ID:
+        description: 主键ID
+        type: integer
+      createdAt:
+        description: 创建时间
+        type: string
+      createdBy:
+        type: integer
+      deletedBy:
+        type: integer
+      industryInnovationCenterCount:
+        description: 行业协同创新中心数或产学研基地数
+        type: integer
+      regionalInnovationCenterCount:
+        description: 区域协同创新中心数或产学研基地数
+        type: integer
+      universityName:
+        description: 学校名称
+        type: string
+      updatedAt:
+        description: 更新时间
+        type: string
+      updatedBy:
+        type: integer
+    required:
+    - industryInnovationCenterCount
+    - regionalInnovationCenterCount
+    - universityName
+    type: object
+  EngineeringEducationDatabase.SubjectConstructionDatabase:
+    properties:
+      ID:
+        description: 主键ID
+        type: integer
+      createdAt:
+        description: 创建时间
+        type: string
+      masterAdmissionNumber:
+        description: 招生人数
+        type: integer
+      masterIsFirstClass:
+        description: 是否一流学科
+        type: boolean
+      masterSoftScienceRanking:
+        description: 软科排名
+        type: integer
+      masterSubjectCategory:
+        description: 学科门类
+        type: string
+      masterSubjectCode:
+        description: 学科代码
+        type: string
+      masterType:
+        description: 类型
+        type: string
+      masterUniversityName:
+        description: 所在学校
+        type: string
+      phdAdmissionNumber:
+        description: 招生人数
+        type: integer
+      phdIsFirstClass:
+        description: 是否一流学科
+        type: boolean
+      phdSoftScienceRanking:
+        description: 软科排名
+        type: integer
+      phdSubjectCategory:
+        description: 学科门类
+        type: string
+      phdSubjectCode:
+        description: 学科代码
+        type: string
+      phdType:
+        description: 类型
+        type: string
+      phdUniversityName:
+        description: 所在学校
+        type: string
+      postdocStationCount:
+        description: 博士后流动站数
+        type: integer
+      postdocStationName:
+        description: 流动站名称
+        type: string
+      postdocSubjectCategory:
+        description: 学科门类
+        type: string
+      updatedAt:
+        description: 更新时间
+        type: string
+    type: object
+  EngineeringEducationDatabase.TalentTrainingDatabase:
+    properties:
+      ID:
+        description: 主键ID
+        type: integer
+      ationalTeachingDemonstrationCenterCount:
+        description: 国家级教学示范中心
+        type: integer
+      createdAt:
+        description: 创建时间
+        type: string
+      createdBy:
+        type: integer
+      deletedBy:
+        type: integer
+      doctoralEmploymentRate:
+        description: 博士生平均毕业去向落实率
+        type: number
+      doctoralStudentCount:
+        description: 博士生数
+        type: integer
+      internationalAwardsCount:
+        description: 学生获国际奖项数
+        type: integer
+      masterEmploymentRate:
+        description: 硕士生平均毕业去向落实率
+        type: number
+      masterStudentCount:
+        description: 硕士生数
+        type: integer
+      nationalAwardsCount:
+        description: 学生获国家级奖项数
+        type: integer
+      nationalExcellentTextbookCount:
+        description: 全国优秀教材数
+        type: integer
+      nationalFirstClassCourseCount:
+        description: 国家级一流课程数
+        type: integer
+      nationalPlanningTextbookCount:
+        description: 国家级规划教材数
+        type: integer
+      participatingStudentCount:
+        description: 参与学生数
+        type: integer
+      projectCount:
+        description: 项目数
+        type: integer
+      provincialAwardsCount:
+        description: 学生获省部级奖项数
+        type: integer
+      provincialExcellentTextbookCount:
+        description: 省级优秀教材数
+        type: integer
+      provincialFirstClassCourseCount:
+        description: 省部级一流课程数
+        type: integer
+      provincialTeachingDemonstrationCenterCount:
+        description: 省部级教学示范中心
+        type: integer
+      transferredIntoEngineeringCount:
+        description: 转入工科学生数
+        type: integer
+      transferredOutOfEngineeringCount:
+        description: 转出工科学生数
+        type: integer
+      undergraduateCount:
+        description: 本科生数
+        type: integer
+      undergraduateEmploymentRate:
+        description: 本科生平均毕业去向落实率
+        type: number
+      universityName:
+        description: 所在学校
+        type: string
+      updatedAt:
+        description: 更新时间
+        type: string
+      updatedBy:
+        type: integer
+    required:
+    - ationalTeachingDemonstrationCenterCount
+    - doctoralEmploymentRate
+    - doctoralStudentCount
+    - internationalAwardsCount
+    - masterEmploymentRate
+    - masterStudentCount
+    - nationalAwardsCount
+    - nationalExcellentTextbookCount
+    - nationalFirstClassCourseCount
+    - nationalPlanningTextbookCount
+    - participatingStudentCount
+    - projectCount
+    - provincialAwardsCount
+    - provincialExcellentTextbookCount
+    - provincialFirstClassCourseCount
+    - provincialTeachingDemonstrationCenterCount
+    - transferredIntoEngineeringCount
+    - transferredOutOfEngineeringCount
+    - undergraduateCount
+    - undergraduateEmploymentRate
+    - universityName
+    type: object
   config.AliyunOSS:
     properties:
       access-key-id:
@@ -150,6 +675,9 @@ definitions:
     type: object
   config.Mongo:
     properties:
+      auth-source:
+        description: 验证数据库
+        type: string
       coll:
         description: collection name
         type: string
@@ -542,9 +1070,6 @@ definitions:
       db-type:
         description: 数据库类型:mysql(默认)|sqlite|sqlserver|postgresql
         type: string
-      env:
-        description: 环境值
-        type: string
       iplimit-count:
         type: integer
       iplimit-time:
@@ -555,7 +1080,7 @@ definitions:
       router-prefix:
         type: string
       use-mongo:
-        description: 使用redis
+        description: 使用mongo
         type: boolean
       use-multipoint:
         description: 多点登录拦截
@@ -1120,7 +1645,8 @@ definitions:
         items:
           $ref: '#/definitions/system.Field'
         type: array
-      hasTimer:
+      gvaModel:
+        description: 是否使用gva默认Model
         type: boolean
       humpPackageName:
         description: go文件名称
@@ -1130,11 +1656,33 @@ definitions:
       packageName:
         description: 文件名称
         type: string
+      primaryField:
+        $ref: '#/definitions/system.Field'
       structName:
         description: Struct名称
         type: string
       tableName:
         description: 表名
+        type: string
+    type: object
+  system.Condition:
+    properties:
+      ID:
+        description: 主键ID
+        type: integer
+      column:
+        type: string
+      createdAt:
+        description: 创建时间
+        type: string
+      from:
+        type: string
+      operator:
+        type: string
+      templateID:
+        type: string
+      updatedAt:
+        description: 更新时间
         type: string
     type: object
   system.Field:
@@ -1172,6 +1720,9 @@ definitions:
       fieldType:
         description: Field数据类型
         type: string
+      primaryKey:
+        description: 是否主键
+        type: boolean
       require:
         description: 是否必填
         type: boolean
@@ -1425,6 +1976,38 @@ definitions:
         description: 字典值
         type: integer
     type: object
+  system.SysExportTemplate:
+    properties:
+      ID:
+        description: 主键ID
+        type: integer
+      conditions:
+        items:
+          $ref: '#/definitions/system.Condition'
+        type: array
+      createdAt:
+        description: 创建时间
+        type: string
+      limit:
+        type: integer
+      name:
+        description: 模板名称
+        type: string
+      order:
+        type: string
+      tableName:
+        description: 表名称
+        type: string
+      templateID:
+        description: 模板标识
+        type: string
+      templateInfo:
+        description: 模板信息
+        type: string
+      updatedAt:
+        description: 更新时间
+        type: string
+    type: object
   system.SysMenu:
     properties:
       ID:
@@ -1557,6 +2140,9 @@ definitions:
       headerImg:
         description: 用户头像
         type: string
+      invitecode:
+        description: 用户邀请码
+        type: string
       nickName:
         description: 用户昵称
         type: string
@@ -1587,6 +2173,1915 @@ info:
   title: Gin-Vue-Admin Swagger API接口文档
   version: v2.6.1
 paths:
+  /BID/createBasicInfomationDatabase:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建基础信息库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.BasicInfomationDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"创建成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 创建基础信息库
+      tags:
+      - BasicInfomationDatabase
+  /BID/deleteBasicInfomationDatabase:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 删除基础信息库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.BasicInfomationDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 删除基础信息库
+      tags:
+      - BasicInfomationDatabase
+  /BID/deleteBasicInfomationDatabaseByIds:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"批量删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 批量删除基础信息库
+      tags:
+      - BasicInfomationDatabase
+  /BID/findBasicInfomationDatabase:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 主键ID
+        in: query
+        name: ID
+        type: integer
+      - description: 创建时间
+        in: query
+        name: createdAt
+        type: string
+      - in: query
+        name: createdBy
+        type: integer
+      - in: query
+        name: deletedBy
+        type: integer
+      - description: 区划代码
+        in: query
+        name: divisionCode
+        required: true
+        type: string
+      - description: 博士授权点数
+        in: query
+        name: doctoralAuthorizationPointerNumber
+        required: true
+        type: integer
+      - description: 博士专业学位类别数
+        in: query
+        name: doctoralDegreeCategoryNumber
+        required: true
+        type: integer
+      - description: 在校博士生数
+        in: query
+        name: doctoralStudentNumber
+        required: true
+        type: integer
+      - description: 学校层次
+        in: query
+        name: educationLevel
+        required: true
+        type: string
+      - description: 在校教职员工数
+        in: query
+        name: facultyStaffNumber
+        required: true
+        type: integer
+      - description: 在校专任教师数
+        in: query
+        name: fullTimeTeacherNumber
+        required: true
+        type: integer
+      - description: 地理区域
+        in: query
+        name: geographicArea
+        required: true
+        type: string
+      - description: 在校硕士生数
+        in: query
+        name: graduateStudentNumber
+        required: true
+        type: integer
+      - description: 在校留学生数
+        in: query
+        name: internationalStudentNumber
+        required: true
+        type: integer
+      - description: 是否双一流
+        in: query
+        name: isDoubleFirstClass
+        required: true
+        type: boolean
+      - description: 所在地区
+        in: query
+        name: locatedRegion
+        required: true
+        type: string
+      - description: 硕士授权点数
+        in: query
+        name: mastersAutorizationPointerNumber
+        required: true
+        type: integer
+      - description: 硕士专业学位类别数
+        in: query
+        name: mastersDegreeCategoryNumber
+        required: true
+        type: integer
+      - description: 博士后流动站数
+        in: query
+        name: postDoctoralMobileStationNumber
+        required: true
+        type: integer
+      - description: 地区生产总值
+        in: query
+        name: regionGDP
+        required: true
+        type: number
+      - description: 省区市名称
+        in: query
+        name: regionName
+        required: true
+        type: string
+      - description: 学校类别
+        in: query
+        name: schoolCategory
+        required: true
+        type: string
+      - description: 学校代码
+        in: query
+        name: schoolCode
+        required: true
+        type: string
+      - description: 学校名称
+        in: query
+        name: schoolName
+        required: true
+        type: string
+      - description: 学校类型
+        in: query
+        name: schoolType
+        required: true
+        type: string
+      - description: 软科排名
+        in: query
+        name: softScienceRanking
+        required: true
+        type: integer
+      - description: 在校本科生数
+        in: query
+        name: undergraduateNumber
+        required: true
+        type: integer
+      - description: 本科专业数
+        in: query
+        name: undergraduateProgramNumber
+        required: true
+        type: integer
+      - description: 更新时间
+        in: query
+        name: updatedAt
+        type: string
+      - in: query
+        name: updatedBy
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"查询成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 用id查询基础信息库
+      tags:
+      - BasicInfomationDatabase
+  /BID/getBasicInfomationDatabaseList:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - in: query
+        name: divisionCode
+        type: string
+      - in: query
+        name: educationLevel
+        type: string
+      - in: query
+        name: endCreatedAt
+        type: string
+      - in: query
+        name: geographicArea
+        type: string
+      - in: query
+        name: isDoubleFirstClass
+        type: boolean
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - in: query
+        name: locatedRegion
+        type: string
+      - in: query
+        name: order
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页大小
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: regionName
+        type: string
+      - in: query
+        name: schoolCategory
+        type: string
+      - in: query
+        name: schoolCode
+        type: string
+      - in: query
+        name: schoolName
+        type: string
+      - in: query
+        name: schoolType
+        type: string
+      - in: query
+        name: sort
+        type: string
+      - in: query
+        name: startCreatedAt
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"获取成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 分页获取基础信息库列表
+      tags:
+      - BasicInfomationDatabase
+  /BID/updateBasicInfomationDatabase:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 更新基础信息库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.BasicInfomationDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"更新成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 更新基础信息库
+      tags:
+      - BasicInfomationDatabase
+  /CGD/createConditionalGuaranteeDatabase:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建条件保障库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.ConditionalGuaranteeDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"创建成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 创建条件保障库
+      tags:
+      - ConditionalGuaranteeDatabase
+  /CGD/deleteConditionalGuaranteeDatabase:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 删除条件保障库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.ConditionalGuaranteeDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 删除条件保障库
+      tags:
+      - ConditionalGuaranteeDatabase
+  /CGD/deleteConditionalGuaranteeDatabaseByIds:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"批量删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 批量删除条件保障库
+      tags:
+      - ConditionalGuaranteeDatabase
+  /CGD/findConditionalGuaranteeDatabase:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 主键ID
+        in: query
+        name: ID
+        type: integer
+      - description: 院士人数
+        in: query
+        name: academicianCount
+        required: true
+        type: integer
+      - description: 创建时间
+        in: query
+        name: createdAt
+        type: string
+      - in: query
+        name: createdBy
+        type: integer
+      - in: query
+        name: deletedBy
+        type: integer
+      - description: 外籍高层次人才数
+        in: query
+        name: foreignHighLevelTalentCount
+        required: true
+        type: integer
+      - description: 专任教师数
+        in: query
+        name: fullTimeFacultyCount
+        required: true
+        type: integer
+      - description: 大型仪器设备共享系统平台数
+        in: query
+        name: largeEquipmentSharingPlatformCount
+        required: true
+        type: integer
+      - description: 国家级实验教学示范中心数
+        in: query
+        name: nationalExperimentalTeachingDemoCenterCount
+        required: true
+        type: integer
+      - description: 国家级人才项目获得者人次
+        in: query
+        name: nationalTalentProjectWinnerCount
+        required: true
+        type: integer
+      - description: 校外实习、实践、实训基地数
+        in: query
+        name: offCampusInternshipBaseCount
+        required: true
+        type: integer
+      - description: 省部级人才项目获得者人次
+        in: query
+        name: provincialTalentProjectWinnerCount
+        required: true
+        type: integer
+      - description: 学校名称
+        in: query
+        name: universityName
+        required: true
+        type: string
+      - description: 更新时间
+        in: query
+        name: updatedAt
+        type: string
+      - in: query
+        name: updatedBy
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"查询成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 用id查询条件保障库
+      tags:
+      - ConditionalGuaranteeDatabase
+  /CGD/getConditionalGuaranteeDatabaseList:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - in: query
+        name: endCreatedAt
+        type: string
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - in: query
+        name: order
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页大小
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: sort
+        type: string
+      - in: query
+        name: startCreatedAt
+        type: string
+      - in: query
+        name: universityName
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"获取成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 分页获取条件保障库列表
+      tags:
+      - ConditionalGuaranteeDatabase
+  /CGD/updateConditionalGuaranteeDatabase:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 更新条件保障库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.ConditionalGuaranteeDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"更新成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 更新条件保障库
+      tags:
+      - ConditionalGuaranteeDatabase
+  /IED/createInternationalExchangeDatabase:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建国际交流库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.InternationalExchangeDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"创建成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 创建国际交流库
+      tags:
+      - InternationalExchangeDatabase
+  /IED/deleteInternationalExchangeDatabase:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 删除国际交流库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.InternationalExchangeDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 删除国际交流库
+      tags:
+      - InternationalExchangeDatabase
+  /IED/deleteInternationalExchangeDatabaseByIds:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"批量删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 批量删除国际交流库
+      tags:
+      - InternationalExchangeDatabase
+  /IED/findInternationalExchangeDatabase:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 主键ID
+        in: query
+        name: ID
+        type: integer
+      - description: 创建时间
+        in: query
+        name: createdAt
+        type: string
+      - in: query
+        name: createdBy
+        type: integer
+      - in: query
+        name: deletedBy
+        type: integer
+      - description: 外籍教师数
+        in: query
+        name: foreignFacultyCount
+        required: true
+        type: integer
+      - description: 举办的国际会议数
+        in: query
+        name: internationalConferencesHosted
+        required: true
+        type: integer
+      - description: 来华留学生数
+        in: query
+        name: internationalStudentsCount
+        required: true
+        type: integer
+      - description: 出国交流学生数
+        in: query
+        name: studentsAbroadExchangeCount
+        required: true
+        type: integer
+      - description: 学校名称
+        in: query
+        name: universityName
+        required: true
+        type: string
+      - description: 更新时间
+        in: query
+        name: updatedAt
+        type: string
+      - in: query
+        name: updatedBy
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"查询成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 用id查询国际交流库
+      tags:
+      - InternationalExchangeDatabase
+  /IED/getInternationalExchangeDatabaseList:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - in: query
+        name: endCreatedAt
+        type: string
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - in: query
+        name: order
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页大小
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: sort
+        type: string
+      - in: query
+        name: startCreatedAt
+        type: string
+      - in: query
+        name: universityName
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"获取成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 分页获取国际交流库列表
+      tags:
+      - InternationalExchangeDatabase
+  /IED/updateInternationalExchangeDatabase:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 更新国际交流库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.InternationalExchangeDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"更新成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 更新国际交流库
+      tags:
+      - InternationalExchangeDatabase
+  /PCD/createProfessionalConstructionDatabase:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建专业建设库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.ProfessionalConstructionDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"创建成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 创建专业建设库
+      tags:
+      - ProfessionalConstructionDatabase
+  /PCD/deleteProfessionalConstructionDatabase:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 删除专业建设库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.ProfessionalConstructionDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 删除专业建设库
+      tags:
+      - ProfessionalConstructionDatabase
+  /PCD/deleteProfessionalConstructionDatabaseByIds:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"批量删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 批量删除专业建设库
+      tags:
+      - ProfessionalConstructionDatabase
+  /PCD/findProfessionalConstructionDatabase:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 主键ID
+        in: query
+        name: ID
+        type: integer
+      - description: 招生专业
+        in: query
+        name: admissionMajor
+        required: true
+        type: string
+      - description: 创建时间
+        in: query
+        name: createdAt
+        type: string
+      - in: query
+        name: createdBy
+        type: integer
+      - description: 授予学位类别
+        in: query
+        name: degreeType
+        required: true
+        type: string
+      - in: query
+        name: deletedBy
+        type: integer
+      - description: 是否大类招生
+        in: query
+        name: isBroadAdmissionCategory
+        required: true
+        type: boolean
+      - description: 是否双学位
+        in: query
+        name: isDoubleDegree
+        required: true
+        type: boolean
+      - description: 是否一流专业
+        in: query
+        name: isFirstClassMajor
+        required: true
+        type: boolean
+      - description: 是否专业认证
+        in: query
+        name: isMajorAccredited
+        required: true
+        type: boolean
+      - description: 是否新工科
+        in: query
+        name: isNewEngineeringDiscipline
+        required: true
+        type: boolean
+      - description: 是否新专业
+        in: query
+        name: isNewMajor
+        required: true
+        type: boolean
+      - description: 是否入选卓越计划
+        in: query
+        name: isSelectedForExcellenceProgram
+        required: true
+        type: boolean
+      - description: 专业代码
+        in: query
+        name: majorCode
+        required: true
+        type: string
+      - description: 专业名称
+        in: query
+        name: majorName
+        required: true
+        type: string
+      - description: 专业满意度
+        in: query
+        name: majorSatisfaction
+        required: true
+        type: string
+      - description: 计划招生数
+        in: query
+        name: plannedEnrollment
+        required: true
+        type: integer
+      - description: 所在学校
+        in: query
+        name: universityName
+        required: true
+        type: string
+      - description: 更新时间
+        in: query
+        name: updatedAt
+        type: string
+      - in: query
+        name: updatedBy
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"查询成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 用id查询专业建设库
+      tags:
+      - ProfessionalConstructionDatabase
+  /PCD/getProfessionalConstructionDatabaseList:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - in: query
+        name: admissionMajor
+        type: string
+      - in: query
+        name: degreeType
+        type: string
+      - in: query
+        name: endCreatedAt
+        type: string
+      - in: query
+        name: isBroadAdmissionCategory
+        type: boolean
+      - in: query
+        name: isDoubleDegree
+        type: boolean
+      - in: query
+        name: isFirstClassMajor
+        type: boolean
+      - in: query
+        name: isMajorAccredited
+        type: boolean
+      - in: query
+        name: isNewEngineeringDiscipline
+        type: boolean
+      - in: query
+        name: isNewMajor
+        type: boolean
+      - in: query
+        name: isSelectedForExcellenceProgram
+        type: boolean
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - in: query
+        name: majorCode
+        type: string
+      - in: query
+        name: majorName
+        type: string
+      - in: query
+        name: majorSatisfaction
+        type: string
+      - in: query
+        name: order
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页大小
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: sort
+        type: string
+      - in: query
+        name: startCreatedAt
+        type: string
+      - in: query
+        name: universityName
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"获取成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 分页获取专业建设库列表
+      tags:
+      - ProfessionalConstructionDatabase
+  /PCD/updateProfessionalConstructionDatabase:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 更新专业建设库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.ProfessionalConstructionDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"更新成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 更新专业建设库
+      tags:
+      - ProfessionalConstructionDatabase
+  /PD/createPolicyDatabase:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建政策数据库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.PolicyDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"创建成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 创建政策数据库
+      tags:
+      - PolicyDatabase
+  /PD/deletePolicyDatabase:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 删除政策数据库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.PolicyDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 删除政策数据库
+      tags:
+      - PolicyDatabase
+  /PD/deletePolicyDatabaseByIds:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"批量删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 批量删除政策数据库
+      tags:
+      - PolicyDatabase
+  /PD/findPolicyDatabase:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 主键ID
+        in: query
+        name: ID
+        type: integer
+      - in: query
+        name: acquisitionTime
+        type: string
+      - description: 其他备注
+        in: query
+        name: additionalRemarks
+        type: string
+      - description: 创建时间
+        in: query
+        name: createdAt
+        type: string
+      - in: query
+        name: createdBy
+        type: integer
+      - description: 数据来源
+        in: query
+        name: dataSource
+        required: true
+        type: string
+      - in: query
+        name: deletedBy
+        type: integer
+      - description: 政策内容
+        in: query
+        name: policyContent
+        required: true
+        type: string
+      - description: 政策国家或地区
+        in: query
+        name: policyCountryOrRegion
+        required: true
+        type: string
+      - description: 政策名称
+        in: query
+        name: policyName
+        required: true
+        type: string
+      - description: 政策发布时间
+        in: query
+        name: policyReleaseDate
+        required: true
+        type: string
+      - description: 更新时间
+        in: query
+        name: updatedAt
+        type: string
+      - in: query
+        name: updatedBy
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"查询成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 用id查询政策数据库
+      tags:
+      - PolicyDatabase
+  /PD/getPolicyDatabaseList:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - in: query
+        name: endCreatedAt
+        type: string
+      - in: query
+        name: endPolicyReleaseDate
+        type: string
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - in: query
+        name: order
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页大小
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: policyCountryOrRegion
+        type: string
+      - in: query
+        name: sort
+        type: string
+      - in: query
+        name: startCreatedAt
+        type: string
+      - in: query
+        name: startPolicyReleaseDate
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"获取成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 分页获取政策数据库列表
+      tags:
+      - PolicyDatabase
+  /PD/updatePolicyDatabase:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 更新政策数据库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.PolicyDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"更新成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 更新政策数据库
+      tags:
+      - PolicyDatabase
+  /SCD/createSubjectConstructionDatabase:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建学科建设库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.SubjectConstructionDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"创建成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 创建学科建设库
+      tags:
+      - SubjectConstructionDatabase
+  /SCD/deleteSubjectConstructionDatabase:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 删除学科建设库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.SubjectConstructionDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 删除学科建设库
+      tags:
+      - SubjectConstructionDatabase
+  /SCD/deleteSubjectConstructionDatabaseByIds:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"批量删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 批量删除学科建设库
+      tags:
+      - SubjectConstructionDatabase
+  /SCD/findSubjectConstructionDatabase:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 主键ID
+        in: query
+        name: ID
+        type: integer
+      - description: 创建时间
+        in: query
+        name: createdAt
+        type: string
+      - description: 招生人数
+        in: query
+        name: masterAdmissionNumber
+        type: integer
+      - description: 是否一流学科
+        in: query
+        name: masterIsFirstClass
+        type: boolean
+      - description: 软科排名
+        in: query
+        name: masterSoftScienceRanking
+        type: integer
+      - description: 学科门类
+        in: query
+        name: masterSubjectCategory
+        type: string
+      - description: 学科代码
+        in: query
+        name: masterSubjectCode
+        type: string
+      - description: 类型
+        in: query
+        name: masterType
+        type: string
+      - description: 所在学校
+        in: query
+        name: masterUniversityName
+        type: string
+      - description: 招生人数
+        in: query
+        name: phdAdmissionNumber
+        type: integer
+      - description: 是否一流学科
+        in: query
+        name: phdIsFirstClass
+        type: boolean
+      - description: 软科排名
+        in: query
+        name: phdSoftScienceRanking
+        type: integer
+      - description: 学科门类
+        in: query
+        name: phdSubjectCategory
+        type: string
+      - description: 学科代码
+        in: query
+        name: phdSubjectCode
+        type: string
+      - description: 类型
+        in: query
+        name: phdType
+        type: string
+      - description: 所在学校
+        in: query
+        name: phdUniversityName
+        type: string
+      - description: 博士后流动站数
+        in: query
+        name: postdocStationCount
+        type: integer
+      - description: 流动站名称
+        in: query
+        name: postdocStationName
+        type: string
+      - description: 学科门类
+        in: query
+        name: postdocSubjectCategory
+        type: string
+      - description: 更新时间
+        in: query
+        name: updatedAt
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"查询成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 用id查询学科建设库
+      tags:
+      - SubjectConstructionDatabase
+  /SCD/getSubjectConstructionDatabaseList:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - in: query
+        name: endCreatedAt
+        type: string
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - in: query
+        name: masterIsFirstClass
+        type: boolean
+      - in: query
+        name: masterSubjectCategory
+        type: string
+      - in: query
+        name: masterSubjectCode
+        type: string
+      - in: query
+        name: masterType
+        type: string
+      - in: query
+        name: masterUniversityName
+        type: string
+      - in: query
+        name: order
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页大小
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: phdIsFirstClass
+        type: boolean
+      - in: query
+        name: phdSubjectCategory
+        type: string
+      - in: query
+        name: phdSubjectCode
+        type: string
+      - in: query
+        name: phdType
+        type: string
+      - in: query
+        name: phdUniversityName
+        type: string
+      - in: query
+        name: postdocStationName
+        type: string
+      - in: query
+        name: postdocSubjectCategory
+        type: string
+      - in: query
+        name: sort
+        type: string
+      - in: query
+        name: startCreatedAt
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"获取成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 分页获取学科建设库列表
+      tags:
+      - SubjectConstructionDatabase
+  /SCD/updateSubjectConstructionDatabase:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 更新学科建设库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.SubjectConstructionDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"更新成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 更新学科建设库
+      tags:
+      - SubjectConstructionDatabase
+  /SSD/createSocialServiceDatabase:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建社会服务库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.SocialServiceDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"创建成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 创建社会服务库
+      tags:
+      - SocialServiceDatabase
+  /SSD/deleteSocialServiceDatabase:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 删除社会服务库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.SocialServiceDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 删除社会服务库
+      tags:
+      - SocialServiceDatabase
+  /SSD/deleteSocialServiceDatabaseByIds:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"批量删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 批量删除社会服务库
+      tags:
+      - SocialServiceDatabase
+  /SSD/findSocialServiceDatabase:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 主键ID
+        in: query
+        name: ID
+        type: integer
+      - description: 创建时间
+        in: query
+        name: createdAt
+        type: string
+      - in: query
+        name: createdBy
+        type: integer
+      - in: query
+        name: deletedBy
+        type: integer
+      - description: 行业协同创新中心数或产学研基地数
+        in: query
+        name: industryInnovationCenterCount
+        required: true
+        type: integer
+      - description: 区域协同创新中心数或产学研基地数
+        in: query
+        name: regionalInnovationCenterCount
+        required: true
+        type: integer
+      - description: 学校名称
+        in: query
+        name: universityName
+        required: true
+        type: string
+      - description: 更新时间
+        in: query
+        name: updatedAt
+        type: string
+      - in: query
+        name: updatedBy
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"查询成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 用id查询社会服务库
+      tags:
+      - SocialServiceDatabase
+  /SSD/getSocialServiceDatabaseList:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - in: query
+        name: endCreatedAt
+        type: string
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - in: query
+        name: order
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页大小
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: sort
+        type: string
+      - in: query
+        name: startCreatedAt
+        type: string
+      - in: query
+        name: universityName
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"获取成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 分页获取社会服务库列表
+      tags:
+      - SocialServiceDatabase
+  /SSD/updateSocialServiceDatabase:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 更新社会服务库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.SocialServiceDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"更新成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 更新社会服务库
+      tags:
+      - SocialServiceDatabase
+  /TTD/createTalentTrainingDatabase:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建人才培养库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.TalentTrainingDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"创建成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 创建人才培养库
+      tags:
+      - TalentTrainingDatabase
+  /TTD/deleteTalentTrainingDatabase:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 删除人才培养库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.TalentTrainingDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 删除人才培养库
+      tags:
+      - TalentTrainingDatabase
+  /TTD/deleteTalentTrainingDatabaseByIds:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"批量删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 批量删除人才培养库
+      tags:
+      - TalentTrainingDatabase
+  /TTD/findTalentTrainingDatabase:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 主键ID
+        in: query
+        name: ID
+        type: integer
+      - description: 国家级教学示范中心
+        in: query
+        name: ationalTeachingDemonstrationCenterCount
+        required: true
+        type: integer
+      - description: 创建时间
+        in: query
+        name: createdAt
+        type: string
+      - in: query
+        name: createdBy
+        type: integer
+      - in: query
+        name: deletedBy
+        type: integer
+      - description: 博士生平均毕业去向落实率
+        in: query
+        name: doctoralEmploymentRate
+        required: true
+        type: number
+      - description: 博士生数
+        in: query
+        name: doctoralStudentCount
+        required: true
+        type: integer
+      - description: 学生获国际奖项数
+        in: query
+        name: internationalAwardsCount
+        required: true
+        type: integer
+      - description: 硕士生平均毕业去向落实率
+        in: query
+        name: masterEmploymentRate
+        required: true
+        type: number
+      - description: 硕士生数
+        in: query
+        name: masterStudentCount
+        required: true
+        type: integer
+      - description: 学生获国家级奖项数
+        in: query
+        name: nationalAwardsCount
+        required: true
+        type: integer
+      - description: 全国优秀教材数
+        in: query
+        name: nationalExcellentTextbookCount
+        required: true
+        type: integer
+      - description: 国家级一流课程数
+        in: query
+        name: nationalFirstClassCourseCount
+        required: true
+        type: integer
+      - description: 国家级规划教材数
+        in: query
+        name: nationalPlanningTextbookCount
+        required: true
+        type: integer
+      - description: 参与学生数
+        in: query
+        name: participatingStudentCount
+        required: true
+        type: integer
+      - description: 项目数
+        in: query
+        name: projectCount
+        required: true
+        type: integer
+      - description: 学生获省部级奖项数
+        in: query
+        name: provincialAwardsCount
+        required: true
+        type: integer
+      - description: 省级优秀教材数
+        in: query
+        name: provincialExcellentTextbookCount
+        required: true
+        type: integer
+      - description: 省部级一流课程数
+        in: query
+        name: provincialFirstClassCourseCount
+        required: true
+        type: integer
+      - description: 省部级教学示范中心
+        in: query
+        name: provincialTeachingDemonstrationCenterCount
+        required: true
+        type: integer
+      - description: 转入工科学生数
+        in: query
+        name: transferredIntoEngineeringCount
+        required: true
+        type: integer
+      - description: 转出工科学生数
+        in: query
+        name: transferredOutOfEngineeringCount
+        required: true
+        type: integer
+      - description: 本科生数
+        in: query
+        name: undergraduateCount
+        required: true
+        type: integer
+      - description: 本科生平均毕业去向落实率
+        in: query
+        name: undergraduateEmploymentRate
+        required: true
+        type: number
+      - description: 所在学校
+        in: query
+        name: universityName
+        required: true
+        type: string
+      - description: 更新时间
+        in: query
+        name: updatedAt
+        type: string
+      - in: query
+        name: updatedBy
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"查询成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 用id查询人才培养库
+      tags:
+      - TalentTrainingDatabase
+  /TTD/getTalentTrainingDatabaseList:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - in: query
+        name: endCreatedAt
+        type: string
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - in: query
+        name: order
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页大小
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: sort
+        type: string
+      - in: query
+        name: startCreatedAt
+        type: string
+      - in: query
+        name: universityName
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"获取成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 分页获取人才培养库列表
+      tags:
+      - TalentTrainingDatabase
+  /TTD/updateTalentTrainingDatabase:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 更新人才培养库
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/EngineeringEducationDatabase.TalentTrainingDatabase'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"更新成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 更新人才培养库
+      tags:
+      - TalentTrainingDatabase
   /api/createApi:
     post:
       consumes:
@@ -3279,6 +5774,18 @@ paths:
       summary: 更新菜单
       tags:
       - Menu
+  /register:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"发送成功"}'
+          schema:
+            type: string
+      summary: 普通用户注册
+      tags:
+      - Register
   /sysDictionary/createSysDictionary:
     post:
       consumes:
@@ -3656,6 +6163,242 @@ paths:
       summary: 更新SysDictionaryDetail
       tags:
       - SysDictionaryDetail
+  /sysExportTemplate/createSysExportTemplate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建导出模板
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.SysExportTemplate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"创建成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 创建导出模板
+      tags:
+      - SysExportTemplate
+  /sysExportTemplate/deleteSysExportTemplate:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 删除导出模板
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.SysExportTemplate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 删除导出模板
+      tags:
+      - SysExportTemplate
+  /sysExportTemplate/deleteSysExportTemplateByIds:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 批量删除导出模板
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.IdsReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"批量删除成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 批量删除导出模板
+      tags:
+      - SysExportTemplate
+  /sysExportTemplate/exportExcel:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: 导出表格模板
+      tags:
+      - SysExportTemplate
+  /sysExportTemplate/findSysExportTemplate:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 主键ID
+        in: query
+        name: ID
+        type: integer
+      - description: 创建时间
+        in: query
+        name: createdAt
+        type: string
+      - in: query
+        name: limit
+        type: integer
+      - description: 模板名称
+        in: query
+        name: name
+        type: string
+      - in: query
+        name: order
+        type: string
+      - description: 表名称
+        in: query
+        name: tableName
+        type: string
+      - description: 模板标识
+        in: query
+        name: templateID
+        type: string
+      - description: 模板信息
+        in: query
+        name: templateInfo
+        type: string
+      - description: 更新时间
+        in: query
+        name: updatedAt
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"查询成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 用id查询导出模板
+      tags:
+      - SysExportTemplate
+  /sysExportTemplate/getSysExportTemplateList:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: 主键ID
+        in: query
+        name: ID
+        type: integer
+      - description: 创建时间
+        in: query
+        name: createdAt
+        type: string
+      - in: query
+        name: endCreatedAt
+        type: string
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - in: query
+        name: limit
+        type: integer
+      - description: 模板名称
+        in: query
+        name: name
+        type: string
+      - in: query
+        name: order
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页大小
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: startCreatedAt
+        type: string
+      - description: 表名称
+        in: query
+        name: tableName
+        type: string
+      - description: 模板标识
+        in: query
+        name: templateID
+        type: string
+      - description: 模板信息
+        in: query
+        name: templateInfo
+        type: string
+      - description: 更新时间
+        in: query
+        name: updatedAt
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"获取成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 分页获取导出模板列表
+      tags:
+      - SysExportTemplate
+  /sysExportTemplate/importExcel:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: 导入表格
+      tags:
+      - SysImportTemplate
+  /sysExportTemplate/updateSysExportTemplate:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 更新导出模板
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.SysExportTemplate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"更新成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 更新导出模板
+      tags:
+      - SysExportTemplate
   /sysOperationRecord/createSysOperationRecord:
     post:
       consumes:
@@ -4102,6 +6845,32 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 删除用户
+      tags:
+      - SysUser
+  /user/getInvitationCode:
+    post:
+      parameters:
+      - description: ID
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.SysUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功获取邀请码
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取邀请码
       tags:
       - SysUser
   /user/getUserInfo:
