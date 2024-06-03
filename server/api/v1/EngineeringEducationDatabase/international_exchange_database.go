@@ -2,20 +2,19 @@ package EngineeringEducationDatabase
 
 import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
-    "github.com/flipped-aurora/gin-vue-admin/server/model/EngineeringEducationDatabase"
-    EngineeringEducationDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/EngineeringEducationDatabase/request"
-    "github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
-    "github.com/flipped-aurora/gin-vue-admin/server/service"
-    "github.com/gin-gonic/gin"
-    "go.uber.org/zap"
-    "github.com/flipped-aurora/gin-vue-admin/server/utils"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/EngineeringEducationDatabase"
+	EngineeringEducationDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/EngineeringEducationDatabase/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
+	"github.com/flipped-aurora/gin-vue-admin/server/service"
+	"github.com/flipped-aurora/gin-vue-admin/server/utils"
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type InternationalExchangeDatabaseApi struct {
 }
 
 var IEDService = service.ServiceGroupApp.EngineeringEducationDatabaseServiceGroup.InternationalExchangeDatabaseService
-
 
 // CreateInternationalExchangeDatabase 创建国际交流库
 // @Tags InternationalExchangeDatabase
@@ -33,10 +32,10 @@ func (IEDApi *InternationalExchangeDatabaseApi) CreateInternationalExchangeDatab
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-    IED.CreatedBy = utils.GetUserID(c)
+	IED.CreatedBy = utils.GetUserID(c)
 
 	if err := IEDService.CreateInternationalExchangeDatabase(&IED); err != nil {
-        global.GVA_LOG.Error("创建失败!", zap.Error(err))
+		global.GVA_LOG.Error("创建失败!", zap.Error(err))
 		response.FailWithMessage("创建失败", c)
 	} else {
 		response.OkWithMessage("创建成功", c)
@@ -54,9 +53,9 @@ func (IEDApi *InternationalExchangeDatabaseApi) CreateInternationalExchangeDatab
 // @Router /IED/deleteInternationalExchangeDatabase [delete]
 func (IEDApi *InternationalExchangeDatabaseApi) DeleteInternationalExchangeDatabase(c *gin.Context) {
 	ID := c.Query("ID")
-    	userID := utils.GetUserID(c)
-	if err := IEDService.DeleteInternationalExchangeDatabase(ID,userID); err != nil {
-        global.GVA_LOG.Error("删除失败!", zap.Error(err))
+	userID := utils.GetUserID(c)
+	if err := IEDService.DeleteInternationalExchangeDatabase(ID, userID); err != nil {
+		global.GVA_LOG.Error("删除失败!", zap.Error(err))
 		response.FailWithMessage("删除失败", c)
 	} else {
 		response.OkWithMessage("删除成功", c)
@@ -73,9 +72,9 @@ func (IEDApi *InternationalExchangeDatabaseApi) DeleteInternationalExchangeDatab
 // @Router /IED/deleteInternationalExchangeDatabaseByIds [delete]
 func (IEDApi *InternationalExchangeDatabaseApi) DeleteInternationalExchangeDatabaseByIds(c *gin.Context) {
 	IDs := c.QueryArray("IDs[]")
-    userID := utils.GetUserID(c)
-	if err := IEDService.DeleteInternationalExchangeDatabaseByIds(IDs,userID); err != nil {
-        global.GVA_LOG.Error("批量删除失败!", zap.Error(err))
+	userID := utils.GetUserID(c)
+	if err := IEDService.DeleteInternationalExchangeDatabaseByIds(IDs, userID); err != nil {
+		global.GVA_LOG.Error("批量删除失败!", zap.Error(err))
 		response.FailWithMessage("批量删除失败", c)
 	} else {
 		response.OkWithMessage("批量删除成功", c)
@@ -98,10 +97,10 @@ func (IEDApi *InternationalExchangeDatabaseApi) UpdateInternationalExchangeDatab
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-    IED.UpdatedBy = utils.GetUserID(c)
+	IED.UpdatedBy = utils.GetUserID(c)
 
 	if err := IEDService.UpdateInternationalExchangeDatabase(IED); err != nil {
-        global.GVA_LOG.Error("更新失败!", zap.Error(err))
+		global.GVA_LOG.Error("更新失败!", zap.Error(err))
 		response.FailWithMessage("更新失败", c)
 	} else {
 		response.OkWithMessage("更新成功", c)
@@ -120,7 +119,7 @@ func (IEDApi *InternationalExchangeDatabaseApi) UpdateInternationalExchangeDatab
 func (IEDApi *InternationalExchangeDatabaseApi) FindInternationalExchangeDatabase(c *gin.Context) {
 	ID := c.Query("ID")
 	if reIED, err := IEDService.GetInternationalExchangeDatabase(ID); err != nil {
-        global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
 		response.FailWithMessage("查询失败", c)
 	} else {
 		response.OkWithData(gin.H{"reIED": reIED}, c)
@@ -144,14 +143,14 @@ func (IEDApi *InternationalExchangeDatabaseApi) GetInternationalExchangeDatabase
 		return
 	}
 	if list, total, err := IEDService.GetInternationalExchangeDatabaseInfoList(pageInfo); err != nil {
-	    global.GVA_LOG.Error("获取失败!", zap.Error(err))
-        response.FailWithMessage("获取失败", c)
-    } else {
-        response.OkWithDetailed(response.PageResult{
-            List:     list,
-            Total:    total,
-            Page:     pageInfo.Page,
-            PageSize: pageInfo.PageSize,
-        }, "获取成功", c)
-    }
+		global.GVA_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage("获取失败", c)
+	} else {
+		response.OkWithDetailed(response.PageResult{
+			List:     list,
+			Total:    total,
+			Page:     pageInfo.Page,
+			PageSize: pageInfo.PageSize,
+		}, "获取成功", c)
+	}
 }

@@ -2,20 +2,19 @@ package EngineeringEducationDatabase
 
 import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
-    "github.com/flipped-aurora/gin-vue-admin/server/model/EngineeringEducationDatabase"
-    EngineeringEducationDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/EngineeringEducationDatabase/request"
-    "github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
-    "github.com/flipped-aurora/gin-vue-admin/server/service"
-    "github.com/gin-gonic/gin"
-    "go.uber.org/zap"
-    "github.com/flipped-aurora/gin-vue-admin/server/utils"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/EngineeringEducationDatabase"
+	EngineeringEducationDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/EngineeringEducationDatabase/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
+	"github.com/flipped-aurora/gin-vue-admin/server/service"
+	"github.com/flipped-aurora/gin-vue-admin/server/utils"
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type ProfessionalConstructionDatabaseApi struct {
 }
 
 var PCDService = service.ServiceGroupApp.EngineeringEducationDatabaseServiceGroup.ProfessionalConstructionDatabaseService
-
 
 // CreateProfessionalConstructionDatabase 创建专业建设库
 // @Tags ProfessionalConstructionDatabase
@@ -33,10 +32,10 @@ func (PCDApi *ProfessionalConstructionDatabaseApi) CreateProfessionalConstructio
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-    PCD.CreatedBy = utils.GetUserID(c)
+	PCD.CreatedBy = utils.GetUserID(c)
 
 	if err := PCDService.CreateProfessionalConstructionDatabase(&PCD); err != nil {
-        global.GVA_LOG.Error("创建失败!", zap.Error(err))
+		global.GVA_LOG.Error("创建失败!", zap.Error(err))
 		response.FailWithMessage("创建失败", c)
 	} else {
 		response.OkWithMessage("创建成功", c)
@@ -54,9 +53,9 @@ func (PCDApi *ProfessionalConstructionDatabaseApi) CreateProfessionalConstructio
 // @Router /PCD/deleteProfessionalConstructionDatabase [delete]
 func (PCDApi *ProfessionalConstructionDatabaseApi) DeleteProfessionalConstructionDatabase(c *gin.Context) {
 	ID := c.Query("ID")
-    	userID := utils.GetUserID(c)
-	if err := PCDService.DeleteProfessionalConstructionDatabase(ID,userID); err != nil {
-        global.GVA_LOG.Error("删除失败!", zap.Error(err))
+	userID := utils.GetUserID(c)
+	if err := PCDService.DeleteProfessionalConstructionDatabase(ID, userID); err != nil {
+		global.GVA_LOG.Error("删除失败!", zap.Error(err))
 		response.FailWithMessage("删除失败", c)
 	} else {
 		response.OkWithMessage("删除成功", c)
@@ -73,9 +72,9 @@ func (PCDApi *ProfessionalConstructionDatabaseApi) DeleteProfessionalConstructio
 // @Router /PCD/deleteProfessionalConstructionDatabaseByIds [delete]
 func (PCDApi *ProfessionalConstructionDatabaseApi) DeleteProfessionalConstructionDatabaseByIds(c *gin.Context) {
 	IDs := c.QueryArray("IDs[]")
-    userID := utils.GetUserID(c)
-	if err := PCDService.DeleteProfessionalConstructionDatabaseByIds(IDs,userID); err != nil {
-        global.GVA_LOG.Error("批量删除失败!", zap.Error(err))
+	userID := utils.GetUserID(c)
+	if err := PCDService.DeleteProfessionalConstructionDatabaseByIds(IDs, userID); err != nil {
+		global.GVA_LOG.Error("批量删除失败!", zap.Error(err))
 		response.FailWithMessage("批量删除失败", c)
 	} else {
 		response.OkWithMessage("批量删除成功", c)
@@ -98,10 +97,10 @@ func (PCDApi *ProfessionalConstructionDatabaseApi) UpdateProfessionalConstructio
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-    PCD.UpdatedBy = utils.GetUserID(c)
+	PCD.UpdatedBy = utils.GetUserID(c)
 
 	if err := PCDService.UpdateProfessionalConstructionDatabase(PCD); err != nil {
-        global.GVA_LOG.Error("更新失败!", zap.Error(err))
+		global.GVA_LOG.Error("更新失败!", zap.Error(err))
 		response.FailWithMessage("更新失败", c)
 	} else {
 		response.OkWithMessage("更新成功", c)
@@ -120,7 +119,7 @@ func (PCDApi *ProfessionalConstructionDatabaseApi) UpdateProfessionalConstructio
 func (PCDApi *ProfessionalConstructionDatabaseApi) FindProfessionalConstructionDatabase(c *gin.Context) {
 	ID := c.Query("ID")
 	if rePCD, err := PCDService.GetProfessionalConstructionDatabase(ID); err != nil {
-        global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
 		response.FailWithMessage("查询失败", c)
 	} else {
 		response.OkWithData(gin.H{"rePCD": rePCD}, c)
@@ -144,14 +143,14 @@ func (PCDApi *ProfessionalConstructionDatabaseApi) GetProfessionalConstructionDa
 		return
 	}
 	if list, total, err := PCDService.GetProfessionalConstructionDatabaseInfoList(pageInfo); err != nil {
-	    global.GVA_LOG.Error("获取失败!", zap.Error(err))
-        response.FailWithMessage("获取失败", c)
-    } else {
-        response.OkWithDetailed(response.PageResult{
-            List:     list,
-            Total:    total,
-            Page:     pageInfo.Page,
-            PageSize: pageInfo.PageSize,
-        }, "获取成功", c)
-    }
+		global.GVA_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage("获取失败", c)
+	} else {
+		response.OkWithDetailed(response.PageResult{
+			List:     list,
+			Total:    total,
+			Page:     pageInfo.Page,
+			PageSize: pageInfo.PageSize,
+		}, "获取成功", c)
+	}
 }
