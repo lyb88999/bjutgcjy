@@ -36,8 +36,8 @@
         <el-button type="primary" icon="plus" @click="openDialog">新增</el-button>
         <el-button icon="delete" style="margin-left: 10px;" :disabled="!multipleSelection.length"
           @click="onDelete">删除</el-button>
-          <exportExcel template-id="IED" :condition="searchInfo"/>
-          <el-button type="primary" @click="goToiedVis">自对比</el-button>
+        <exportExcel template-id="IED" :condition="searchInfo" />
+        <el-button type="primary" @click="goToiedVis">自对比</el-button>
       </div>
       <el-table ref="multipleTable" style="width: 100%" tooltip-effect="dark" :data="tableData" row-key="ID"
         @selection-change="handleSelectionChange" @sort-change="sortChange">
@@ -48,16 +48,35 @@
         </el-table-column>
         <el-table-column align="left" label="学校名称" fixed prop="universityName" width="120" />
         <el-table-column label="国际会议" align="center" width="180">
-          <el-table-column sortable align="left" label="举办的国际会议数" prop="internationalConferencesHosted" width="180" />
+          <el-table-column sortable align="left" label="举办的国际会议数" prop="internationalConferencesHosted" width="180">
+            <template #default="{ row }">
+              {{ formatCount(row.internationalConferencesHosted) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="外籍教师" align="center" width="120">
-          <el-table-column sortable align="left" label="外籍教师数" prop="foreignFacultyCount" width="120" />
+          <el-table-column sortable align="left" label="外籍教师数" prop="foreignFacultyCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.foreignFacultyCount) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="留学生" align="center" width="150">
-          <el-table-column sortable align="left" label="来华留学生数" prop="internationalStudentsCount" width="150" />
+          <el-table-column sortable align="left" label="来华留学生数" prop="internationalStudentsCount" width="150">
+            <template #default="{ row }">
+              {{ formatCount(row.internationalStudentsCount) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="出国交流" align="center" width="150">
-          <el-table-column sortable align="left" label="出国交流学生数" prop="studentsAbroadExchangeCount" width="150" />
+          <el-table-column sortable align="left" label="出国交流学生数" prop="studentsAbroadExchangeCount" width="150">
+            <template #default="{ row }">
+              {{ formatCount(row.studentsAbroadExchangeCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column align="left" label="数据采集时间" prop="additionalRemarks" width="180">
+            <template #default="scope">{{ formatDatemini(scope.row.acquisitionTime) }}</template>
+          </el-table-column>
         </el-table-column>
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
           <template #default="scope">
@@ -114,6 +133,11 @@
             <el-input v-model.number="formData.studentsAbroadExchangeCount" :clearable="true" placeholder="请输入出国交流学生数"
               style="width: 200px;" />
           </el-form-item>
+          <el-form-item label="数据采集时间:" prop="acquisitionTime">
+            <el-date-picker v-model="formData.acquisitionTime" type="date" style="width: 200px;" placeholder="选择日期"
+              :clearable="true" />
+            <!-- <el-input v-model="formData.policyReleaseDate" :clearable="true" placeholder="请输入日期" /> -->
+          </el-form-item>
         </el-form>
       </el-scrollbar>
       <template #footer>
@@ -135,25 +159,32 @@
             <el-tag type="success" class="custom-tag">国际会议</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="举办的国际会议数">
-            {{ formData.internationalConferencesHosted }}
+            <span v-if="formData.internationalConferencesHosted < 0">暂无</span>
+            <span v-else>{{ formData.internationalConferencesHosted }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">外籍教师</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="外籍教师数">
-            {{ formData.foreignFacultyCount }}
+            <span v-if="formData.foreignFacultyCount < 0">暂无</span>
+            <span v-else>{{ formData.foreignFacultyCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">留学生</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="来华留学生数">
-            {{ formData.internationalStudentsCount }}
+            <span v-if="formData.internationalStudentsCount < 0">暂无</span>
+            <span v-else>{{ formData.internationalStudentsCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">出国交流</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="出国交流学生数">
-            {{ formData.studentsAbroadExchangeCount }}
+            <span v-if="formData.studentsAbroadExchangeCount < 0">暂无</span>
+            <span v-else>{{ formData.studentsAbroadExchangeCount }}</span>
+          </el-descriptions-item>
+          <el-descriptions-item label="数据采集时间">
+            {{ formatDatemini(formData.acquisitionTime) }}
           </el-descriptions-item>
         </el-descriptions>
       </el-scrollbar>
@@ -174,7 +205,7 @@ import {
 } from '@/api/internationalExchangeDatabase'
 
 // 全量引入格式化工具 请按需保留
-import { getDictFunc, formatDate, formatBoolean, filterDict, ReturnArrImg, onDownloadFile } from '@/utils/format'
+import { getDictFunc, formatDate, formatDatemini, formatBoolean, filterDict, ReturnArrImg, onDownloadFile } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive } from 'vue'
 import exportExcel from '@/components/exportExcel/exportExcel.vue'
@@ -183,6 +214,10 @@ import { useRouter } from 'vue-router'
 defineOptions({
   name: 'InternationalExchangeDatabase'
 })
+
+const formatCount = (value) => {
+  return value < 0 ? '暂无' : value;
+};
 
 const router = useRouter();
 
@@ -194,10 +229,11 @@ const goToiedVis = () => {
 // 自动化生成的字典（可能为空）以及字段
 const formData = ref({
   universityName: '',
-  internationalConferencesHosted: 0,
-  foreignFacultyCount: 0,
-  internationalStudentsCount: 0,
-  studentsAbroadExchangeCount: 0,
+  internationalConferencesHosted: -1,
+  foreignFacultyCount: -1,
+  internationalStudentsCount: -1,
+  studentsAbroadExchangeCount: -1,
+  acquisitionTime: new Date(),
 })
 
 
@@ -447,10 +483,11 @@ const closeDetailShow = () => {
   detailShow.value = false
   formData.value = {
     universityName: '',
-    internationalConferencesHosted: 0,
-    foreignFacultyCount: 0,
-    internationalStudentsCount: 0,
-    studentsAbroadExchangeCount: 0,
+    internationalConferencesHosted: -1,
+    foreignFacultyCount: -1,
+    internationalStudentsCount: -1,
+    studentsAbroadExchangeCount: -1,
+    acquisitionTime: new Date(),
   }
 }
 
@@ -466,10 +503,11 @@ const closeDialog = () => {
   dialogFormVisible.value = false
   formData.value = {
     universityName: '',
-    internationalConferencesHosted: 0,
-    foreignFacultyCount: 0,
-    internationalStudentsCount: 0,
-    studentsAbroadExchangeCount: 0,
+    internationalConferencesHosted: -1,
+    foreignFacultyCount: -1,
+    internationalStudentsCount: -1,
+    studentsAbroadExchangeCount: -1,
+    acquisitionTime: new Date(),
   }
 }
 // 弹窗确定

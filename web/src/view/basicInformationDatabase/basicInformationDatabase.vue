@@ -93,7 +93,11 @@
           <el-table-column align="left" label="省区市名称" prop="regionName" width="120" />
           <el-table-column align="left" label="区划代码" prop="divisionCode" width="120" />
           <el-table-column align="left" label="地理区域" prop="geographicArea" width="120" />
-          <el-table-column align="left" label="地区生产总值" prop="regionGDP" width="120" />
+          <el-table-column align="left" label="地区生产总值" prop="regionGDP" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.regionGDP) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="学校信息" align="center" width="2400">
           <el-table-column sortable align="left" label="学校代码" prop="schoolCode" width="120" />
@@ -104,19 +108,74 @@
             <template #default="scope">{{ formatBoolean(scope.row.isDoubleFirstClass) }}</template>
           </el-table-column>
           <el-table-column align="left" label="所在地区" prop="locatedRegion" width="120" />
-          <el-table-column sortable align="left" label="在校本科生数" prop="undergraduateNumber" width="120" />
-          <el-table-column sortable align="left" label="在校硕士生数" prop="graduateStudentNumber" width="120" />
-          <el-table-column sortable align="left" label="在校博士生数" prop="doctoralStudentNumber" width="120" />
-          <el-table-column sortable align="left" label="在校留学生数" prop="internationalStudentNumber" width="120" />
-          <el-table-column sortable align="left" label="在校教职员工数" prop="facultyStaffNumber" width="120" />
-          <el-table-column sortable align="left" label="在校专任教师数" prop="fullTimeTeacherNumber" width="120" />
-          <el-table-column sortable align="left" label="本科专业数" prop="undergraduateProgramNumber" width="120" />
-          <el-table-column sortable align="left" label="硕士授权点数" prop="mastersAutorizationPointerNumber" width="120" />
-          <el-table-column sortable align="left" label="博士授权点数" prop="doctoralAuthorizationPointerNumber" width="120" />
-          <el-table-column sortable align="left" label="硕士专业学位类别数" prop="mastersDegreeCategoryNumber" width="120" />
-          <el-table-column sortable align="left" label="博士专业学位类别数" prop="doctoralDegreeCategoryNumber" width="120" />
-          <el-table-column sortable align="left" label="博士后流动站数" prop="postDoctoralMobileStationNumber" width="120" />
-          <el-table-column sortable align="left" label="软科排名" prop="softScienceRanking" width="120" />
+          <el-table-column sortable align="left" label="在校本科生数" prop="undergraduateNumber" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.undergraduateNumber) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="在校硕士生数" prop="graduateStudentNumber" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.graduateStudentNumber) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="在校博士生数" prop="doctoralStudentNumber" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.doctoralStudentNumber) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="在校留学生数" prop="internationalStudentNumber" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.internationalStudentNumber) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="在校教职员工数" prop="facultyStaffNumber" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.facultyStaffNumber) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="在校专任教师数" prop="fullTimeTeacherNumber" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.fullTimeTeacherNumber) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="本科专业数" prop="undergraduateProgramNumber" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.undergraduateProgramNumber) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="硕士授权点数" prop="mastersAutorizationPointerNumber" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.mastersAutorizationPointerNumber) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="博士授权点数" prop="doctoralAuthorizationPointerNumber" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.doctoralAuthorizationPointerNumber) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="硕士专业学位类别数" prop="mastersDegreeCategoryNumber" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.mastersDegreeCategoryNumber) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="博士专业学位类别数" prop="doctoralDegreeCategoryNumber" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.doctoralDegreeCategoryNumber) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="博士后流动站数" prop="postDoctoralMobileStationNumber" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.postDoctoralMobileStationNumber) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="软科排名" prop="softScienceRanking" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.softScienceRanking) }}
+            </template>
+          </el-table-column>
+          <el-table-column align="left" label="数据采集时间" prop="additionalRemarks" width="180">
+            <template #default="scope">{{ formatDatemini(scope.row.acquisitionTime) }}</template>
+          </el-table-column>
         </el-table-column>
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
           <template #default="scope">
@@ -235,6 +294,11 @@
             <el-input v-model.number="formData.softScienceRanking" :clearable="true" placeholder="请输入软科排名"
               style="width: 200px;" />
           </el-form-item>
+          <el-form-item label="数据采集时间:" prop="acquisitionTime">
+            <el-date-picker v-model="formData.acquisitionTime" type="date" style="width: 200px;" placeholder="选择日期"
+              :clearable="true" />
+            <!-- <el-input v-model="formData.policyReleaseDate" :clearable="true" placeholder="请输入日期" /> -->
+          </el-form-item>
         </el-form>
       </el-scrollbar>
       <template #footer>
@@ -262,7 +326,8 @@
             {{ formData.geographicArea }}
           </el-descriptions-item>
           <el-descriptions-item label="地区生产总值">
-            {{ formData.regionGDP }}
+            <span v-if="formData.regionGDP < 0">暂无</span>
+            <span v-else>{{ formData.regionGDP }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">学校信息</el-tag>
@@ -289,43 +354,59 @@
             {{ formData.locatedRegion }}
           </el-descriptions-item>
           <el-descriptions-item label="在校本科生数">
-            {{ formData.undergraduateNumber }}
+            <span v-if="formData.undergraduateNumber < 0">暂无</span>
+            <span v-else>{{ formData.undergraduateNumber }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="在校硕士生数">
-            {{ formData.graduateStudentNumber }}
+            <span v-if="formData.graduateStudentNumber < 0">暂无</span>
+            <span v-else>{{ formData.graduateStudentNumber }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="在校博士生数">
-            {{ formData.doctoralStudentNumber }}
+            <span v-if="formData.doctoralStudentNumber < 0">暂无</span>
+            <span v-else>{{ formData.doctoralStudentNumber }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="在校留学生数">
-            {{ formData.internationalStudentNumber }}
+            <span v-if="formData.internationalStudentNumber < 0">暂无</span>
+            <span v-else>{{ formData.internationalStudentNumber }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="在校教职员工数">
-            {{ formData.facultyStaffNumber }}
+            <span v-if="formData.facultyStaffNumber < 0">暂无</span>
+            <span v-else>{{ formData.facultyStaffNumber }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="在校专任教师数">
-            {{ formData.fullTimeTeacherNumber }}
+            <span v-if="formData.fullTimeTeacherNumber < 0">暂无</span>
+            <span v-else>{{ formData.fullTimeTeacherNumber }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="本科专业数">
-            {{ formData.undergraduateProgramNumber }}
+            <span v-if="formData.undergraduateProgramNumber < 0">暂无</span>
+            <span v-else>{{ formData.undergraduateProgramNumber }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="硕士授权点数">
-            {{ formData.mastersAutorizationPointerNumber }}
+            <span v-if="formData.mastersAutorizationPointerNumber < 0">暂无</span>
+            <span v-else>{{ formData.mastersAutorizationPointerNumber}}</span>
           </el-descriptions-item>
           <el-descriptions-item label="博士授权点数">
-            {{ formData.doctoralAuthorizationPointerNumber }}
+            <span v-if="formData.doctoralAuthorizationPointerNumber < 0">暂无</span>
+            <span v-else>{{ formData.doctoralAuthorizationPointerNumber}}</span>
           </el-descriptions-item>
           <el-descriptions-item label="硕士专业学位类别数">
-            {{ formData.mastersDegreeCategoryNumber }}
+            <span v-if="formData.mastersDegreeCategoryNumber< 0">暂无</span>
+            <span v-else>{{ formData.mastersDegreeCategoryNumber}}</span>
           </el-descriptions-item>
           <el-descriptions-item label="博士专业学位类别数">
-            {{ formData.doctoralDegreeCategoryNumber }}
+            <span v-if="formData.doctoralDegreeCategoryNumber< 0">暂无</span>
+            <span v-else>{{ formData.doctoralDegreeCategoryNumber}}</span>
           </el-descriptions-item>
           <el-descriptions-item label="博士后流动站数">
-            {{ formData.postDoctoralMobileStationNumber }}
+            <span v-if="formData.postDoctoralMobileStationNumber< 0">暂无</span>
+            <span v-else>{{ formData.postDoctoralMobileStationNumber}}</span>
           </el-descriptions-item>
           <el-descriptions-item label="软科排名">
-            {{ formData.softScienceRanking }}
+            <span v-if="formData.softScienceRanking< 0">暂无</span>
+            <span v-else>{{ formData.softScienceRanking}}</span>
+          </el-descriptions-item>
+          <el-descriptions-item label="数据采集时间">
+            {{ formatDatemini(formData.acquisitionTime) }}
           </el-descriptions-item>
         </el-descriptions>
       </el-scrollbar>
@@ -345,7 +426,7 @@ import {
 } from '@/api/basicInformationDatabase'
 
 // 全量引入格式化工具 请按需保留
-import { getDictFunc, formatDate, formatBoolean, filterDict, ReturnArrImg, onDownloadFile } from '@/utils/format'
+import { getDictFunc, formatDate, formatBoolean, formatDatemini, filterDict, ReturnArrImg, onDownloadFile } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive } from 'vue'
 import exportExcel from '@/components/exportExcel/exportExcel.vue'
@@ -354,6 +435,10 @@ import { useRouter } from 'vue-router'
 defineOptions({
   name: 'BasicInfomationDatabase'
 })
+
+const formatCount = (value) => {
+  return value < 0 ? '暂无' : value;
+};
 
 const router = useRouter();
 
@@ -367,7 +452,7 @@ const formData = ref({
   regionName: '',
   divisionCode: '',
   geographicArea: '',
-  regionGDP: 0,
+  regionGDP: -1,
   schoolName: '',
   schoolCode: '',
   schoolType: '',
@@ -375,19 +460,20 @@ const formData = ref({
   educationLevel: '',
   isDoubleFirstClass: false,
   locatedRegion: '',
-  undergraduateNumber: 0,
-  graduateStudentNumber: 0,
-  doctoralStudentNumber: 0,
-  internationalStudentNumber: 0,
-  facultyStaffNumber: 0,
-  fullTimeTeacherNumber: 0,
-  undergraduateProgramNumber: 0,
-  mastersAutorizationPointerNumber: 0,
-  doctoralAuthorizationPointerNumber: 0,
-  mastersDegreeCategoryNumber: 0,
-  doctoralDegreeCategoryNumber: 0,
-  postDoctoralMobileStationNumber: 0,
-  softScienceRanking: 0,
+  undergraduateNumber: -1,
+  graduateStudentNumber: -1,
+  doctoralStudentNumber: -1,
+  internationalStudentNumber: -1,
+  facultyStaffNumber: -1,
+  fullTimeTeacherNumber: -1,
+  undergraduateProgramNumber: -1,
+  mastersAutorizationPointerNumber: -1,
+  doctoralAuthorizationPointerNumber: -1,
+  mastersDegreeCategoryNumber: -1,
+  doctoralDegreeCategoryNumber: -1,
+  postDoctoralMobileStationNumber: -1,
+  softScienceRanking: -1,
+  acquisitionTime: new Date(),
 })
 
 
@@ -808,7 +894,7 @@ const closeDetailShow = () => {
     regionName: '',
     divisionCode: '',
     geographicArea: '',
-    regionGDP: 0,
+    regionGDP: -1,
     schoolName: '',
     schoolCode: '',
     schoolType: '',
@@ -816,19 +902,20 @@ const closeDetailShow = () => {
     educationLevel: '',
     isDoubleFirstClass: false,
     locatedRegion: '',
-    undergraduateNumber: 0,
-    graduateStudentNumber: 0,
-    doctoralStudentNumber: 0,
-    internationalStudentNumber: 0,
-    facultyStaffNumber: 0,
-    fullTimeTeacherNumber: 0,
-    undergraduateProgramNumber: 0,
-    mastersAutorizationPointerNumber: 0,
-    doctoralAuthorizationPointerNumber: 0,
-    mastersDegreeCategoryNumber: 0,
-    doctoralDegreeCategoryNumber: 0,
-    postDoctoralMobileStationNumber: 0,
-    softScienceRanking: 0,
+    undergraduateNumber: -1,
+    graduateStudentNumber: -1,
+    doctoralStudentNumber: -1,
+    internationalStudentNumber: -1,
+    facultyStaffNumber: -1,
+    fullTimeTeacherNumber: -1,
+    undergraduateProgramNumber: -1,
+    mastersAutorizationPointerNumber: -1,
+    doctoralAuthorizationPointerNumber: -1,
+    mastersDegreeCategoryNumber: -1,
+    doctoralDegreeCategoryNumber: -1,
+    postDoctoralMobileStationNumber: -1,
+    softScienceRanking: -1,
+    acquisitionTime: new Date(),
   }
 }
 
@@ -846,7 +933,7 @@ const closeDialog = () => {
     regionName: '',
     divisionCode: '',
     geographicArea: '',
-    regionGDP: 0,
+    regionGDP: -1,
     schoolName: '',
     schoolCode: '',
     schoolType: '',
@@ -854,19 +941,20 @@ const closeDialog = () => {
     educationLevel: '',
     isDoubleFirstClass: false,
     locatedRegion: '',
-    undergraduateNumber: 0,
-    graduateStudentNumber: 0,
-    doctoralStudentNumber: 0,
-    internationalStudentNumber: 0,
-    facultyStaffNumber: 0,
-    fullTimeTeacherNumber: 0,
-    undergraduateProgramNumber: 0,
-    mastersAutorizationPointerNumber: 0,
-    doctoralAuthorizationPointerNumber: 0,
-    mastersDegreeCategoryNumber: 0,
-    doctoralDegreeCategoryNumber: 0,
-    postDoctoralMobileStationNumber: 0,
-    softScienceRanking: 0,
+    undergraduateNumber: -1,
+    graduateStudentNumber: -1,
+    doctoralStudentNumber: -1,
+    internationalStudentNumber: -1,
+    facultyStaffNumber: -1,
+    fullTimeTeacherNumber: -1,
+    undergraduateProgramNumber: -1,
+    mastersAutorizationPointerNumber: -1,
+    doctoralAuthorizationPointerNumber: -1,
+    mastersDegreeCategoryNumber: -1,
+    doctoralDegreeCategoryNumber: -1,
+    postDoctoralMobileStationNumber: -1,
+    softScienceRanking: -1,
+    acquisitionTime: new Date(),
   }
 }
 // 弹窗确定

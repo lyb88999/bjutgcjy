@@ -36,8 +36,8 @@
         <el-button type="primary" icon="plus" @click="openDialog">新增</el-button>
         <el-button icon="delete" style="margin-left: 10px;" :disabled="!multipleSelection.length"
           @click="onDelete">删除</el-button>
-          <exportExcel template-id="CGD" :condition="searchInfo"/>
-          <el-button type="primary" @click="goToCgdVis">自对比</el-button>
+        <exportExcel template-id="CGD" :condition="searchInfo" />
+        <el-button type="primary" @click="goToCgdVis">自对比</el-button>
       </div>
       <el-table ref="multipleTable" style="width: 100%" tooltip-effect="dark" :data="tableData" row-key="ID"
         @selection-change="handleSelectionChange" @sort-change="sortChange">
@@ -50,25 +50,59 @@
 
         <el-table-column align="left" label="学校名称" fixed prop="universityName" width="120" />
         <el-table-column label="专任教师" align="center" width="120">
-          <el-table-column sortable align="left" label="专任教师数" prop="fullTimeFacultyCount" width="120" />
+          <el-table-column sortable align="left" label="专任教师数" prop="fullTimeFacultyCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.fullTimeFacultyCount) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="高层次人才" align="center" width="480">
-          <el-table-column sortable align="left" label="外籍高层次人才数" prop="foreignHighLevelTalentCount" width="120" />
-          <el-table-column sortable align="left" label="院士人数" prop="academicianCount" width="120" />
+          <el-table-column sortable align="left" label="外籍高层次人才数" prop="foreignHighLevelTalentCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.foreignHighLevelTalentCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="院士人数" prop="academicianCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.academicianCount) }}
+            </template>
+          </el-table-column>
           <el-table-column sortable align="left" label="国家级人才项目获得者人次" prop="nationalTalentProjectWinnerCount"
-            width="120" />
+            width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.nationalTalentProjectWinnerCount) }}
+            </template>
+          </el-table-column>
           <el-table-column sortable align="left" label="省部级人才项目获得者人次" prop="provincialTalentProjectWinnerCount"
-            width="120" />
+            width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.provincialTalentProjectWinnerCount) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="基地数" align="center" width="120">
-          <el-table-column sortable align="left" label="校外实习、实践、实训基地数" prop="offCampusInternshipBaseCount"
-            width="120" />
+          <el-table-column sortable align="left" label="校外实习、实践、实训基地数" prop="offCampusInternshipBaseCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.offCampusInternshipBaseCount) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="仪器设备" align="center" width="240">
           <el-table-column sortable align="left" label="大型仪器设备共享系统平台数" prop="largeEquipmentSharingPlatformCount"
-            width="120" />
+            width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.largeEquipmentSharingPlatformCount) }}
+            </template>
+          </el-table-column>
           <el-table-column sortable align="left" label="国家级实验教学示范中心数" prop="nationalExperimentalTeachingDemoCenterCount"
-            width="120" />
+            width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.nationalExperimentalTeachingDemoCenterCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column align="left" label="数据采集时间" prop="additionalRemarks" width="180">
+            <template #default="scope">{{ formatDatemini(scope.row.acquisitionTime) }}</template>
+          </el-table-column>
         </el-table-column>
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
           <template #default="scope">
@@ -141,6 +175,11 @@
             <el-input v-model.number="formData.nationalExperimentalTeachingDemoCenterCount" :clearable="true"
               placeholder="请输入国家级实验教学示范中心数" style="width: 200px;" />
           </el-form-item>
+          <el-form-item label="数据采集时间:" prop="acquisitionTime">
+            <el-date-picker v-model="formData.acquisitionTime" type="date" style="width: 200px;" placeholder="选择日期"
+              :clearable="true" />
+            <!-- <el-input v-model="formData.policyReleaseDate" :clearable="true" placeholder="请输入日期" /> -->
+          </el-form-item>
         </el-form>
       </el-scrollbar>
       <template #footer>
@@ -162,37 +201,48 @@
             <el-tag type="success" class="custom-tag">专任教师</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="专任教师数">
-            {{ formData.fullTimeFacultyCount }}
+            <span v-if="formData.fullTimeFacultyCount < 0">暂无</span>
+            <span v-else>{{ formData.fullTimeFacultyCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">高层次人才</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="外籍高层次人才数">
-            {{ formData.foreignHighLevelTalentCount }}
+            <span v-if="formData.foreignHighLevelTalentCount < 0">暂无</span>
+            <span v-else>{{ formData.foreignHighLevelTalentCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="院士人数">
-            {{ formData.academicianCount }}
+            <span v-if="formData.academicianCount < 0">暂无</span>
+            <span v-else>{{ formData.academicianCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="国家级人才项目获得者人次">
-            {{ formData.nationalTalentProjectWinnerCount }}
+            <span v-if="formData.nationalTalentProjectWinnerCount < 0">暂无</span>
+            <span v-else>{{ formData.nationalTalentProjectWinnerCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="省部级人才项目获得者人次">
-            {{ formData.provincialTalentProjectWinnerCount }}
+            <span v-if="formData.provincialTalentProjectWinnerCount < 0">暂无</span>
+            <span v-else>{{ formData.provincialTalentProjectWinnerCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">基地数</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="校外实习、实践、实训基地数">
-            {{ formData.offCampusInternshipBaseCount }}
+            <span v-if="formData.offCampusInternshipBaseCount < 0">暂无</span>
+            <span v-else>{{ formData.offCampusInternshipBaseCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">仪器设备</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="大型仪器设备共享系统平台数">
-            {{ formData.largeEquipmentSharingPlatformCount }}
+            <span v-if="formData.largeEquipmentSharingPlatformCount < 0">暂无</span>
+            <span v-else>{{ formData.largeEquipmentSharingPlatformCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="国家级实验教学示范中心数">
-            {{ formData.nationalExperimentalTeachingDemoCenterCount }}
+            <span v-if="formData.nationalExperimentalTeachingDemoCenterCount < 0">暂无</span>
+            <span v-else>{{ formData.nationalExperimentalTeachingDemoCenterCount }}</span>
+          </el-descriptions-item>
+          <el-descriptions-item label="数据采集时间">
+            {{ formatDatemini(formData.acquisitionTime) }}
           </el-descriptions-item>
         </el-descriptions>
       </el-scrollbar>
@@ -211,7 +261,7 @@ import {
 } from '@/api/conditionalGuaranteeDatabase'
 
 // 全量引入格式化工具 请按需保留
-import { getDictFunc, formatDate, formatBoolean, filterDict, ReturnArrImg, onDownloadFile } from '@/utils/format'
+import { getDictFunc, formatDate, formatDatemini, formatBoolean, filterDict, ReturnArrImg, onDownloadFile } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive } from 'vue'
 import exportExcel from '@/components/exportExcel/exportExcel.vue'
@@ -220,6 +270,11 @@ import { useRouter } from 'vue-router'
 defineOptions({
   name: 'ConditionalGuaranteeDatabase'
 })
+
+const formatCount = (value) => {
+  return value < 0 ? '暂无' : value;
+};
+
 
 const router = useRouter();
 
@@ -231,14 +286,15 @@ const goToCgdVis = () => {
 // 自动化生成的字典（可能为空）以及字段
 const formData = ref({
   universityName: '',
-  fullTimeFacultyCount: 0,
-  foreignHighLevelTalentCount: 0,
-  academicianCount: 0,
-  nationalTalentProjectWinnerCount: 0,
-  provincialTalentProjectWinnerCount: 0,
-  offCampusInternshipBaseCount: 0,
-  largeEquipmentSharingPlatformCount: 0,
-  nationalExperimentalTeachingDemoCenterCount: 0,
+  fullTimeFacultyCount: -1,
+  foreignHighLevelTalentCount: -1,
+  academicianCount: -1,
+  nationalTalentProjectWinnerCount: -1,
+  provincialTalentProjectWinnerCount: -1,
+  offCampusInternshipBaseCount: -1,
+  largeEquipmentSharingPlatformCount: -1,
+  nationalExperimentalTeachingDemoCenterCount: -1,
+  acquisitionTime: new Date(),
 })
 
 
@@ -516,14 +572,15 @@ const closeDetailShow = () => {
   detailShow.value = false
   formData.value = {
     universityName: '',
-    fullTimeFacultyCount: 0,
-    foreignHighLevelTalentCount: 0,
-    academicianCount: 0,
-    nationalTalentProjectWinnerCount: 0,
-    provincialTalentProjectWinnerCount: 0,
-    offCampusInternshipBaseCount: 0,
-    largeEquipmentSharingPlatformCount: 0,
-    nationalExperimentalTeachingDemoCenterCount: 0,
+    fullTimeFacultyCount: -1,
+    foreignHighLevelTalentCount: -1,
+    academicianCount: -1,
+    nationalTalentProjectWinnerCount: -1,
+    provincialTalentProjectWinnerCount: -1,
+    offCampusInternshipBaseCount: -1,
+    largeEquipmentSharingPlatformCount: -1,
+    nationalExperimentalTeachingDemoCenterCount: -1,
+    acquisitionTime: new Date(),
   }
 }
 
@@ -539,14 +596,15 @@ const closeDialog = () => {
   dialogFormVisible.value = false
   formData.value = {
     universityName: '',
-    fullTimeFacultyCount: 0,
-    foreignHighLevelTalentCount: 0,
-    academicianCount: 0,
-    nationalTalentProjectWinnerCount: 0,
-    provincialTalentProjectWinnerCount: 0,
-    offCampusInternshipBaseCount: 0,
-    largeEquipmentSharingPlatformCount: 0,
-    nationalExperimentalTeachingDemoCenterCount: 0,
+    fullTimeFacultyCount: -1,
+    foreignHighLevelTalentCount: -1,
+    academicianCount: -1,
+    nationalTalentProjectWinnerCount: -1,
+    provincialTalentProjectWinnerCount: -1,
+    offCampusInternshipBaseCount: -1,
+    largeEquipmentSharingPlatformCount: -1,
+    nationalExperimentalTeachingDemoCenterCount: -1,
+    acquisitionTime: new Date(),
   }
 }
 // 弹窗确定

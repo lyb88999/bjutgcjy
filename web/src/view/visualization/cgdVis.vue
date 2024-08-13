@@ -68,7 +68,20 @@ const talentsOption = computed(() => ({
     title: { text: '教师与人才数据', left: 'center', top: '5%' },
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { left: 'right', data: ['专任教师数', '外籍高层次人才数', '院士人数', '国家级人才项目获得者人次', '省部级人才项目获得者人次'] },
-    xAxis: { type: 'category', data: schools.value.map(s => s.universityName) },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '15%', // 增加底部间距
+        containLabel: true
+    },
+    xAxis: { 
+        type: 'category', 
+        data: schools.value.map(s => s.universityName),
+        axisLabel: {
+            rotate: 30, // 旋转30度
+            fontStyle: 'italic', // 字体斜体
+        }
+    },
     yAxis: { type: 'value' },
     series: [
         { name: '专任教师数', type: 'bar', data: schools.value.map(s => s.fullTimeFacultyCount) },
@@ -84,7 +97,20 @@ const resourcesOption = computed(() => ({
     title: { text: '实习基地与设备共享', left: 'center', top: '5%' },
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { left: 'right', data: ['校外实习、实践、实训基地数', '大型仪器设备共享系统平台数', '国家级实验教学示范中心数'] },
-    xAxis: { type: 'category', data: schools.value.map(s => s.universityName) },
+    grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '15%', // 增加底部间距
+        containLabel: true
+    },
+    xAxis: { 
+        type: 'category', 
+        data: schools.value.map(s => s.universityName),
+        axisLabel: {
+            rotate: 30, // 旋转30度
+            fontStyle: 'italic', // 字体斜体
+        }
+    },
     yAxis: { type: 'value' },
     series: [
         { name: '校外实习、实践、实训基地数', type: 'bar', data: schools.value.map(s => s.offCampusInternshipBaseCount) },
@@ -101,11 +127,11 @@ const resourcesOption = computed(() => ({
     align-items: center;
     gap: 20px;
     margin-top: 10%;
+    overflow-x: auto; /* 添加水平滚动条 */
 }
 
 .chart {
-    width: 100%;
-    max-width: 800px;
-    height: 400px;
+    width: 1200px; /* 设置足够大的宽度 */
+    height: 500px; /* 增加图表高度 */
 }
 </style>

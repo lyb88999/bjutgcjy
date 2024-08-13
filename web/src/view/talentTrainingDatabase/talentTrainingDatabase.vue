@@ -36,8 +36,8 @@
         <el-button type="primary" icon="plus" @click="openDialog">新增</el-button>
         <el-button icon="delete" style="margin-left: 10px;" :disabled="!multipleSelection.length"
           @click="onDelete">删除</el-button>
-          <exportExcel template-id="TTD" :condition="searchInfo"/>
-          <el-button type="primary" @click="goToTtdVis">自对比</el-button>
+        <exportExcel template-id="TTD" :condition="searchInfo" />
+        <el-button type="primary" @click="goToTtdVis">自对比</el-button>
       </div>
       <el-table ref="multipleTable" style="width: 100%" tooltip-effect="dark" :data="tableData" row-key="ID"
         @selection-change="handleSelectionChange" @sort-change="sortChange">
@@ -50,42 +50,125 @@
 
         <el-table-column align="left" label="学校名称" fixed prop="universityName" width="120" />
         <el-table-column label="在校学生" align="center" width="360">
-          <el-table-column sortable align="left" label="本科生数" prop="undergraduateCount" width="120" />
-          <el-table-column sortable align="left" label="硕士生数" prop="masterStudentCount" width="120" />
-          <el-table-column sortable align="left" label="博士生数" prop="doctoralStudentCount" width="120" />
+          <el-table-column sortable align="left" label="本科生数" prop="undergraduateCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.undergraduateCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="硕士生数" prop="masterStudentCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.masterStudentCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="博士生数" prop="doctoralStudentCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.doctoralStudentCount) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="课堂建设" align="center" width="240">
-          <el-table-column sortable align="left" label="国家级一流课程数" prop="nationalFirstClassCourseCount" width="120" />
-          <el-table-column sortable align="left" label="省部级一流课程数" prop="provincialFirstClassCourseCount" width="120" />
+          <el-table-column sortable align="left" label="国家级一流课程数" prop="nationalFirstClassCourseCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.nationalFirstClassCourseCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="省部级一流课程数" prop="provincialFirstClassCourseCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.provincialFirstClassCourseCount) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="教学中心" align="center" width="240">
           <el-table-column sortable align="left" label="国家级教学示范中心" prop="ationalTeachingDemonstrationCenterCount"
-            width="120" />
+            width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.ationalTeachingDemonstrationCenterCount) }}
+            </template>
+          </el-table-column>
           <el-table-column sortable align="left" label="省部级教学示范中心" prop="provincialTeachingDemonstrationCenterCount"
-            width="120" />
+            width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.provincialTeachingDemonstrationCenterCount) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="教材建设" align="center" width="360">
-          <el-table-column sortable align="left" label="国家级规划教材数" prop="nationalPlanningTextbookCount" width="120" />
-          <el-table-column sortable align="left" label="全国优秀教材数" prop="nationalExcellentTextbookCount" width="120" />
-          <el-table-column sortable align="left" label="省级优秀教材数" prop="provincialExcellentTextbookCount" width="120" />
+          <el-table-column sortable align="left" label="国家级规划教材数" prop="nationalPlanningTextbookCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.nationalPlanningTextbookCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="全国优秀教材数" prop="nationalExcellentTextbookCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.nationalExcellentTextbookCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="省级优秀教材数" prop="provincialExcellentTextbookCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.provincialExcellentTextbookCount) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="学生获奖" align="center" width="360">
-          <el-table-column sortable align="left" label="学生获国际奖项数" prop="internationalAwardsCount" width="120" />
-          <el-table-column sortable align="left" label="学生获国家级奖项数" prop="nationalAwardsCount" width="120" />
-          <el-table-column sortable align="left" label="学生获省部级奖项数" prop="provincialAwardsCount" width="120" />
+          <el-table-column sortable align="left" label="学生获国际奖项数" prop="internationalAwardsCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.internationalAwardsCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="学生获国家级奖项数" prop="nationalAwardsCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.nationalAwardsCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="学生获省部级奖项数" prop="provincialAwardsCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.provincialAwardsCount) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="学生毕业去向落实率和升学率" align="center" width="360">
-          <el-table-column sortable align="left" label="本科生平均毕业去向落实率" prop="undergraduateEmploymentRate" width="120" />
-          <el-table-column sortable align="left" label="硕士生平均毕业去向落实率" prop="masterEmploymentRate" width="120" />
-          <el-table-column sortable align="left" label="博士生平均毕业去向落实率" prop="doctoralEmploymentRate" width="120" />
+          <el-table-column sortable align="left" label="本科生平均毕业去向落实率" prop="undergraduateEmploymentRate" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.undergraduateEmploymentRate) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="硕士生平均毕业去向落实率" prop="masterEmploymentRate" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.masterEmploymentRate) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="博士生平均毕业去向落实率" prop="doctoralEmploymentRate" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.doctoralEmploymentRate) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="在校学生创业项目" align="center" width="240">
-          <el-table-column sortable align="left" label="项目数" prop="projectCount" width="120" />
-          <el-table-column sortable align="left" label="参与学生数" prop="participatingStudentCount" width="120" />
+          <el-table-column sortable align="left" label="项目数" prop="projectCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.projectCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="参与学生数" prop="participatingStudentCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.participatingStudentCount) }}
+            </template>
+          </el-table-column>
         </el-table-column>
         <el-table-column label="本科生转专业" align="center" width="240">
-          <el-table-column sortable align="left" label="转入工科学生数" prop="transferredIntoEngineeringCount" width="120" />
-          <el-table-column sortable align="left" label="转出工科学生数" prop="transferredOutOfEngineeringCount" width="120" />
+          <el-table-column sortable align="left" label="转入工科学生数" prop="transferredIntoEngineeringCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.transferredIntoEngineeringCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column sortable align="left" label="转出工科学生数" prop="transferredOutOfEngineeringCount" width="120">
+            <template #default="{ row }">
+              {{ formatCount(row.transferredOutOfEngineeringCount) }}
+            </template>
+          </el-table-column>
+          <el-table-column align="left" label="数据采集时间" prop="additionalRemarks" width="180">
+            <template #default="scope">{{ formatDatemini(scope.row.acquisitionTime) }}</template>
+          </el-table-column>
         </el-table-column>
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
           <template #default="scope">
@@ -218,6 +301,11 @@
             <el-input v-model.number="formData.transferredOutOfEngineeringCount" :clearable="true"
               placeholder="请输入转出工科学生数" style="width: 200px;" />
           </el-form-item>
+          <el-form-item label="数据采集时间:" prop="acquisitionTime">
+            <el-date-picker v-model="formData.acquisitionTime" type="date" style="width: 200px;" placeholder="选择日期"
+              :clearable="true" />
+            <!-- <el-input v-model="formData.policyReleaseDate" :clearable="true" placeholder="请输入日期" /> -->
+          </el-form-item>
         </el-form>
       </el-scrollbar>
       <template #footer>
@@ -239,85 +327,108 @@
             <el-tag type="success" class="custom-tag">在校学生</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="本科生数">
-            {{ formData.undergraduateCount }}
+            <span v-if="formData.undergraduateCount < 0">暂无</span>
+            <span v-else>{{ formData.undergraduateCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="硕士生数">
-            {{ formData.masterStudentCount }}
+            <span v-if="formData.masterStudentCount < 0">暂无</span>
+            <span v-else>{{ formData.masterStudentCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="博士生数">
-            {{ formData.doctoralStudentCount }}
+            <span v-if="formData.doctoralStudentCount < 0">暂无</span>
+            <span v-else>{{ formData.doctoralStudentCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">课程建设</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="国家级一流课程数">
-            {{ formData.nationalFirstClassCourseCount }}
+            <span v-if="formData.nationalFirstClassCourseCount < 0">暂无</span>
+            <span v-else>{{ formData.nationalFirstClassCourseCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="省部级一流课程数">
-            {{ formData.provincialFirstClassCourseCount }}
+            <span v-if="formData.provincialFirstClassCourseCount < 0">暂无</span>
+            <span v-else>{{ formData.provincialFirstClassCourseCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">教学中心</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="国家级教学示范中心">
-            {{ formData.ationalTeachingDemonstrationCenterCount }}
+            <span v-if="formData.ationalTeachingDemonstrationCenterCount < 0">暂无</span>
+            <span v-else>{{ formData.ationalTeachingDemonstrationCenterCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="省部级教学示范中心">
-            {{ formData.provincialTeachingDemonstrationCenterCount }}
+            <span v-if="formData.provincialTeachingDemonstrationCenterCount < 0">暂无</span>
+            <span v-else>{{ formData.provincialTeachingDemonstrationCenterCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">教材建设</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="国家级规划教材数">
-            {{ formData.nationalPlanningTextbookCount }}
+            <span v-if="formData.nationalPlanningTextbookCount < 0">暂无</span>
+            <span v-else>{{ formData.nationalPlanningTextbookCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="全国优秀教材数">
-            {{ formData.nationalExcellentTextbookCount }}
+            <span v-if="formData.nationalExcellentTextbookCount < 0">暂无</span>
+            <span v-else>{{ formData.nationalExcellentTextbookCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="省级优秀教材数">
-            {{ formData.provincialExcellentTextbookCount }}
+            <span v-if="formData.provincialExcellentTextbookCount < 0">暂无</span>
+            <span v-else>{{ formData.provincialExcellentTextbookCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">学生获奖</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="学生获国际奖项数">
-            {{ formData.internationalAwardsCount }}
+            <span v-if="formData.internationalAwardsCount < 0">暂无</span>
+            <span v-else>{{ formData.internationalAwardsCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="学生获国家级奖项数">
-            {{ formData.nationalAwardsCount }}
+            <span v-if="formData.nationalAwardsCount < 0">暂无</span>
+            <span v-else>{{ formData.nationalAwardsCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="学生获省部级奖项数">
-            {{ formData.provincialAwardsCount }}
+            <span v-if="formData.provincialAwardsCount < 0">暂无</span>
+            <span v-else>{{ formData.provincialAwardsCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">学生毕业去向落实率和升学率</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="本科生平均毕业去向落实率">
-            {{ formData.undergraduateEmploymentRate }}
+            <span v-if="formData.undergraduateEmploymentRate < 0">暂无</span>
+            <span v-else>{{ formData.undergraduateEmploymentRate }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="硕士生平均毕业去向落实率">
-            {{ formData.masterEmploymentRate }}
+            <span v-if="formData.masterEmploymentRate < 0">暂无</span>
+            <span v-else>{{ formData.masterEmploymentRate }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="博士生平均毕业去向落实率">
-            {{ formData.doctoralEmploymentRate }}
+            <span v-if="formData.doctoralEmploymentRate < 0">暂无</span>
+            <span v-else>{{ formData.doctoralEmploymentRate }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">在校学生创业项目</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="项目数">
-            {{ formData.projectCount }}
+            <span v-if="formData.projectCount < 0">暂无</span>
+            <span v-else>{{ formData.projectCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="参与学生数">
-            {{ formData.participatingStudentCount }}
+            <span v-if="formData.participatingStudentCount < 0">暂无</span>
+            <span v-else>{{ formData.participatingStudentCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="">
             <el-tag type="success" class="custom-tag">本科生转专业</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="转入工科学生数">
-            {{ formData.transferredIntoEngineeringCount }}
+            <span v-if="formData.transferredIntoEngineeringCount < 0">暂无</span>
+            <span v-else>{{ formData.transferredIntoEngineeringCount }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="转出工科学生数">
-            {{ formData.transferredOutOfEngineeringCount }}
+            <span v-if="formData.transferredOutOfEngineeringCount < 0">暂无</span>
+            <span v-else>{{ formData.transferredOutOfEngineeringCount }}</span>
+          </el-descriptions-item>
+          <el-descriptions-item label="数据采集时间">
+            {{ formatDatemini(formData.acquisitionTime) }}
           </el-descriptions-item>
         </el-descriptions>
       </el-scrollbar>
@@ -337,7 +448,7 @@ import {
 } from '@/api/talentTrainingDatabase'
 
 // 全量引入格式化工具 请按需保留
-import { getDictFunc, formatDate, formatBoolean, filterDict, ReturnArrImg, onDownloadFile } from '@/utils/format'
+import { getDictFunc, formatDate, formatDatemini, formatBoolean, filterDict, ReturnArrImg, onDownloadFile } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive } from 'vue'
 import exportExcel from '@/components/exportExcel/exportExcel.vue'
@@ -346,6 +457,10 @@ import { useRouter } from 'vue-router'
 defineOptions({
   name: 'TalentTrainingDatabase'
 })
+
+const formatCount = (value) => {
+  return value < 0 ? '暂无' : value;
+};
 
 const router = useRouter();
 
@@ -357,26 +472,27 @@ const goToTtdVis = () => {
 // 自动化生成的字典（可能为空）以及字段
 const formData = ref({
   universityName: '',
-  undergraduateCount: 0,
-  masterStudentCount: 0,
-  doctoralStudentCount: 0,
-  nationalFirstClassCourseCount: 0,
-  provincialFirstClassCourseCount: 0,
-  ationalTeachingDemonstrationCenterCount: 0,
-  provincialTeachingDemonstrationCenterCount: 0,
-  nationalPlanningTextbookCount: 0,
-  nationalExcellentTextbookCount: 0,
-  provincialExcellentTextbookCount: 0,
-  internationalAwardsCount: 0,
-  nationalAwardsCount: 0,
-  provincialAwardsCount: 0,
-  undergraduateEmploymentRate: 0,
-  masterEmploymentRate: 0,
-  doctoralEmploymentRate: 0,
-  projectCount: 0,
-  participatingStudentCount: 0,
-  transferredIntoEngineeringCount: 0,
-  transferredOutOfEngineeringCount: 0,
+  undergraduateCount: -1,
+  masterStudentCount: -1,
+  doctoralStudentCount: -1,
+  nationalFirstClassCourseCount: -1,
+  provincialFirstClassCourseCount: -1,
+  ationalTeachingDemonstrationCenterCount: -1,
+  provincialTeachingDemonstrationCenterCount: -1,
+  nationalPlanningTextbookCount: -1,
+  nationalExcellentTextbookCount: -1,
+  provincialExcellentTextbookCount: -1,
+  internationalAwardsCount: -1,
+  nationalAwardsCount: -1,
+  provincialAwardsCount: -1,
+  undergraduateEmploymentRate: -1,
+  masterEmploymentRate: -1,
+  doctoralEmploymentRate: -1,
+  projectCount: -1,
+  participatingStudentCount: -1,
+  transferredIntoEngineeringCount: -1,
+  transferredOutOfEngineeringCount: -1,
+  acquisitionTime: new Date(),
 })
 
 
@@ -738,26 +854,27 @@ const closeDetailShow = () => {
   detailShow.value = false
   formData.value = {
     universityName: '',
-    undergraduateCount: 0,
-    masterStudentCount: 0,
-    doctoralStudentCount: 0,
-    nationalFirstClassCourseCount: 0,
-    provincialFirstClassCourseCount: 0,
-    ationalTeachingDemonstrationCenterCount: 0,
-    provincialTeachingDemonstrationCenterCount: 0,
-    nationalPlanningTextbookCount: 0,
-    nationalExcellentTextbookCount: 0,
-    provincialExcellentTextbookCount: 0,
-    internationalAwardsCount: 0,
-    nationalAwardsCount: 0,
-    provincialAwardsCount: 0,
-    undergraduateEmploymentRate: 0,
-    masterEmploymentRate: 0,
-    doctoralEmploymentRate: 0,
-    projectCount: 0,
-    participatingStudentCount: 0,
-    transferredIntoEngineeringCount: 0,
-    transferredOutOfEngineeringCount: 0,
+    undergraduateCount: -1,
+    masterStudentCount: -1,
+    doctoralStudentCount: -1,
+    nationalFirstClassCourseCount: -1,
+    provincialFirstClassCourseCount: -1,
+    ationalTeachingDemonstrationCenterCount: -1,
+    provincialTeachingDemonstrationCenterCount: -1,
+    nationalPlanningTextbookCount: -1,
+    nationalExcellentTextbookCount: -1,
+    provincialExcellentTextbookCount: -1,
+    internationalAwardsCount: -1,
+    nationalAwardsCount: -1,
+    provincialAwardsCount: -1,
+    undergraduateEmploymentRate: -1,
+    masterEmploymentRate: -1,
+    doctoralEmploymentRate: -1,
+    projectCount: -1,
+    participatingStudentCount: -1,
+    transferredIntoEngineeringCount: -1,
+    transferredOutOfEngineeringCount: -1,
+    acquisitionTime: new Date(),
   }
 }
 
@@ -773,26 +890,27 @@ const closeDialog = () => {
   dialogFormVisible.value = false
   formData.value = {
     universityName: '',
-    undergraduateCount: 0,
-    masterStudentCount: 0,
-    doctoralStudentCount: 0,
-    nationalFirstClassCourseCount: 0,
-    provincialFirstClassCourseCount: 0,
-    ationalTeachingDemonstrationCenterCount: 0,
-    provincialTeachingDemonstrationCenterCount: 0,
-    nationalPlanningTextbookCount: 0,
-    nationalExcellentTextbookCount: 0,
-    provincialExcellentTextbookCount: 0,
-    internationalAwardsCount: 0,
-    nationalAwardsCount: 0,
-    provincialAwardsCount: 0,
-    undergraduateEmploymentRate: 0,
-    masterEmploymentRate: 0,
-    doctoralEmploymentRate: 0,
-    projectCount: 0,
-    participatingStudentCount: 0,
-    transferredIntoEngineeringCount: 0,
-    transferredOutOfEngineeringCount: 0,
+    undergraduateCount: -1,
+    masterStudentCount: -1,
+    doctoralStudentCount: -1,
+    nationalFirstClassCourseCount: -1,
+    provincialFirstClassCourseCount: -1,
+    ationalTeachingDemonstrationCenterCount: -1,
+    provincialTeachingDemonstrationCenterCount: -1,
+    nationalPlanningTextbookCount: -1,
+    nationalExcellentTextbookCount: -1,
+    provincialExcellentTextbookCount: -1,
+    internationalAwardsCount: -1,
+    nationalAwardsCount: -1,
+    provincialAwardsCount: -1,
+    undergraduateEmploymentRate: -1,
+    masterEmploymentRate: -1,
+    doctoralEmploymentRate: -1,
+    projectCount: -1,
+    participatingStudentCount: -1,
+    transferredIntoEngineeringCount: -1,
+    transferredOutOfEngineeringCount: -1,
+    acquisitionTime: new Date(),
   }
 }
 // 弹窗确定
