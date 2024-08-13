@@ -71,8 +71,15 @@ const studentOption = computed(() => ({
   title: { text: '学生数量', left: 'center', top: '5%' },
   tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
   legend: { left: 'right', data: ['本科生', '硕士生', '博士生', '留学生'] },
-  grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-  xAxis: { type: 'category', data: schools.value.map(s => s.schoolName) },
+  grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true }, // 增加底部间距
+  xAxis: { 
+    type: 'category', 
+    data: schools.value.map(s => s.schoolName),
+    axisLabel: {
+      rotate: 30, // 旋转30度
+      fontStyle: 'italic', // 字体斜体
+    }
+  },
   yAxis: { type: 'value' },
   series: [
     { name: '本科生', type: 'bar', data: schools.value.map(s => s.undergraduateNumber) },
@@ -86,8 +93,15 @@ const staffOption = computed(() => ({
   title: { text: '教职员工数量', left: 'center', top: '5%' },
   tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
   legend: { left: 'right', data: ['教职员工', '专任教师'] },
-  grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-  xAxis: { type: 'category', data: schools.value.map(s => s.schoolName) },
+  grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true }, // 增加底部间距
+  xAxis: { 
+    type: 'category', 
+    data: schools.value.map(s => s.schoolName),
+    axisLabel: {
+      rotate: 30, // 旋转30度
+      fontStyle: 'italic', // 字体斜体
+    }
+  },
   yAxis: { type: 'value' },
   series: [
     { name: '教职员工', type: 'bar', data: schools.value.map(s => s.facultyStaffNumber) },
@@ -99,8 +113,15 @@ const programOption = computed(() => ({
   title: { text: '学术项目', left: 'center', top: '5%' },
   tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
   legend: { left: 'right', data: ['本科专业', '硕士授权点', '博士授权点', '硕士专业学位', '博士专业学位', '博士后流动站'] },
-  grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-  xAxis: { type: 'category', data: schools.value.map(s => s.schoolName) },
+  grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true }, // 增加底部间距
+  xAxis: { 
+    type: 'category', 
+    data: schools.value.map(s => s.schoolName),
+    axisLabel: {
+      rotate: 30, // 旋转30度
+      fontStyle: 'italic', // 字体斜体
+    }
+  },
   yAxis: { type: 'value' },
   series: [
     { name: '本科专业', type: 'bar', data: schools.value.map(s => s.undergraduateProgramNumber) },
@@ -120,11 +141,11 @@ const programOption = computed(() => ({
   align-items: center;
   gap: 20px;
   margin-top: 10%;
+  overflow-x: auto; /* 添加水平滚动条 */
 }
 
 .chart {
-  width: 100%;
-  /* max-width: 1000px; */
-  height: 400px;
+  width: 1200px; /* 设置足够大的宽度 */
+  height: 500px; /* 增加图表高度 */
 }
 </style>
