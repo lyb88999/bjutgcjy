@@ -25,6 +25,13 @@ SET @expert_parent_id := (
 
 INSERT INTO sys_base_menus
   (created_at, updated_at, menu_level, parent_id, path, name, hidden, component, sort, active_name, keep_alive, default_menu, title, icon, close_tab)
+SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'expertApproval', 'expertApproval', 0, 'view/beijingExpertDatabase/expertApproval/expertApproval.vue', 0, '', 0, 0, '审核台', 'finished', 0
+WHERE NOT EXISTS (
+  SELECT 1 FROM sys_base_menus WHERE path = 'expertApproval' AND deleted_at IS NULL
+);
+
+INSERT INTO sys_base_menus
+  (created_at, updated_at, menu_level, parent_id, path, name, hidden, component, sort, active_name, keep_alive, default_menu, title, icon, close_tab)
 SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'expertProfile', 'expertProfile', 0, 'view/beijingExpertDatabase/expertProfile/expertProfile.vue', 1, '', 0, 0, '专家主档', 'user', 0
 WHERE NOT EXISTS (
   SELECT 1 FROM sys_base_menus WHERE path = 'expertProfile' AND deleted_at IS NULL
