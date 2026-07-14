@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/flipped-aurora/gin-vue-admin/server/service/EngineeringEducationDatabase"
+	"github.com/flipped-aurora/gin-vue-admin/server/service/ExpertDatabase"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/example"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/system"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/util"
@@ -11,6 +12,7 @@ type ServiceGroup struct {
 	SystemServiceGroup                       system.ServiceGroup
 	ExampleServiceGroup                      example.ServiceGroup
 	EngineeringEducationDatabaseServiceGroup EngineeringEducationDatabase.ServiceGroup
+	ExpertDatabaseServiceGroup               ExpertDatabase.ServiceGroup
 	UtilServiceGroup                         util.ServiceGroup
 }
 
