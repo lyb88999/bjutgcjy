@@ -51,10 +51,12 @@ type ExpertProfile struct {
 	SubmittedBy *uint  `json:"submittedBy" form:"submittedBy" gorm:"column:submitted_by;comment:申报人用户ID;"` //申报人用户ID
 	CurrentStep string `json:"currentStep" form:"currentStep" gorm:"column:current_step;comment:当前审核环节;"`  //当前审核环节
 
-	// 推荐排序缓存字段（算分逻辑在里程碑 C 补充，这里先建列）
+	// 推荐排序缓存字段：achievement/influence/social 是与检索关键词无关的基础分，检索时按 relevance 加权；
+	// composite_score 是不带关键词的默认综合排序分，供未输入关键词时的默认排序使用
 	AchievementScore float64    `json:"achievementScore" form:"achievementScore" gorm:"column:achievement_score;comment:成果得分缓存;"` //成果得分缓存
 	InfluenceScore   float64    `json:"influenceScore" form:"influenceScore" gorm:"column:influence_score;comment:决策影响得分缓存;"`     //决策影响得分缓存
-	CompositeScore   float64    `json:"compositeScore" form:"compositeScore" gorm:"column:composite_score;comment:综合排序得分缓存;"`     //综合排序得分缓存
+	SocialScore      float64    `json:"socialScore" form:"socialScore" gorm:"column:social_score;comment:社会贡献得分缓存;"`              //社会贡献得分缓存（学术兼职、荣誉称号）
+	CompositeScore   float64    `json:"compositeScore" form:"compositeScore" gorm:"column:composite_score;comment:综合排序得分缓存;"`     //综合排序得分缓存（不含关键词相关性）
 	ScoreUpdatedAt   *time.Time `json:"scoreUpdatedAt" form:"scoreUpdatedAt" gorm:"column:score_updated_at;comment:得分缓存更新时间;"`    //得分缓存更新时间
 
 	CreatedBy uint `gorm:"column:created_by;comment:创建者"`

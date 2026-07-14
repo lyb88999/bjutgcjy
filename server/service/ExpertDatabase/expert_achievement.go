@@ -11,32 +11,58 @@ type ExpertAchievementService struct{}
 
 // CreateExpertAchievement 创建专家成果
 func (expertAchievementService *ExpertAchievementService) CreateExpertAchievement(achievement *ExpertDatabase.ExpertAchievement) (err error) {
-	return global.GVA_DB.Create(achievement).Error
+	if err = global.GVA_DB.Create(achievement).Error; err != nil {
+		return err
+	}
+	expertScoreSvc.recomputeIfPublished(achievement.ExpertId)
+	return nil
 }
 
 // DeleteExpertAchievement 删除专家成果
 func (expertAchievementService *ExpertAchievementService) DeleteExpertAchievement(ID string, userID uint) (err error) {
-	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+	var achievement ExpertDatabase.ExpertAchievement
+	if err = global.GVA_DB.Where("id = ?", ID).First(&achievement).Error; err != nil {
+		return err
+	}
+	if err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&ExpertDatabase.ExpertAchievement{}).Where("id = ?", ID).Update("deleted_by", userID).Error; err != nil {
 			return err
 		}
 		return tx.Delete(&ExpertDatabase.ExpertAchievement{}, "id = ?", ID).Error
-	})
+	}); err != nil {
+		return err
+	}
+	expertScoreSvc.recomputeIfPublished(achievement.ExpertId)
+	return nil
 }
 
 // DeleteExpertAchievementByIds 批量删除专家成果
 func (expertAchievementService *ExpertAchievementService) DeleteExpertAchievementByIds(IDs []string, deletedBy uint) (err error) {
-	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+	var achievements []ExpertDatabase.ExpertAchievement
+	if err = global.GVA_DB.Where("id in ?", IDs).Find(&achievements).Error; err != nil {
+		return err
+	}
+	if err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&ExpertDatabase.ExpertAchievement{}).Where("id in ?", IDs).Update("deleted_by", deletedBy).Error; err != nil {
 			return err
 		}
 		return tx.Where("id in ?", IDs).Delete(&ExpertDatabase.ExpertAchievement{}).Error
-	})
+	}); err != nil {
+		return err
+	}
+	for _, a := range achievements {
+		expertScoreSvc.recomputeIfPublished(a.ExpertId)
+	}
+	return nil
 }
 
 // UpdateExpertAchievement 更新专家成果
 func (expertAchievementService *ExpertAchievementService) UpdateExpertAchievement(achievement ExpertDatabase.ExpertAchievement) (err error) {
-	return global.GVA_DB.Save(&achievement).Error
+	if err = global.GVA_DB.Save(&achievement).Error; err != nil {
+		return err
+	}
+	expertScoreSvc.recomputeIfPublished(achievement.ExpertId)
+	return nil
 }
 
 // GetExpertAchievement 根据ID获取专家成果

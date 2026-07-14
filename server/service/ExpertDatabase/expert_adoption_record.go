@@ -11,32 +11,58 @@ type ExpertAdoptionRecordService struct{}
 
 // CreateExpertAdoptionRecord 创建专家决策影响记录
 func (expertAdoptionRecordService *ExpertAdoptionRecordService) CreateExpertAdoptionRecord(record *ExpertDatabase.ExpertAdoptionRecord) (err error) {
-	return global.GVA_DB.Create(record).Error
+	if err = global.GVA_DB.Create(record).Error; err != nil {
+		return err
+	}
+	expertScoreSvc.recomputeIfPublished(record.ExpertId)
+	return nil
 }
 
 // DeleteExpertAdoptionRecord 删除专家决策影响记录
 func (expertAdoptionRecordService *ExpertAdoptionRecordService) DeleteExpertAdoptionRecord(ID string, userID uint) (err error) {
-	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+	var record ExpertDatabase.ExpertAdoptionRecord
+	if err = global.GVA_DB.Where("id = ?", ID).First(&record).Error; err != nil {
+		return err
+	}
+	if err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&ExpertDatabase.ExpertAdoptionRecord{}).Where("id = ?", ID).Update("deleted_by", userID).Error; err != nil {
 			return err
 		}
 		return tx.Delete(&ExpertDatabase.ExpertAdoptionRecord{}, "id = ?", ID).Error
-	})
+	}); err != nil {
+		return err
+	}
+	expertScoreSvc.recomputeIfPublished(record.ExpertId)
+	return nil
 }
 
 // DeleteExpertAdoptionRecordByIds 批量删除专家决策影响记录
 func (expertAdoptionRecordService *ExpertAdoptionRecordService) DeleteExpertAdoptionRecordByIds(IDs []string, deletedBy uint) (err error) {
-	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+	var records []ExpertDatabase.ExpertAdoptionRecord
+	if err = global.GVA_DB.Where("id in ?", IDs).Find(&records).Error; err != nil {
+		return err
+	}
+	if err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&ExpertDatabase.ExpertAdoptionRecord{}).Where("id in ?", IDs).Update("deleted_by", deletedBy).Error; err != nil {
 			return err
 		}
 		return tx.Where("id in ?", IDs).Delete(&ExpertDatabase.ExpertAdoptionRecord{}).Error
-	})
+	}); err != nil {
+		return err
+	}
+	for _, r := range records {
+		expertScoreSvc.recomputeIfPublished(r.ExpertId)
+	}
+	return nil
 }
 
 // UpdateExpertAdoptionRecord 更新专家决策影响记录
 func (expertAdoptionRecordService *ExpertAdoptionRecordService) UpdateExpertAdoptionRecord(record ExpertDatabase.ExpertAdoptionRecord) (err error) {
-	return global.GVA_DB.Save(&record).Error
+	if err = global.GVA_DB.Save(&record).Error; err != nil {
+		return err
+	}
+	expertScoreSvc.recomputeIfPublished(record.ExpertId)
+	return nil
 }
 
 // GetExpertAdoptionRecord 根据ID获取专家决策影响记录

@@ -7,4 +7,6 @@ type ServiceGroup struct {
 	ExpertTagService
 	ExpertAcademicPositionService
 	ExpertApprovalService
+	ExpertScoreService
+	ExpertSearchService
 }
