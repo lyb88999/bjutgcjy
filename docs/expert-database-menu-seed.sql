@@ -57,3 +57,10 @@ SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'expertTag', 'expertTag', 0, 'view/
 WHERE NOT EXISTS (
   SELECT 1 FROM sys_base_menus WHERE path = 'expertTag' AND deleted_at IS NULL
 );
+
+INSERT INTO sys_base_menus
+  (created_at, updated_at, menu_level, parent_id, path, name, hidden, component, sort, active_name, keep_alive, default_menu, title, icon, close_tab)
+SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'expertSearch', 'expertSearch', 0, 'view/beijingExpertDatabase/expertSearch/expertSearch.vue', 6, '', 0, 0, '专家检索推荐', 'search', 0
+WHERE NOT EXISTS (
+  SELECT 1 FROM sys_base_menus WHERE path = 'expertSearch' AND deleted_at IS NULL
+);

@@ -6,4 +6,5 @@ type ApiGroup struct {
 	ExpertAdoptionRecordApi
 	ExpertTagApi
 	ExpertAcademicPositionApi
+	ExpertSearchApi
 }

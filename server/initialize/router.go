@@ -102,6 +102,7 @@ func Routers() *gin.Engine {
 		ExpertDatabaseRouter.InitExpertAdoptionRecordRouter(PrivateGroup)
 		ExpertDatabaseRouter.InitExpertTagRouter(PrivateGroup)
 		ExpertDatabaseRouter.InitExpertAcademicPositionRouter(PrivateGroup)
+		ExpertDatabaseRouter.InitExpertSearchRouter(PrivateGroup)
 	}
 	{
 		utilRouter := router.RouterGroupApp.Util
