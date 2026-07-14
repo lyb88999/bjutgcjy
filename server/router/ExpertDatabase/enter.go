@@ -6,4 +6,5 @@ type RouterGroup struct {
 	ExpertAdoptionRecordRouter
 	ExpertTagRouter
 	ExpertAcademicPositionRouter
+	ExpertApprovalRouter
 }
