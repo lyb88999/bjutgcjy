@@ -1,8 +1,8 @@
 <template>
   <div id="userLayout" class="w-full h-full relative">
     <div
-      class="rounded-lg flex items-center justify-evenly w-full h-full bg-white md:w-screen md:h-screen md:bg-[#194bfb]">
-      <div class="md:bg-[rgb(161,191,244)] w-3/5 w-10/12 h-full flex items-center justify-evenly">
+      class="rounded-lg flex items-center justify-evenly w-full h-full bg-white md:w-screen md:h-screen md:bg-[#7a1f2e]">
+      <div class="md:bg-[rgb(232,206,206)] w-3/5 w-10/12 h-full flex items-center justify-evenly">
         <div class="oblique h-[130%] w-3/5 bg-white transform -rotate-12 absolute -ml-52" />
         <!-- 分割斜块 -->
         <div class="z-[999] pt-12 pb-10 md:w-96 w-full  rounded-lg flex flex-col justify-between box-border">
@@ -13,7 +13,7 @@
             </div>
             <div class="mb-9">
               <p class="text-center text-3xl font-bold">{{ $GIN_VUE_ADMIN.appName }}</p>
-              <p class="text-center text-sm font-normal text-gray-500 mt-2.5">北京工业大学采集点
+              <p class="text-center text-sm font-normal text-gray-500 mt-2.5">智库专家资源管理与推荐平台
               </p>
             </div>
             <el-form ref="loginForm" :model="loginFormData" :rules="rules" :validate-on-rule-change="false" @keyup.enter="submitForm">
@@ -74,7 +74,7 @@
           </div>
         </div>
       </div>
-      <div class="hidden md:block w-1/2 h-full float-right bg-[#194bfb]"><img class="h-full" src="@/assets/banner.jpg"
+      <div class="hidden md:block w-1/2 h-full float-right bg-[#7a1f2e]"><img class="h-full" src="@/assets/banner.jpg"
           alt="banner"></div>
     </div>
 
