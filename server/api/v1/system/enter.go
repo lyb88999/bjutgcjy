@@ -18,10 +18,12 @@ type ApiGroup struct {
 	DictionaryDetailApi
 	AuthorityBtnApi
 	SysExportTemplateApi
+	OrganizationApi
 }
 
 var (
 	apiService              = service.ServiceGroupApp.SystemServiceGroup.ApiService
+	organizationService     = service.ServiceGroupApp.SystemServiceGroup.OrganizationService
 	jwtService              = service.ServiceGroupApp.SystemServiceGroup.JwtService
 	menuService             = service.ServiceGroupApp.SystemServiceGroup.MenuService
 	userService             = service.ServiceGroupApp.SystemServiceGroup.UserService
