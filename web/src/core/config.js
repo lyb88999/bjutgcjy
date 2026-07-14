@@ -3,7 +3,7 @@
  */
 
 const config = {
-  appName: '工程教育发展监测数据采集',
+  appName: '北京市哲学社会科学专家库',
   appLogo: '/assets/logoNew.png',
   showViteLogo: true,
   logs: [],
