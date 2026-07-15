@@ -102,13 +102,19 @@ func (s *ExpertApprovalService) OrgReject(expertID uint, operatorID uint, opinio
 
 // CityApprove 市级审核通过：待市级审核 -> 已发布，正式收录进入检索排序范围
 func (s *ExpertApprovalService) CityApprove(expertID uint, operatorID uint) error {
-	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+	err := global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		var profile ExpertDatabase.ExpertProfile
 		if err := tx.Where("id = ?", expertID).First(&profile).Error; err != nil {
 			return err
 		}
 		return s.transition(tx, &profile, []string{StatusPendingCityReview}, StatusPublished, operatorID, "")
 	})
+	if err != nil {
+		return err
+	}
+	// 首次发布，得分缓存此前从未算过，这里立即算一次，不用等每日兜底任务
+	expertScoreSvc.recomputeIfPublished(expertID)
+	return nil
 }
 
 // CityReject 市级审核退回：待市级审核 -> 市级已退回，需填写意见
