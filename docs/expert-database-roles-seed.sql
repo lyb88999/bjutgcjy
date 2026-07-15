@@ -8,10 +8,12 @@
 -- 使用后续步骤：在"用户管理"里把具体用户的角色改成对应角色、并设置"所属单位"
 -- （单位审核员必须设置所属单位，否则 assertSameOrg 会拒绝所有审核操作）。
 
+-- parent_id 必须是 0（顶级角色），不能是 NULL——角色树构建逻辑只认 0，NULL 会导致这些角色
+-- 从"用户管理"的角色选择器里彻底消失（即使 sys_authorities 表里已经有记录）。
 INSERT IGNORE INTO sys_authorities (created_at, updated_at, authority_id, authority_name, parent_id, default_router) VALUES
-  (NOW(3), NOW(3), 9001, '专家库-个人申报人', NULL, 'dashboard'),
-  (NOW(3), NOW(3), 9002, '专家库-单位审核员', NULL, 'dashboard'),
-  (NOW(3), NOW(3), 9003, '专家库-市级审核员', NULL, 'dashboard');
+  (NOW(3), NOW(3), 9001, '专家库-个人申报人', 0, 'dashboard'),
+  (NOW(3), NOW(3), 9002, '专家库-单位审核员', 0, 'dashboard'),
+  (NOW(3), NOW(3), 9003, '专家库-市级审核员', 0, 'dashboard');
 
 -- 菜单：三个角色都给仪表盘 + 专家库全树，具体操作权限由 Casbin 控制
 INSERT IGNORE INTO sys_authority_menus (sys_base_menu_id, sys_authority_authority_id)
