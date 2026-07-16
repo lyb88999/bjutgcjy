@@ -42,6 +42,21 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5)
 SELECT 'p', a.authority_id, '/expertDatabase/search', 'GET', '', '', ''
 FROM (SELECT 9001 AS authority_id UNION SELECT 9002 UNION SELECT 9003) a;
 
+-- 审核台是三个角色共用的同一个页面：一进页面就会请求"我发起的"（myDrafts），
+-- 点开"待我审核的"tab 会同时请求单位待审（pendingOrgReview）和市级待审（pendingCityReview）——
+-- 不管当前角色是不是真的用得上那部分数据。三个角色都必须能读这三个只读列表接口，
+-- 否则某个角色一进审核台或者切 tab 就会先弹一次"权限不足"，即使他真正需要看的那部分数据是正常的。
+-- （expert_approval.go 的 GetPendingOrgReview 对没有关联单位的账号会返回空列表而不是报错，
+-- 所以这里放开权限是安全的，不会导致越权查看其他单位的数据。）
+INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5)
+SELECT 'p', a.authority_id, ep.path, 'GET', '', '', ''
+FROM (SELECT 9001 AS authority_id UNION SELECT 9002 UNION SELECT 9003) a
+JOIN (
+  SELECT '/expertApproval/myDrafts' AS path UNION ALL
+  SELECT '/expertApproval/pendingOrgReview' UNION ALL
+  SELECT '/expertApproval/pendingCityReview'
+) ep ON 1=1;
+
 -- 9001 专家库-个人申报人：维护自己的专家档案与成果/影响/兼职记录，提交审核
 INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','9001','/expertProfile/createExpertProfile','POST','','',''),

@@ -196,13 +196,15 @@ func (s *ExpertApprovalService) GetMyDrafts(userID uint, page commonRequest.Page
 }
 
 // GetPendingOrgReview 获取待本单位审核的专家档案列表（对应前端"待我审核的"，单位审核员视角）
+// 审核台是所有角色共用的同一个页面，市级审核员/个人申报人等没有关联单位的账号也会触发这个查询，
+// 未关联单位时返回空列表而不是报错，避免这类角色一打开"待我审核的"tab 就看到误导性的错误提示
 func (s *ExpertApprovalService) GetPendingOrgReview(userID uint, page commonRequest.PageInfo) ([]ExpertDatabase.ExpertProfile, int64, error) {
 	orgId, err := s.getUserOrgId(userID)
 	if err != nil {
 		return nil, 0, err
 	}
 	if orgId == nil {
-		return nil, 0, errors.New("当前用户未关联单位，无法查看待审核列表")
+		return []ExpertDatabase.ExpertProfile{}, 0, nil
 	}
 	return s.listByFilter(func(db *gorm.DB) *gorm.DB {
 		return db.Where("org_id = ? AND status = ?", orgId, StatusPendingOrgReview)
