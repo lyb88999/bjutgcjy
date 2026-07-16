@@ -93,25 +93,40 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','9001','/expertApproval/myDrafts','GET','','',''),
 ('p','9001','/expertApproval/getApprovalLogList','GET','','','');
 
--- 9002 专家库-单位审核员：只读专家档案 + 本单位审核操作（跨单位由后端 assertSameOrg 拦截）
+-- 9002 专家库-单位审核员：只读专家档案（含成果/决策影响/学术兼职/标签的列表+详情）+ 本单位审核操作
+-- （跨单位由后端 assertSameOrg 拦截）。故意不给 create/update/delete —— 审核员不应该能改动
+-- 正在审核的申报人自己的成果数据，否则"审核通过"就失去意义了。
 INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','9002','/expertProfile/findExpertProfile','GET','','',''),
 ('p','9002','/expertProfile/getExpertProfileList','GET','','',''),
+('p','9002','/expertAchievement/findExpertAchievement','GET','','',''),
 ('p','9002','/expertAchievement/getExpertAchievementList','GET','','',''),
+('p','9002','/expertAdoptionRecord/findExpertAdoptionRecord','GET','','',''),
 ('p','9002','/expertAdoptionRecord/getExpertAdoptionRecordList','GET','','',''),
+('p','9002','/expertAcademicPosition/findExpertAcademicPosition','GET','','',''),
 ('p','9002','/expertAcademicPosition/getExpertAcademicPositionList','GET','','',''),
+('p','9002','/expertTag/findExpertTag','GET','','',''),
+('p','9002','/expertTag/getExpertTagList','GET','','',''),
+('p','9002','/expertTag/getExpertTagsByExpertId','GET','','',''),
 ('p','9002','/expertApproval/pendingOrgReview','GET','','',''),
 ('p','9002','/expertApproval/orgApprove','POST','','',''),
 ('p','9002','/expertApproval/orgReject','POST','','',''),
 ('p','9002','/expertApproval/getApprovalLogList','GET','','','');
 
--- 9003 专家库-市级审核员：只读专家档案 + 市级审核操作（不限单位）
+-- 9003 专家库-市级审核员：只读专家档案（含成果/决策影响/学术兼职/标签的列表+详情）+ 市级审核操作
+-- （不限单位）。同样故意不给 create/update/delete，理由同 9002。
 INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','9003','/expertProfile/findExpertProfile','GET','','',''),
 ('p','9003','/expertProfile/getExpertProfileList','GET','','',''),
+('p','9003','/expertAchievement/findExpertAchievement','GET','','',''),
 ('p','9003','/expertAchievement/getExpertAchievementList','GET','','',''),
+('p','9003','/expertAdoptionRecord/findExpertAdoptionRecord','GET','','',''),
 ('p','9003','/expertAdoptionRecord/getExpertAdoptionRecordList','GET','','',''),
+('p','9003','/expertAcademicPosition/findExpertAcademicPosition','GET','','',''),
 ('p','9003','/expertAcademicPosition/getExpertAcademicPositionList','GET','','',''),
+('p','9003','/expertTag/findExpertTag','GET','','',''),
+('p','9003','/expertTag/getExpertTagList','GET','','',''),
+('p','9003','/expertTag/getExpertTagsByExpertId','GET','','',''),
 ('p','9003','/expertApproval/pendingCityReview','GET','','',''),
 ('p','9003','/expertApproval/cityApprove','POST','','',''),
 ('p','9003','/expertApproval/cityReject','POST','','',''),
