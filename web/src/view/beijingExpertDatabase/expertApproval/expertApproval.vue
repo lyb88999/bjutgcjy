@@ -8,8 +8,9 @@
           <el-table-column align="left" label="审核状态" prop="status" width="140">
             <template #default="scope">{{ statusLabel(scope.row.status) }}</template>
           </el-table-column>
-          <el-table-column align="left" label="操作" fixed="right" width="180">
+          <el-table-column align="left" label="操作" fixed="right" width="240">
             <template #default="scope">
+              <el-button type="primary" link @click="viewDetail(scope.row)">查看详情</el-button>
               <el-button
                 v-if="['draft', 'org_rejected', 'city_rejected'].includes(scope.row.status)"
                 type="primary" link @click="doSubmit(scope.row)"
@@ -30,8 +31,9 @@
           <el-table-column align="left" label="姓名" prop="name" width="120" />
           <el-table-column align="left" label="所在单位" prop="unitName" width="160" />
           <el-table-column align="left" label="专业技术职称" prop="techTitle" width="120" />
-          <el-table-column align="left" label="操作" fixed="right" width="200">
+          <el-table-column align="left" label="操作" fixed="right" width="260">
             <template #default="scope">
+              <el-button type="primary" link @click="viewDetail(scope.row)">查看详情</el-button>
               <el-button type="primary" link @click="orgApprove(scope.row)">通过</el-button>
               <el-button type="danger" link @click="openReject(scope.row, 'org')">退回</el-button>
               <el-button type="primary" link @click="openLog(scope.row)">审核记录</el-button>
@@ -43,8 +45,9 @@
           <el-table-column align="left" label="姓名" prop="name" width="120" />
           <el-table-column align="left" label="所在单位" prop="unitName" width="160" />
           <el-table-column align="left" label="专业技术职称" prop="techTitle" width="120" />
-          <el-table-column align="left" label="操作" fixed="right" width="200">
+          <el-table-column align="left" label="操作" fixed="right" width="260">
             <template #default="scope">
+              <el-button type="primary" link @click="viewDetail(scope.row)">查看详情</el-button>
               <el-button type="primary" link @click="cityApprove(scope.row)">通过</el-button>
               <el-button type="danger" link @click="openReject(scope.row, 'city')">退回</el-button>
               <el-button type="primary" link @click="openLog(scope.row)">审核记录</el-button>
@@ -94,10 +97,16 @@ import {
 import { formatDate } from '@/utils/format'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 defineOptions({
   name: 'ExpertApproval'
 })
+
+const router = useRouter()
+const viewDetail = (row) => {
+  router.push({ name: 'expertProfileDetail', params: { id: row.ID } })
+}
 
 const statusMap = {
   draft: '草稿',

@@ -20,7 +20,7 @@ INSERT IGNORE INTO sys_authority_menus (sys_base_menu_id, sys_authority_authorit
 SELECT m.id, a.authority_id
 FROM sys_base_menus m
 JOIN (SELECT 9001 AS authority_id UNION SELECT 9002 UNION SELECT 9003) a ON 1=1
-WHERE m.id = 1 OR m.path IN ('expertDatabase','expertApproval','expertProfile','expertAchievement','expertAdoptionRecord','expertAcademicPosition','expertTag','expertSearch')
+WHERE m.id = 1 OR m.path IN ('expertDatabase','expertApproval','expertProfile','expertAchievement','expertAdoptionRecord','expertAcademicPosition','expertTag','expertSearch','expertProfileDetail/:id')
   AND m.deleted_at IS NULL;
 
 -- 每个角色都需要的登录/基础接口（对应 systemReq.DefaultCasbin()，新建角色的标准最小权限集）

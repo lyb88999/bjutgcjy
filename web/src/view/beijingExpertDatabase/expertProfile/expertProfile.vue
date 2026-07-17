@@ -116,21 +116,6 @@
         </div>
       </template>
     </el-dialog>
-
-    <el-drawer v-model="detailShow" size="500" :before-close="closeDetailShow" title="专家详情">
-      <el-descriptions :column="1" border>
-        <el-descriptions-item label="姓名">{{ formData.name }}</el-descriptions-item>
-        <el-descriptions-item label="所在单位">{{ formData.unitName }}</el-descriptions-item>
-        <el-descriptions-item label="专业技术职称">{{ formData.techTitle }}</el-descriptions-item>
-        <el-descriptions-item label="一级学科">{{ formData.disciplineL1 }}</el-descriptions-item>
-        <el-descriptions-item label="研究方向">{{ formData.researchDirections }}</el-descriptions-item>
-        <el-descriptions-item label="研究关键词">{{ formData.researchKeywords }}</el-descriptions-item>
-        <el-descriptions-item label="审核状态">{{ statusLabel(formData.status) }}</el-descriptions-item>
-        <el-descriptions-item label="成果得分">{{ formData.achievementScore }}</el-descriptions-item>
-        <el-descriptions-item label="决策影响得分">{{ formData.influenceScore }}</el-descriptions-item>
-        <el-descriptions-item label="综合排序得分">{{ formData.compositeScore }}</el-descriptions-item>
-      </el-descriptions>
-    </el-drawer>
   </div>
 </template>
 
@@ -147,10 +132,13 @@ import {
 import { formatDate } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 
 defineOptions({
   name: 'ExpertProfile'
 })
+
+const router = useRouter()
 
 const statusOptions = [
   { label: '草稿', value: 'draft' },
@@ -306,19 +294,9 @@ const deleteExpertProfileFunc = async (row) => {
 }
 
 const dialogFormVisible = ref(false)
-const detailShow = ref(false)
 
-const getDetails = async (row) => {
-  const res = await findExpertProfile({ ID: row.ID })
-  if (res.code === 0) {
-    formData.value = res.data.reExpertProfile
-    detailShow.value = true
-  }
-}
-
-const closeDetailShow = () => {
-  detailShow.value = false
-  formData.value = initFormData()
+const getDetails = (row) => {
+  router.push({ name: 'expertProfileDetail', params: { id: row.ID } })
 }
 
 const openDialog = () => {

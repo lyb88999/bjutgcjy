@@ -71,3 +71,14 @@ SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'expertSearch', 'expertSearch', 0, 
 WHERE NOT EXISTS (
   SELECT 1 FROM sys_base_menus WHERE path = 'expertSearch' AND deleted_at IS NULL
 );
+
+-- 专家详情整合页（专家主档"详情"按钮 + 审核台"查看详情"跳转的目标页，一次性展示背景信息
+-- 加上研究成果/决策影响记录/学术兼职三个 Tab，不用再手动记专家 ID 去另外三个独立页面筛选）。
+-- hidden=1：不出现在侧边栏，仅作为 sys_base_menu 里的一条路由记录供 vue-router 识别，
+-- 参照本仓库已有的 autoCodeEdit/:id 这条隐藏参数路由的写法。
+INSERT INTO sys_base_menus
+  (created_at, updated_at, menu_level, parent_id, path, name, hidden, component, sort, active_name, keep_alive, default_menu, title, icon, close_tab)
+SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'expertProfileDetail/:id', 'expertProfileDetail', 1, 'view/beijingExpertDatabase/expertProfile/expertProfileDetail.vue', 7, '', 0, 0, '专家详情', 'user', 0
+WHERE NOT EXISTS (
+  SELECT 1 FROM sys_base_menus WHERE path = 'expertProfileDetail/:id' AND deleted_at IS NULL
+);

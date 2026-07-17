@@ -2,10 +2,10 @@
 -- 使用前提：docs/expert-database-menu-seed.sql 已经执行过，sys_base_menus 里已经有专家库的 8 个菜单行。
 -- 如果你的环境里"超级管理员"不是 authority_id = 1，把下面所有的 1 换成实际的角色ID即可。
 
--- 菜单权限：把专家库父菜单 + 7 个子菜单都挂给该角色
+-- 菜单权限：把专家库父菜单 + 7 个子菜单 + 隐藏的专家详情整合页都挂给该角色
 INSERT IGNORE INTO sys_authority_menus (sys_base_menu_id, sys_authority_authority_id)
 SELECT id, 1 FROM sys_base_menus
-WHERE path IN ('expertDatabase','expertApproval','expertProfile','expertAchievement','expertAdoptionRecord','expertAcademicPosition','expertTag','expertSearch')
+WHERE path IN ('expertDatabase','expertApproval','expertProfile','expertAchievement','expertAdoptionRecord','expertAcademicPosition','expertTag','expertSearch','expertProfileDetail/:id')
   AND deleted_at IS NULL;
 
 -- 接口权限：Casbin 策略（v0=角色ID, v1=接口路径, v2=HTTP方法）
