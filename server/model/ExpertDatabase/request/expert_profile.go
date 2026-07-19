@@ -11,6 +11,7 @@ type ExpertProfileSearch struct {
 	EndCreatedAt   *time.Time `json:"endCreatedAt" form:"endCreatedAt"`
 
 	Name             string `json:"name" form:"name"`
+	UnitName         string `json:"unitName" form:"unitName"`
 	TechTitle        string `json:"techTitle" form:"techTitle"`
 	DisciplineL1     string `json:"disciplineL1" form:"disciplineL1"`
 	DisciplineL2     string `json:"disciplineL2" form:"disciplineL2"`

@@ -23,15 +23,6 @@ const (
 
 type ExpertApprovalService struct{}
 
-// getUserOrgId 查询用户所属单位ID，用于单位审核环节的数据域校验
-func (s *ExpertApprovalService) getUserOrgId(userID uint) (*uint, error) {
-	var user system.SysUser
-	if err := global.GVA_DB.Where("id = ?", userID).First(&user).Error; err != nil {
-		return nil, err
-	}
-	return user.OrgId, nil
-}
-
 // transition 校验来源状态是否允许流转、落库新状态、写审核日志，是所有流转方法的共用核心
 func (s *ExpertApprovalService) transition(tx *gorm.DB, profile *ExpertDatabase.ExpertProfile, allowedFrom []string, to string, operatorID uint, opinion string) error {
 	allowed := false
@@ -65,7 +56,14 @@ func (s *ExpertApprovalService) Submit(expertID uint, operatorID uint) error {
 		if err := tx.Where("id = ?", expertID).First(&profile).Error; err != nil {
 			return err
 		}
-		return s.transition(tx, &profile, []string{StatusDraft, StatusOrgRejected, StatusCityRejected}, StatusPendingOrgReview, operatorID, "")
+		// 待单位审核列表按 org_id 精确匹配审核员所属单位，没有 org_id 的档案如果按常规流程进
+		// "待单位审核"，会静默卡死在这一步且无人能审。这类档案没有单位可以归口，跳过单位审核，
+		// 直接进入市级审核——市级审核不按单位限定范围，市级审核员和管理员都能处理，流程不会被卡住。
+		target := StatusPendingOrgReview
+		if profile.OrgId == nil {
+			target = StatusPendingCityReview
+		}
+		return s.transition(tx, &profile, []string{StatusDraft, StatusOrgRejected, StatusCityRejected}, target, operatorID, "")
 	})
 }
 
@@ -160,13 +158,21 @@ func (s *ExpertApprovalService) AdminSetStatus(expertID uint, status string, ope
 	})
 }
 
-// assertSameOrg 校验操作人所属单位与专家档案的申报单位一致，防止跨单位审核
+// superAdminAuthorityId 系统自带的超级管理员角色ID，管理员账号本身不挂靠任何单位，
+// 审核流程里的"本单位"校验对它天然无法满足——管理员理应有全权限，不能被单位归口卡住
+const superAdminAuthorityId = 1
+
+// assertSameOrg 校验操作人所属单位与专家档案的申报单位一致，防止跨单位审核；
+// 超级管理员账号跳过这层校验，可以审核任意单位提交的档案
 func (s *ExpertApprovalService) assertSameOrg(operatorID uint, profileOrgId *uint) error {
-	operatorOrgId, err := s.getUserOrgId(operatorID)
-	if err != nil {
+	var operator system.SysUser
+	if err := global.GVA_DB.Where("id = ?", operatorID).First(&operator).Error; err != nil {
 		return err
 	}
-	if operatorOrgId == nil || profileOrgId == nil || *operatorOrgId != *profileOrgId {
+	if operator.AuthorityId == superAdminAuthorityId {
+		return nil
+	}
+	if operator.OrgId == nil || profileOrgId == nil || *operator.OrgId != *profileOrgId {
 		return errors.New("无权审核其他单位提交的专家档案")
 	}
 	return nil
@@ -180,7 +186,9 @@ func (s *ExpertApprovalService) listByFilter(filter func(*gorm.DB) *gorm.DB, pag
 	if err = db.Count(&total).Error; err != nil {
 		return
 	}
-	db = db.Order("id desc")
+	// 按更新时间倒序，不是按创建时间——申报人编辑完草稿后，那条记录应该排到"我发起的"最前面，
+	// 方便马上找到并提交，而不是淹没在一长串按创建顺序排列的旧记录里
+	db = db.Order("updated_at desc")
 	if limit != 0 {
 		db = db.Limit(limit).Offset(offset)
 	}
@@ -197,17 +205,24 @@ func (s *ExpertApprovalService) GetMyDrafts(userID uint, page commonRequest.Page
 
 // GetPendingOrgReview 获取待本单位审核的专家档案列表（对应前端"待我审核的"，单位审核员视角）
 // 审核台是所有角色共用的同一个页面，市级审核员/个人申报人等没有关联单位的账号也会触发这个查询，
-// 未关联单位时返回空列表而不是报错，避免这类角色一打开"待我审核的"tab 就看到误导性的错误提示
+// 未关联单位时返回空列表而不是报错，避免这类角色一打开"待我审核的"tab 就看到误导性的错误提示。
+// 超级管理员是例外：它本身不挂靠任何单位，但理应能看到所有单位的待审记录（呼应 assertSameOrg
+// 里对超级管理员的放行），否则就算能调用 orgApprove 接口，页面上也永远看不到能审的东西
 func (s *ExpertApprovalService) GetPendingOrgReview(userID uint, page commonRequest.PageInfo) ([]ExpertDatabase.ExpertProfile, int64, error) {
-	orgId, err := s.getUserOrgId(userID)
-	if err != nil {
+	var operator system.SysUser
+	if err := global.GVA_DB.Where("id = ?", userID).First(&operator).Error; err != nil {
 		return nil, 0, err
 	}
-	if orgId == nil {
+	if operator.AuthorityId == superAdminAuthorityId {
+		return s.listByFilter(func(db *gorm.DB) *gorm.DB {
+			return db.Where("status = ?", StatusPendingOrgReview)
+		}, page)
+	}
+	if operator.OrgId == nil {
 		return []ExpertDatabase.ExpertProfile{}, 0, nil
 	}
 	return s.listByFilter(func(db *gorm.DB) *gorm.DB {
-		return db.Where("org_id = ? AND status = ?", orgId, StatusPendingOrgReview)
+		return db.Where("org_id = ? AND status = ?", operator.OrgId, StatusPendingOrgReview)
 	}, page)
 }
 

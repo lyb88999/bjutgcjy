@@ -52,7 +52,7 @@
     <div class="gva-table-box">
       <el-tabs v-model="activeTab">
         <el-tab-pane label="研究成果" name="achievement">
-          <div class="gva-btn-list">
+          <div v-if="!isReadOnlyReviewer" class="gva-btn-list">
             <el-button type="primary" icon="plus" @click="openAchievementDialog">新增</el-button>
           </div>
           <el-table :data="achievementData" style="width: 100%">
@@ -60,7 +60,7 @@
             <el-table-column align="left" label="成果名称" prop="title" min-width="200" show-overflow-tooltip />
             <el-table-column align="left" label="成果级别" prop="level" width="100" />
             <el-table-column align="left" label="发表/立项单位" prop="publishOrg" width="160" />
-            <el-table-column align="left" label="操作" fixed="right" width="150">
+            <el-table-column v-if="!isReadOnlyReviewer" align="left" label="操作" fixed="right" width="150">
               <template #default="scope">
                 <el-button type="primary" link icon="edit" @click="openAchievementDialog(scope.row)">编辑</el-button>
                 <el-button type="primary" link icon="delete" @click="deleteAchievement(scope.row)">删除</el-button>
@@ -70,14 +70,14 @@
         </el-tab-pane>
 
         <el-tab-pane label="决策影响记录" name="adoption">
-          <div class="gva-btn-list">
+          <div v-if="!isReadOnlyReviewer" class="gva-btn-list">
             <el-button type="primary" icon="plus" @click="openAdoptionDialog">新增</el-button>
           </div>
           <el-table :data="adoptionData" style="width: 100%">
             <el-table-column align="left" label="采纳类型" prop="adoptionType" width="180" />
             <el-table-column align="left" label="采纳/批示单位级别" prop="adoptingUnitLevel" width="140" />
             <el-table-column align="left" label="采纳/批示单位名称" prop="adoptingUnitName" min-width="180" show-overflow-tooltip />
-            <el-table-column align="left" label="操作" fixed="right" width="150">
+            <el-table-column v-if="!isReadOnlyReviewer" align="left" label="操作" fixed="right" width="150">
               <template #default="scope">
                 <el-button type="primary" link icon="edit" @click="openAdoptionDialog(scope.row)">编辑</el-button>
                 <el-button type="primary" link icon="delete" @click="deleteAdoption(scope.row)">删除</el-button>
@@ -87,14 +87,14 @@
         </el-tab-pane>
 
         <el-tab-pane label="学术兼职" name="position">
-          <div class="gva-btn-list">
+          <div v-if="!isReadOnlyReviewer" class="gva-btn-list">
             <el-button type="primary" icon="plus" @click="openPositionDialog">新增</el-button>
           </div>
           <el-table :data="positionData" style="width: 100%">
             <el-table-column align="left" label="兼职类型" prop="positionType" width="180" />
             <el-table-column align="left" label="任职机构名称" prop="organizationName" min-width="180" show-overflow-tooltip />
             <el-table-column align="left" label="担任职务" prop="positionTitle" width="140" />
-            <el-table-column align="left" label="操作" fixed="right" width="150">
+            <el-table-column v-if="!isReadOnlyReviewer" align="left" label="操作" fixed="right" width="150">
               <template #default="scope">
                 <el-button type="primary" link icon="edit" @click="openPositionDialog(scope.row)">编辑</el-button>
                 <el-button type="primary" link icon="delete" @click="deletePosition(scope.row)">删除</el-button>
@@ -195,8 +195,9 @@ import {
 } from '@/api/expertAcademicPosition'
 
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useUserStore } from '@/pinia/modules/user'
 
 defineOptions({
   name: 'ExpertProfileDetail'
@@ -205,6 +206,10 @@ defineOptions({
 const route = useRoute()
 const router = useRouter()
 const expertId = Number(route.params.id)
+const userStore = useUserStore()
+// 单位审核员/市级审核员在后端只有只读权限，写操作一定会被 Casbin 拒绝——
+// 前端直接不展示这些按钮，避免审核员填完一整张表单才发现白填了
+const isReadOnlyReviewer = computed(() => [9002, 9003].includes(userStore.userInfo.authorityId))
 
 const statusMap = {
   draft: '草稿',

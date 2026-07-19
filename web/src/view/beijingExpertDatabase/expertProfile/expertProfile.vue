@@ -5,6 +5,9 @@
         <el-form-item label="姓名" prop="name">
           <el-input v-model="searchInfo.name" placeholder="搜索条件" />
         </el-form-item>
+        <el-form-item label="所在单位" prop="unitName">
+          <el-input v-model="searchInfo.unitName" placeholder="搜索条件" />
+        </el-form-item>
         <el-form-item label="职称" prop="techTitle">
           <el-input v-model="searchInfo.techTitle" placeholder="搜索条件" />
         </el-form-item>
@@ -26,13 +29,13 @@
       </el-form>
     </div>
     <div class="gva-table-box">
-      <div class="gva-btn-list">
+      <div v-if="!isReadOnlyReviewer" class="gva-btn-list">
         <el-button type="primary" icon="plus" @click="openDialog">新增</el-button>
         <el-button icon="delete" style="margin-left: 10px;" :disabled="!multipleSelection.length" @click="onDelete">删除</el-button>
       </div>
       <el-table ref="multipleTable" style="width: 100%" tooltip-effect="dark" :data="tableData" row-key="ID"
         @selection-change="handleSelectionChange">
-        <el-table-column type="selection" fixed width="55" />
+        <el-table-column v-if="!isReadOnlyReviewer" type="selection" fixed width="55" />
         <el-table-column align="left" label="姓名" prop="name" width="100" />
         <el-table-column align="left" label="所在单位" prop="unitName" width="160" />
         <el-table-column align="left" label="专业技术职称" prop="techTitle" width="120" />
@@ -48,8 +51,14 @@
         <el-table-column align="left" label="操作" fixed="right" min-width="140">
           <template #default="scope">
             <el-button type="primary" link class="table-button" @click="getDetails(scope.row)">详情</el-button>
-            <el-button type="primary" link icon="edit" @click="updateExpertProfileFunc(scope.row)">编辑</el-button>
-            <el-button type="primary" link icon="delete" @click="deleteRow(scope.row)">删除</el-button>
+            <template v-if="!isReadOnlyReviewer">
+              <el-button type="primary" link icon="edit" @click="updateExpertProfileFunc(scope.row)">编辑</el-button>
+              <el-button
+                v-if="['draft', 'org_rejected', 'city_rejected'].includes(scope.row.status)"
+                type="primary" link @click="submitForReview(scope.row)"
+              >提交审核</el-button>
+              <el-button type="primary" link icon="delete" @click="deleteRow(scope.row)">删除</el-button>
+            </template>
           </template>
         </el-table-column>
       </el-table>
@@ -128,17 +137,23 @@ import {
   findExpertProfile,
   getExpertProfileList
 } from '@/api/expertProfile'
+import { submitExpertProfile } from '@/api/expertApproval'
 
 import { formatDate } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/pinia/modules/user'
 
 defineOptions({
   name: 'ExpertProfile'
 })
 
 const router = useRouter()
+const userStore = useUserStore()
+// 单位审核员/市级审核员在后端只有只读权限，写操作一定会被 Casbin 拒绝——
+// 前端直接不展示这些按钮，避免审核员填完一整张表单才发现白填了
+const isReadOnlyReviewer = computed(() => [9002, 9003].includes(userStore.userInfo.authorityId))
 
 const statusOptions = [
   { label: '草稿', value: 'draft' },
@@ -289,6 +304,15 @@ const deleteExpertProfileFunc = async (row) => {
     if (tableData.value.length === 1 && page.value > 1) {
       page.value--
     }
+    getTableData()
+  }
+}
+
+// 改完信息后不用再跑一趟审核台才能提交——编辑完在这里就能直接提交审核
+const submitForReview = async (row) => {
+  const res = await submitExpertProfile({ expertId: row.ID })
+  if (res.code === 0) {
+    ElMessage({ type: 'success', message: '提交成功' })
     getTableData()
   }
 }

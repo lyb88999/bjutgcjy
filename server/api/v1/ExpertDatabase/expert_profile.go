@@ -138,7 +138,7 @@ func (expertProfileApi *ExpertProfileApi) GetExpertProfileList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	if list, total, err := expertProfileService.GetExpertProfileInfoList(pageInfo); err != nil {
+	if list, total, err := expertProfileService.GetExpertProfileInfoList(pageInfo, utils.GetUserID(c)); err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败", c)
 	} else {

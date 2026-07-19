@@ -4,7 +4,14 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase"
 	ExpertDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"gorm.io/gorm"
+)
+
+// 单位审核员/市级审核员角色ID，专家主档列表对它们做数据域收敛，见 GetExpertProfileInfoList
+const (
+	authorityOrgReviewer  = 9002
+	authorityCityReviewer = 9003
 )
 
 type ExpertProfileService struct{}
@@ -46,17 +53,40 @@ func (expertProfileService *ExpertProfileService) GetExpertProfile(ID string) (p
 }
 
 // GetExpertProfileInfoList 分页获取专家主档列表
-func (expertProfileService *ExpertProfileService) GetExpertProfileInfoList(info ExpertDatabaseReq.ExpertProfileSearch) (list []ExpertDatabase.ExpertProfile, total int64, err error) {
+//
+// 单位审核员/市级审核员在审核台之外，还能通过这个列表页查到全库专家——原先没有按角色收敛，
+// 相当于谁都能翻到别人、别的单位还没提交的草稿，跟"审核台只显示轮到自己审的记录"这个预期不一致。
+// 这里补上：单位审核员只看得到已发布的 + 本单位已提交（非草稿）的；市级审核员只看得到已发布的 +
+// 待市级审核的；管理员和个人申报人不受影响，保持原有的全量可见。
+func (expertProfileService *ExpertProfileService) GetExpertProfileInfoList(info ExpertDatabaseReq.ExpertProfileSearch, operatorID uint) (list []ExpertDatabase.ExpertProfile, total int64, err error) {
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	db := global.GVA_DB.Model(&ExpertDatabase.ExpertProfile{})
 	var profiles []ExpertDatabase.ExpertProfile
+
+	var operator system.SysUser
+	if err = global.GVA_DB.Where("id = ?", operatorID).First(&operator).Error; err != nil {
+		return
+	}
+	switch operator.AuthorityId {
+	case authorityOrgReviewer:
+		if operator.OrgId != nil {
+			db = db.Where("status = ? OR (org_id = ? AND status <> ?)", StatusPublished, *operator.OrgId, StatusDraft)
+		} else {
+			db = db.Where("status = ?", StatusPublished)
+		}
+	case authorityCityReviewer:
+		db = db.Where("status = ? OR status = ?", StatusPublished, StatusPendingCityReview)
+	}
 
 	if info.StartCreatedAt != nil && info.EndCreatedAt != nil {
 		db = db.Where("created_at BETWEEN ? AND ?", info.StartCreatedAt, info.EndCreatedAt)
 	}
 	if info.Name != "" {
 		db = db.Where("name LIKE ?", "%"+info.Name+"%")
+	}
+	if info.UnitName != "" {
+		db = db.Where("unit_name LIKE ?", "%"+info.UnitName+"%")
 	}
 	if info.TechTitle != "" {
 		db = db.Where("tech_title = ?", info.TechTitle)

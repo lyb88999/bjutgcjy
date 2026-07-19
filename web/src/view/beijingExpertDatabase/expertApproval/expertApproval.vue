@@ -3,10 +3,15 @@
     <el-tabs v-model="activeTab" @tab-change="onTabChange">
       <el-tab-pane label="我发起的" name="mine">
         <el-table :data="mineData" style="width: 100%">
-          <el-table-column align="left" label="姓名" prop="name" width="120" />
-          <el-table-column align="left" label="所在单位" prop="unitName" width="160" />
-          <el-table-column align="left" label="审核状态" prop="status" width="140">
+          <el-table-column align="left" label="姓名" prop="name" width="110" />
+          <el-table-column align="left" label="所在单位" prop="unitName" min-width="220" show-overflow-tooltip />
+          <el-table-column align="left" label="专业技术职称" prop="techTitle" min-width="130" show-overflow-tooltip />
+          <el-table-column align="left" label="一级学科" prop="disciplineL1" min-width="130" show-overflow-tooltip />
+          <el-table-column align="left" label="审核状态" prop="status" width="120">
             <template #default="scope">{{ statusLabel(scope.row.status) }}</template>
+          </el-table-column>
+          <el-table-column align="left" label="创建日期" width="170">
+            <template #default="scope">{{ formatDate(scope.row.CreatedAt) }}</template>
           </el-table-column>
           <el-table-column align="left" label="操作" fixed="right" width="240">
             <template #default="scope">
@@ -26,34 +31,47 @@
       </el-tab-pane>
 
       <el-tab-pane label="待我审核的" name="pending">
-        <el-divider content-position="left">待本单位审核</el-divider>
-        <el-table :data="orgData" style="width: 100%">
-          <el-table-column align="left" label="姓名" prop="name" width="120" />
-          <el-table-column align="left" label="所在单位" prop="unitName" width="160" />
-          <el-table-column align="left" label="专业技术职称" prop="techTitle" width="120" />
-          <el-table-column align="left" label="操作" fixed="right" width="260">
-            <template #default="scope">
-              <el-button type="primary" link @click="viewDetail(scope.row)">查看详情</el-button>
-              <el-button type="primary" link @click="orgApprove(scope.row)">通过</el-button>
-              <el-button type="danger" link @click="openReject(scope.row, 'org')">退回</el-button>
-              <el-button type="primary" link @click="openLog(scope.row)">审核记录</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-        <el-divider content-position="left">待市级审核</el-divider>
-        <el-table :data="cityData" style="width: 100%">
-          <el-table-column align="left" label="姓名" prop="name" width="120" />
-          <el-table-column align="left" label="所在单位" prop="unitName" width="160" />
-          <el-table-column align="left" label="专业技术职称" prop="techTitle" width="120" />
-          <el-table-column align="left" label="操作" fixed="right" width="260">
-            <template #default="scope">
-              <el-button type="primary" link @click="viewDetail(scope.row)">查看详情</el-button>
-              <el-button type="primary" link @click="cityApprove(scope.row)">通过</el-button>
-              <el-button type="danger" link @click="openReject(scope.row, 'city')">退回</el-button>
-              <el-button type="primary" link @click="openLog(scope.row)">审核记录</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+        <template v-if="showOrgSection">
+          <el-divider content-position="left">待本单位审核</el-divider>
+          <el-table :data="orgData" style="width: 100%">
+            <el-table-column align="left" label="姓名" prop="name" width="110" />
+            <el-table-column align="left" label="所在单位" prop="unitName" min-width="220" show-overflow-tooltip />
+            <el-table-column align="left" label="专业技术职称" prop="techTitle" min-width="130" show-overflow-tooltip />
+            <el-table-column align="left" label="一级学科" prop="disciplineL1" min-width="130" show-overflow-tooltip />
+            <el-table-column align="left" label="提交日期" width="170">
+              <template #default="scope">{{ formatDate(scope.row.CreatedAt) }}</template>
+            </el-table-column>
+            <el-table-column align="left" label="操作" fixed="right" width="260">
+              <template #default="scope">
+                <el-button type="primary" link @click="viewDetail(scope.row)">查看详情</el-button>
+                <el-button type="primary" link @click="orgApprove(scope.row)">通过</el-button>
+                <el-button type="danger" link @click="openReject(scope.row, 'org')">退回</el-button>
+                <el-button type="primary" link @click="openLog(scope.row)">审核记录</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </template>
+        <template v-if="showCitySection">
+          <el-divider content-position="left">待市级审核</el-divider>
+          <el-table :data="cityData" style="width: 100%">
+            <el-table-column align="left" label="姓名" prop="name" width="110" />
+            <el-table-column align="left" label="所在单位" prop="unitName" min-width="220" show-overflow-tooltip />
+            <el-table-column align="left" label="专业技术职称" prop="techTitle" min-width="130" show-overflow-tooltip />
+            <el-table-column align="left" label="一级学科" prop="disciplineL1" min-width="130" show-overflow-tooltip />
+            <el-table-column align="left" label="提交日期" width="170">
+              <template #default="scope">{{ formatDate(scope.row.CreatedAt) }}</template>
+            </el-table-column>
+            <el-table-column align="left" label="操作" fixed="right" width="260">
+              <template #default="scope">
+                <el-button type="primary" link @click="viewDetail(scope.row)">查看详情</el-button>
+                <el-button type="primary" link @click="cityApprove(scope.row)">通过</el-button>
+                <el-button type="danger" link @click="openReject(scope.row, 'city')">退回</el-button>
+                <el-button type="primary" link @click="openLog(scope.row)">审核记录</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </template>
+        <el-empty v-if="!showOrgSection && !showCitySection" description="当前角色没有需要审核的记录" />
       </el-tab-pane>
     </el-tabs>
 
@@ -96,14 +114,22 @@ import {
 
 import { formatDate } from '@/utils/format'
 import { ElMessage } from 'element-plus'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/pinia/modules/user'
 
 defineOptions({
   name: 'ExpertApproval'
 })
 
 const router = useRouter()
+const userStore = useUserStore()
+// 审核台是三个审核角色共用的同一个页面，"待本单位审核"/"待市级审核"两个区块原来对谁都无条件展示——
+// 单位审核员因此能看到跟自己无关的"待市级审核"队列（虽然按不了通过/退回，但看到了不该看的东西）。
+// 这里按角色只展示各自负责的那一块；管理员两块都能看，个人申报人两块都不展示。
+const isSuperAdmin = computed(() => userStore.userInfo.authorityId === 1)
+const showOrgSection = computed(() => isSuperAdmin.value || userStore.userInfo.authorityId === 9002)
+const showCitySection = computed(() => isSuperAdmin.value || userStore.userInfo.authorityId === 9003)
 const viewDetail = (row) => {
   router.push({ name: 'expertProfileDetail', params: { id: row.ID } })
 }
@@ -151,8 +177,8 @@ const fetchCityPending = async () => {
 const onTabChange = (name) => {
   if (name === 'mine') fetchMine()
   if (name === 'pending') {
-    fetchOrgPending()
-    fetchCityPending()
+    if (showOrgSection.value) fetchOrgPending()
+    if (showCitySection.value) fetchCityPending()
   }
 }
 
