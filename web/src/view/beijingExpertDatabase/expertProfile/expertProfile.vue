@@ -31,6 +31,7 @@
     <div class="gva-table-box">
       <div v-if="!isReadOnlyReviewer" class="gva-btn-list">
         <el-button type="primary" icon="plus" @click="openDialog">新增</el-button>
+        <el-button icon="upload" style="margin-left: 10px;" @click="openImportDialog">批量导入</el-button>
         <el-button icon="delete" style="margin-left: 10px;" :disabled="!multipleSelection.length" @click="onDelete">删除</el-button>
       </div>
       <el-table ref="multipleTable" style="width: 100%" tooltip-effect="dark" :data="tableData" row-key="ID"
@@ -125,6 +126,48 @@
         </div>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="importDialogVisible" title="批量导入专家" width="600px" :before-close="closeImportDialog">
+      <div class="import-step">
+        <p>1. 下载模板，按格式填写"专家背景信息"和"研究成果"两个 sheet（研究成果表按"专家姓名"关联背景信息表，姓名要能对上）</p>
+        <el-button icon="download" @click="handleDownloadTemplate">下载模板</el-button>
+      </div>
+      <div class="import-step" style="margin-top: 20px;">
+        <p>2. 上传填好的 .xlsx 文件</p>
+        <el-upload
+          drag
+          :auto-upload="false"
+          :limit="1"
+          accept=".xlsx"
+          :on-change="handleFileChange"
+          :on-remove="() => { importFile = null }"
+        >
+          <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+          <div class="el-upload__text">拖到这里，或<em>点击选择文件</em></div>
+        </el-upload>
+      </div>
+      <div v-if="importResult" style="margin-top: 20px;">
+        <el-alert
+          v-if="importResult.success"
+          type="success" :closable="false"
+          :title="`导入成功：新建专家 ${importResult.createdProfiles} 位，复用已有档案 ${importResult.reusedProfiles} 位，新增研究成果 ${importResult.createdAchievements} 条，标题重复跳过 ${importResult.skippedAchievements} 条`"
+        />
+        <template v-else>
+          <el-alert type="error" :closable="false" title="校验未通过，以下问题需要改完重新上传，本次没有导入任何数据" />
+          <el-table :data="importResult.errors" size="small" style="margin-top: 10px; max-height: 260px; overflow-y: auto;">
+            <el-table-column label="sheet" prop="sheet" width="120" />
+            <el-table-column label="行号" prop="row" width="70" />
+            <el-table-column label="问题" prop="message" />
+          </el-table>
+        </template>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="closeImportDialog">关闭</el-button>
+          <el-button type="primary" :disabled="!importFile" :loading="importing" @click="handleImportSubmit">开始导入</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -135,7 +178,9 @@ import {
   deleteExpertProfileByIds,
   updateExpertProfile,
   findExpertProfile,
-  getExpertProfileList
+  getExpertProfileList,
+  downloadImportTemplate,
+  importExpertBatch
 } from '@/api/expertProfile'
 import { submitExpertProfile } from '@/api/expertApproval'
 
@@ -348,6 +393,53 @@ const enterDialog = async () => {
       getTableData()
     }
   })
+}
+
+// ============ 批量导入 ============
+const importDialogVisible = ref(false)
+const importFile = ref(null)
+const importing = ref(false)
+const importResult = ref(null)
+
+const openImportDialog = () => {
+  importFile.value = null
+  importResult.value = null
+  importDialogVisible.value = true
+}
+const closeImportDialog = () => {
+  importDialogVisible.value = false
+}
+const handleFileChange = (file) => {
+  importFile.value = file.raw
+  importResult.value = null
+}
+const handleDownloadTemplate = async () => {
+  const res = await downloadImportTemplate()
+  const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = '专家批量导入模板.xlsx'
+  a.click()
+  window.URL.revokeObjectURL(url)
+}
+const handleImportSubmit = async () => {
+  if (!importFile.value) return
+  importing.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', importFile.value)
+    const res = await importExpertBatch(formData)
+    if (res.code === 0) {
+      ElMessage({ type: 'success', message: '导入成功' })
+      importResult.value = res.data
+      getTableData()
+    } else {
+      importResult.value = res.data
+    }
+  } finally {
+    importing.value = false
+  }
 }
 </script>
 

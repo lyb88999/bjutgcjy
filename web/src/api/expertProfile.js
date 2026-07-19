@@ -65,3 +65,26 @@ export const getExpertProfileList = (params) => {
     params
   })
 }
+
+// @Tags ExpertProfile
+// @Summary 下载专家批量导入模板
+// @Router /expertProfile/downloadImportTemplate [get]
+export const downloadImportTemplate = () => {
+  return service({
+    url: '/expertProfile/downloadImportTemplate',
+    method: 'get',
+    responseType: 'blob'
+  })
+}
+
+// @Tags ExpertProfile
+// @Summary 批量导入专家背景信息与研究成果
+// @Router /expertProfile/importBatch [post]
+export const importExpertBatch = (formData) => {
+  return service({
+    url: '/expertProfile/importBatch',
+    method: 'post',
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}

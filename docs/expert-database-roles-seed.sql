@@ -91,7 +91,10 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 
 ('p','9001','/expertApproval/submit','POST','','',''),
 ('p','9001','/expertApproval/myDrafts','GET','','',''),
-('p','9001','/expertApproval/getApprovalLogList','GET','','','');
+('p','9001','/expertApproval/getApprovalLogList','GET','','',''),
+
+('p','9001','/expertProfile/downloadImportTemplate','GET','','',''),
+('p','9001','/expertProfile/importBatch','POST','','','');
 
 -- 9002 专家库-单位审核员：只读专家档案（含成果/决策影响/学术兼职/标签的列表+详情）+ 本单位审核操作
 -- （跨单位由后端 assertSameOrg 拦截）。故意不给 create/update/delete —— 审核员不应该能改动

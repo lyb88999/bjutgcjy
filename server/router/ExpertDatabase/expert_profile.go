@@ -20,7 +20,11 @@ func (s *ExpertProfileRouter) InitExpertProfileRouter(Router *gin.RouterGroup) {
 		expertProfileRouter.PUT("updateExpertProfile", expertProfileApi.UpdateExpertProfile)              // 更新专家主档
 	}
 	{
-		expertProfileRouterWithoutRecord.GET("findExpertProfile", expertProfileApi.FindExpertProfile)       // 根据ID获取专家主档
-		expertProfileRouterWithoutRecord.GET("getExpertProfileList", expertProfileApi.GetExpertProfileList) // 分页获取专家主档列表
+		expertProfileRouterWithoutRecord.GET("findExpertProfile", expertProfileApi.FindExpertProfile)           // 根据ID获取专家主档
+		expertProfileRouterWithoutRecord.GET("getExpertProfileList", expertProfileApi.GetExpertProfileList)     // 分页获取专家主档列表
+		expertProfileRouterWithoutRecord.GET("downloadImportTemplate", expertProfileApi.DownloadImportTemplate) // 下载批量导入模板
+	}
+	{
+		expertProfileRouter.POST("importBatch", expertProfileApi.ImportBatch) // 批量导入专家背景信息与研究成果
 	}
 }
