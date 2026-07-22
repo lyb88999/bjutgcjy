@@ -42,8 +42,11 @@
         <el-table-column align="left" label="专业技术职称" prop="techTitle" width="120" />
         <el-table-column align="left" label="一级学科" prop="disciplineL1" width="120" />
         <el-table-column align="left" label="研究关键词" prop="researchKeywords" width="180" show-overflow-tooltip />
-        <el-table-column align="left" label="审核状态" prop="status" width="120">
-          <template #default="scope">{{ statusLabel(scope.row.status) }}</template>
+        <el-table-column align="left" label="审核状态" prop="status" width="150">
+          <template #default="scope">
+            {{ statusLabel(scope.row.status) }}
+            <el-tag v-if="scope.row.reviewBypassed" type="warning" size="small" style="margin-left: 4px;">免审核发布</el-tag>
+          </template>
         </el-table-column>
         <el-table-column align="left" label="综合排序得分" prop="compositeScore" width="110" />
         <el-table-column align="left" label="创建日期" width="180">

@@ -41,7 +41,10 @@
 
       <el-divider content-position="left">审核与推荐排序</el-divider>
       <el-descriptions :column="3" border>
-        <el-descriptions-item label="审核状态">{{ statusLabel(profile.status) }}</el-descriptions-item>
+        <el-descriptions-item label="审核状态">
+          {{ statusLabel(profile.status) }}
+          <el-tag v-if="profile.reviewBypassed" type="warning" size="small" style="margin-left: 4px;">免审核发布</el-tag>
+        </el-descriptions-item>
         <el-descriptions-item label="成果分">{{ profile.achievementScore }}</el-descriptions-item>
         <el-descriptions-item label="决策影响分">{{ profile.influenceScore }}</el-descriptions-item>
         <el-descriptions-item label="社会贡献分">{{ profile.socialScore }}</el-descriptions-item>

@@ -18,9 +18,20 @@ const (
 
 type ExpertProfileService struct{}
 
-// CreateExpertProfile 创建专家主档
+// CreateExpertProfile 创建专家主档；审核开关关闭时跳过草稿状态，直接落库为已发布并重算得分
 func (expertProfileService *ExpertProfileService) CreateExpertProfile(profile *ExpertDatabase.ExpertProfile) (err error) {
-	return global.GVA_DB.Create(profile).Error
+	skipReview := !reviewRequired()
+	if skipReview {
+		profile.Status = StatusPublished
+		profile.ReviewBypassed = true
+	}
+	if err = global.GVA_DB.Create(profile).Error; err != nil {
+		return err
+	}
+	if skipReview {
+		expertScoreSvc.recomputeIfPublished(profile.ID)
+	}
+	return nil
 }
 
 // DeleteExpertProfile 删除专家主档

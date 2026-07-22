@@ -267,6 +267,13 @@ func (expertProfileService *ExpertProfileService) ImportBatch(src io.Reader, ope
 		return result, nil
 	}
 
+	// 审核开关关闭时，批量导入的新档案直接落库为已发布，不进草稿/审核流程
+	skipReview := !reviewRequired()
+	initialStatus := StatusDraft
+	if skipReview {
+		initialStatus = StatusPublished
+	}
+
 	nameToExpertID := map[string]uint{}
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		for _, pr := range profileList {
@@ -287,11 +294,12 @@ func (expertProfileService *ExpertProfileService) ImportBatch(src io.Reader, ope
 				Phone: pr.fields["phone"], Mobile: pr.fields["mobile"], Email: pr.fields["email"],
 				HighestEducation: pr.fields["highestEducation"], HighestDegree: pr.fields["highestDegree"], GraduateSchool: pr.fields["graduateSchool"], Major: pr.fields["major"],
 				DisciplineL1: pr.fields["disciplineL1"], DisciplineL2: pr.fields["disciplineL2"], ResearchDirections: pr.fields["researchDirections"], ResearchKeywords: pr.fields["researchKeywords"],
-				Status:      StatusDraft,
-				OrgId:       matchOrgId(pr.fields["unitName"]),
-				SubmittedBy: &operatorID,
-				CreatedBy:   operatorID,
-				UpdatedBy:   operatorID,
+				Status:         initialStatus,
+				ReviewBypassed: skipReview,
+				OrgId:          matchOrgId(pr.fields["unitName"]),
+				SubmittedBy:    &operatorID,
+				CreatedBy:      operatorID,
+				UpdatedBy:      operatorID,
 			}
 			if err := tx.Create(&profile).Error; err != nil {
 				return err
@@ -328,6 +336,14 @@ func (expertProfileService *ExpertProfileService) ImportBatch(src io.Reader, ope
 	})
 	if err != nil {
 		return ExpertDatabaseResp.ExpertBatchImportResult{}, errors.New("导入失败：" + err.Error())
+	}
+
+	if skipReview {
+		// 关闭审核时新档案已经是已发布状态；复用的既有档案如果本来就是已发布，
+		// 这次新增的成果也要计入得分——recomputeIfPublished 对非已发布档案是空操作，不会误改草稿/审核中的记录
+		for _, expertID := range nameToExpertID {
+			expertScoreSvc.recomputeIfPublished(expertID)
+		}
 	}
 
 	result.Success = true

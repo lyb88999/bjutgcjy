@@ -21,6 +21,24 @@ const (
 	StatusPublished         = "published"
 )
 
+// DictTypeReviewSwitch 专家库审核开关字典类型：管理员在"系统工具 -> 字典管理"里改这个字典的
+// 明细值，就能控制批量导入/手动新增/提交审核这三个入口是否要走三级审核流程，不用改代码、不用重启
+const DictTypeReviewSwitch = "expert_review_switch"
+
+// reviewRequired 读取审核开关；字典或明细缺失时默认按"需要审核"处理（安全默认值，不会因为
+// 管理员没配置字典就意外整体跳过审核流程），字典存在且明细 value 为 0 时表示关闭审核、直接发布
+func reviewRequired() bool {
+	var dict system.SysDictionary
+	if err := global.GVA_DB.Where("type = ?", DictTypeReviewSwitch).First(&dict).Error; err != nil {
+		return true
+	}
+	var detail system.SysDictionaryDetail
+	if err := global.GVA_DB.Where("sys_dictionary_id = ?", dict.ID).Order("sort").First(&detail).Error; err != nil {
+		return true
+	}
+	return detail.Value != 0
+}
+
 type ExpertApprovalService struct{}
 
 // transition 校验来源状态是否允许流转、落库新状态、写审核日志，是所有流转方法的共用核心
@@ -49,8 +67,25 @@ func (s *ExpertApprovalService) transition(tx *gorm.DB, profile *ExpertDatabase.
 	return tx.Create(&log).Error
 }
 
-// Submit 提交审核：草稿/单位退回/市级退回 -> 待单位审核
+// Submit 提交审核：草稿/单位退回/市级退回 -> 待单位审核；审核开关关闭时直接跳到已发布
 func (s *ExpertApprovalService) Submit(expertID uint, operatorID uint) error {
+	if !reviewRequired() {
+		err := global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+			var profile ExpertDatabase.ExpertProfile
+			if err := tx.Where("id = ?", expertID).First(&profile).Error; err != nil {
+				return err
+			}
+			if err := s.transition(tx, &profile, []string{StatusDraft, StatusOrgRejected, StatusCityRejected}, StatusPublished, operatorID, ""); err != nil {
+				return err
+			}
+			return tx.Model(&ExpertDatabase.ExpertProfile{}).Where("id = ?", expertID).Update("review_bypassed", true).Error
+		})
+		if err != nil {
+			return err
+		}
+		expertScoreSvc.recomputeIfPublished(expertID)
+		return nil
+	}
 	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		var profile ExpertDatabase.ExpertProfile
 		if err := tx.Where("id = ?", expertID).First(&profile).Error; err != nil {
@@ -98,14 +133,18 @@ func (s *ExpertApprovalService) OrgReject(expertID uint, operatorID uint, opinio
 	})
 }
 
-// CityApprove 市级审核通过：待市级审核 -> 已发布，正式收录进入检索排序范围
+// CityApprove 市级审核通过：待市级审核 -> 已发布，正式收录进入检索排序范围；
+// 走到这里说明是真的过完了三级审核，顺带把"免审核发布"标记清掉（哪怕它之前曾经被审核开关绕过一次）
 func (s *ExpertApprovalService) CityApprove(expertID uint, operatorID uint) error {
 	err := global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		var profile ExpertDatabase.ExpertProfile
 		if err := tx.Where("id = ?", expertID).First(&profile).Error; err != nil {
 			return err
 		}
-		return s.transition(tx, &profile, []string{StatusPendingCityReview}, StatusPublished, operatorID, "")
+		if err := s.transition(tx, &profile, []string{StatusPendingCityReview}, StatusPublished, operatorID, ""); err != nil {
+			return err
+		}
+		return tx.Model(&ExpertDatabase.ExpertProfile{}).Where("id = ?", expertID).Update("review_bypassed", false).Error
 	})
 	if err != nil {
 		return err

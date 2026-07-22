@@ -51,6 +51,12 @@ type ExpertProfile struct {
 	SubmittedBy *uint  `json:"submittedBy" form:"submittedBy" gorm:"column:submitted_by;comment:申报人用户ID;"` //申报人用户ID
 	CurrentStep string `json:"currentStep" form:"currentStep" gorm:"column:current_step;comment:当前审核环节;"`  //当前审核环节
 
+	// ReviewBypassed 标记这条记录变成"已发布"的这一次，是不是靠专家库审核开关关闭时绕过三级审核
+	// 直接发布的（而不是真的走完单位审核+市级审核）。只在"审核开关关闭期间新建/导入/提交"时置为
+	// true；如果后来又走了一遍真正的市级审核（CityApprove），会被重置回 false——这样这个字段
+	// 反映的始终是"当前的已发布状态是不是真审过"，而不是"历史上有没有被绕过一次"
+	ReviewBypassed bool `json:"reviewBypassed" form:"reviewBypassed" gorm:"column:review_bypassed;default:false;comment:是否为审核开关关闭期间绕过审核直接发布;"`
+
 	// 推荐排序缓存字段：achievement/influence/social 是与检索关键词无关的基础分，检索时按 relevance 加权；
 	// composite_score 是不带关键词的默认综合排序分，供未输入关键词时的默认排序使用
 	AchievementScore float64    `json:"achievementScore" form:"achievementScore" gorm:"column:achievement_score;comment:成果得分缓存;"` //成果得分缓存
