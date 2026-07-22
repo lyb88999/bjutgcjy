@@ -8,4 +8,5 @@ type RouterGroup struct {
 	ExpertAcademicPositionRouter
 	ExpertApprovalRouter
 	ExpertSearchRouter
+	ExpertOrgUserRouter
 }

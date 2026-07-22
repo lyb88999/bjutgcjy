@@ -102,6 +102,26 @@
             </el-table-column>
           </el-table>
         </el-tab-pane>
+
+        <el-tab-pane label="标签" name="tag">
+          <p style="color: #909399; font-size: 13px; margin-bottom: 12px;">
+            标签会直接影响"专家检索推荐"里的相关性排序，建议按学科/关键词/政策领域/研究方法等打全。
+          </p>
+          <el-select
+            v-model="selectedTagIds"
+            multiple filterable
+            :disabled="isReadOnlyReviewer"
+            placeholder="选择标签"
+            style="width: 100%; max-width: 640px;"
+          >
+            <el-option-group v-for="group in tagGroups" :key="group.type" :label="group.label">
+              <el-option v-for="item in group.options" :key="item.ID" :label="item.tagValue" :value="item.ID" />
+            </el-option-group>
+          </el-select>
+          <div v-if="!isReadOnlyReviewer" style="margin-top: 16px;">
+            <el-button type="primary" @click="submitTags">保存标签</el-button>
+          </div>
+        </el-tab-pane>
       </el-tabs>
     </div>
 
@@ -193,6 +213,11 @@ import {
   deleteExpertAcademicPosition,
   getExpertAcademicPositionList
 } from '@/api/expertAcademicPosition'
+import {
+  getExpertTagList,
+  getExpertTagsByExpertId,
+  setExpertTagRelations
+} from '@/api/expertTag'
 
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, computed } from 'vue'
@@ -334,6 +359,42 @@ const deletePosition = (row) => {
       fetchPositions()
     }
   })
+}
+
+// ============ 标签 ============
+// 标签直接参与"专家检索推荐"的相关性排序，之前只有标签库本身的维护页面，没有把标签关联到
+// 具体某个专家的入口——加在这里，跟成果/决策影响/学术兼职一样是这个专家详情页的一部分
+const tagTypeLabels = {
+  discipline_l1: '一级学科', keyword: '关键词', policy_field: '政策领域', region: '区域/国别', method: '研究方法'
+}
+const allTags = ref([])
+const selectedTagIds = ref([])
+const tagGroups = computed(() => {
+  const byType = {}
+  allTags.value.forEach(tag => {
+    if (!byType[tag.tagType]) byType[tag.tagType] = []
+    byType[tag.tagType].push(tag)
+  })
+  return Object.keys(byType).map(type => ({
+    type, label: tagTypeLabels[type] || type, options: byType[type]
+  }))
+})
+const fetchAllTags = async () => {
+  const res = await getExpertTagList({ page: 1, pageSize: 500 })
+  if (res.code === 0) allTags.value = res.data.list || []
+}
+const fetchExpertTags = async () => {
+  const res = await getExpertTagsByExpertId({ expertId })
+  if (res.code === 0) selectedTagIds.value = (res.data.tags || []).map(t => t.ID)
+}
+fetchAllTags()
+fetchExpertTags()
+
+const submitTags = async () => {
+  const res = await setExpertTagRelations({ expertId, tagIds: selectedTagIds.value })
+  if (res.code === 0) {
+    ElMessage({ type: 'success', message: '保存成功' })
+  }
 }
 </script>
 

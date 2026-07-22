@@ -8,4 +8,5 @@ type ApiGroup struct {
 	ExpertAcademicPositionApi
 	ExpertApprovalApi
 	ExpertSearchApi
+	ExpertOrgUserApi
 }

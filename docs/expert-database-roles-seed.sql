@@ -23,6 +23,10 @@ JOIN (SELECT 9001 AS authority_id UNION SELECT 9002 UNION SELECT 9003) a ON 1=1
 WHERE m.id = 1 OR m.path IN ('expertDatabase','expertApproval','expertProfile','expertAchievement','expertAdoptionRecord','expertAcademicPosition','expertTag','expertSearch','expertProfileDetail/:id')
   AND m.deleted_at IS NULL;
 
+-- 本单位账号管理这个菜单只给单位审核员（9002），个人申报人/市级审核员没有"自己的单位"这个概念
+INSERT IGNORE INTO sys_authority_menus (sys_base_menu_id, sys_authority_authority_id)
+SELECT id, 9002 FROM sys_base_menus WHERE path = 'expertOrgUser' AND deleted_at IS NULL;
+
 -- 每个角色都需要的登录/基础接口（对应 systemReq.DefaultCasbin()，新建角色的标准最小权限集）
 INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5)
 SELECT 'p', a.authority_id, base.path, base.method, '', '', ''
@@ -114,7 +118,14 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','9002','/expertApproval/pendingOrgReview','GET','','',''),
 ('p','9002','/expertApproval/orgApprove','POST','','',''),
 ('p','9002','/expertApproval/orgReject','POST','','',''),
-('p','9002','/expertApproval/getApprovalLogList','GET','','','');
+('p','9002','/expertApproval/getApprovalLogList','GET','','',''),
+
+-- 本单位账号管理：单位审核员给本单位新建个人申报人账号，不用事事找超级管理员。
+-- org_id/角色都由后端固定推导（见 expert_org_user.go），这三个接口本身不接受越权参数，
+-- 但仍然只放给 9002——申报人和市级审核员没有"自己的单位"这个概念，不适用这套能力
+('p','9002','/expertOrgUser/createOrgApplicant','POST','','',''),
+('p','9002','/expertOrgUser/getOrgUserList','GET','','',''),
+('p','9002','/expertOrgUser/toggleOrgUserEnable','POST','','','');
 
 -- 9003 专家库-市级审核员：只读专家档案（含成果/决策影响/学术兼职/标签的列表+详情）+ 市级审核操作
 -- （不限单位）。同样故意不给 create/update/delete，理由同 9002。

@@ -8,10 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// 单位审核员/市级审核员角色ID，专家主档列表对它们做数据域收敛，见 GetExpertProfileInfoList
+// 专家库三个角色ID：个人申报人/单位审核员/市级审核员。专家主档列表对审核员角色做数据域收敛
+// （见 GetExpertProfileInfoList），个人申报人角色ID被本单位账号管理功能用来固定新建账号的角色
 const (
-	authorityOrgReviewer  = 9002
-	authorityCityReviewer = 9003
+	authorityIndividualApplicant = 9001
+	authorityOrgReviewer         = 9002
+	authorityCityReviewer        = 9003
 )
 
 type ExpertProfileService struct{}

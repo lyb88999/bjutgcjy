@@ -82,3 +82,22 @@ SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'expertProfileDetail/:id', 'expertP
 WHERE NOT EXISTS (
   SELECT 1 FROM sys_base_menus WHERE path = 'expertProfileDetail/:id' AND deleted_at IS NULL
 );
+
+-- 单位管理：sys_organization 的增删改查页面，只给管理员用（见 expert-database-permission-seed.sql），
+-- 用来维护"单位审核员只能审自己单位提交的档案"这套数据域隔离依赖的单位树，
+-- 以及给批量导入/真实数据回填 org_id 提供可持续维护的入口，不用再靠手工跑 SQL
+INSERT INTO sys_base_menus
+  (created_at, updated_at, menu_level, parent_id, path, name, hidden, component, sort, active_name, keep_alive, default_menu, title, icon, close_tab)
+SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'sysOrganization', 'sysOrganization', 0, 'view/beijingExpertDatabase/sysOrganization/sysOrganization.vue', 8, '', 0, 0, '单位管理', 'office-building', 0
+WHERE NOT EXISTS (
+  SELECT 1 FROM sys_base_menus WHERE path = 'sysOrganization' AND deleted_at IS NULL
+);
+
+-- 本单位账号管理：只给单位审核员用（见 expert-database-roles-seed.sql），
+-- 让审核员自己给本单位新建个人申报人账号，不用事事找超级管理员建账号
+INSERT INTO sys_base_menus
+  (created_at, updated_at, menu_level, parent_id, path, name, hidden, component, sort, active_name, keep_alive, default_menu, title, icon, close_tab)
+SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'expertOrgUser', 'expertOrgUser', 0, 'view/beijingExpertDatabase/expertOrgUser/expertOrgUser.vue', 9, '', 0, 0, '本单位账号管理', 'user-filled', 0
+WHERE NOT EXISTS (
+  SELECT 1 FROM sys_base_menus WHERE path = 'expertOrgUser' AND deleted_at IS NULL
+);
