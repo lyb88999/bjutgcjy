@@ -101,3 +101,12 @@ SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'expertOrgUser', 'expertOrgUser', 0
 WHERE NOT EXISTS (
   SELECT 1 FROM sys_base_menus WHERE path = 'expertOrgUser' AND deleted_at IS NULL
 );
+
+-- 统计概览：只给管理员/单位审核员/市级审核员用（见 expert-database-roles-seed.sql），
+-- 个人申报人只关心自己提交的那几条，不需要看全库/全单位的统计图表
+INSERT INTO sys_base_menus
+  (created_at, updated_at, menu_level, parent_id, path, name, hidden, component, sort, active_name, keep_alive, default_menu, title, icon, close_tab)
+SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'expertDashboard', 'expertDashboard', 0, 'view/beijingExpertDatabase/expertDashboard/expertDashboard.vue', 10, '', 0, 0, '统计概览', 'data-analysis', 0
+WHERE NOT EXISTS (
+  SELECT 1 FROM sys_base_menus WHERE path = 'expertDashboard' AND deleted_at IS NULL
+);

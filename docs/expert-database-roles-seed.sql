@@ -27,6 +27,14 @@ WHERE m.id = 1 OR m.path IN ('expertDatabase','expertApproval','expertProfile','
 INSERT IGNORE INTO sys_authority_menus (sys_base_menu_id, sys_authority_authority_id)
 SELECT id, 9002 FROM sys_base_menus WHERE path = 'expertOrgUser' AND deleted_at IS NULL;
 
+-- 统计概览菜单只给单位审核员/市级审核员（9002/9003），个人申报人只关心自己提交的记录，
+-- 全库/全单位的统计图表对他们没有意义
+INSERT IGNORE INTO sys_authority_menus (sys_base_menu_id, sys_authority_authority_id)
+SELECT m.id, a.authority_id
+FROM sys_base_menus m
+JOIN (SELECT 9002 AS authority_id UNION SELECT 9003) a ON 1=1
+WHERE m.path = 'expertDashboard' AND m.deleted_at IS NULL;
+
 -- 每个角色都需要的登录/基础接口（对应 systemReq.DefaultCasbin()，新建角色的标准最小权限集）
 INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5)
 SELECT 'p', a.authority_id, base.path, base.method, '', '', ''
@@ -125,7 +133,9 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 -- 但仍然只放给 9002——申报人和市级审核员没有"自己的单位"这个概念，不适用这套能力
 ('p','9002','/expertOrgUser/createOrgApplicant','POST','','',''),
 ('p','9002','/expertOrgUser/getOrgUserList','GET','','',''),
-('p','9002','/expertOrgUser/toggleOrgUserEnable','POST','','','');
+('p','9002','/expertOrgUser/toggleOrgUserEnable','POST','','',''),
+
+('p','9002','/expertDatabase/dashboardStats','GET','','','');
 
 -- 9003 专家库-市级审核员：只读专家档案（含成果/决策影响/学术兼职/标签的列表+详情）+ 市级审核操作
 -- （不限单位）。同样故意不给 create/update/delete，理由同 9002。
@@ -144,4 +154,5 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','9003','/expertApproval/pendingCityReview','GET','','',''),
 ('p','9003','/expertApproval/cityApprove','POST','','',''),
 ('p','9003','/expertApproval/cityReject','POST','','',''),
-('p','9003','/expertApproval/getApprovalLogList','GET','','','');
+('p','9003','/expertApproval/getApprovalLogList','GET','','',''),
+('p','9003','/expertDatabase/dashboardStats','GET','','','');

@@ -9,4 +9,5 @@ type RouterGroup struct {
 	ExpertApprovalRouter
 	ExpertSearchRouter
 	ExpertOrgUserRouter
+	ExpertDashboardRouter
 }

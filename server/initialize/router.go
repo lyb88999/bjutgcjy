@@ -105,6 +105,7 @@ func Routers() *gin.Engine {
 		ExpertDatabaseRouter.InitExpertApprovalRouter(PrivateGroup)
 		ExpertDatabaseRouter.InitExpertSearchRouter(PrivateGroup)
 		ExpertDatabaseRouter.InitExpertOrgUserRouter(PrivateGroup)
+		ExpertDatabaseRouter.InitExpertDashboardRouter(PrivateGroup)
 	}
 	{
 		utilRouter := router.RouterGroupApp.Util

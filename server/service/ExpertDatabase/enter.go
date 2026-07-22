@@ -10,4 +10,5 @@ type ServiceGroup struct {
 	ExpertScoreService
 	ExpertSearchService
 	ExpertOrgUserService
+	ExpertDashboardService
 }
