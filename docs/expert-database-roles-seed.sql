@@ -20,7 +20,7 @@ INSERT IGNORE INTO sys_authority_menus (sys_base_menu_id, sys_authority_authorit
 SELECT m.id, a.authority_id
 FROM sys_base_menus m
 JOIN (SELECT 9001 AS authority_id UNION SELECT 9002 UNION SELECT 9003) a ON 1=1
-WHERE m.id = 1 OR m.path IN ('expertDatabase','expertApproval','expertProfile','expertAchievement','expertAdoptionRecord','expertAcademicPosition','expertTag','expertSearch','expertProfileDetail/:id')
+WHERE m.id = 1 OR m.path IN ('expertDatabase','expertApproval','expertProfile','expertAchievement','expertAdoptionRecord','expertAcademicPosition','expertTag','expertSearch','expertProfileDetail/:id','expertHelp')
   AND m.deleted_at IS NULL;
 
 -- 本单位账号管理这个菜单只给单位审核员（9002），个人申报人/市级审核员没有"自己的单位"这个概念

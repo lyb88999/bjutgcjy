@@ -110,3 +110,12 @@ SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'expertDashboard', 'expertDashboard
 WHERE NOT EXISTS (
   SELECT 1 FROM sys_base_menus WHERE path = 'expertDashboard' AND deleted_at IS NULL
 );
+
+-- 使用帮助：纯前端静态内容页，不调用任何后端接口，四个角色都给（内容按角色自动折叠/展开，
+-- 见 expertHelp.vue），不需要额外的 Casbin 接口权限
+INSERT INTO sys_base_menus
+  (created_at, updated_at, menu_level, parent_id, path, name, hidden, component, sort, active_name, keep_alive, default_menu, title, icon, close_tab)
+SELECT NOW(3), NOW(3), 0, @expert_parent_id, 'expertHelp', 'expertHelp', 0, 'view/beijingExpertDatabase/expertHelp/expertHelp.vue', 11, '', 0, 0, '使用帮助', 'question-filled', 0
+WHERE NOT EXISTS (
+  SELECT 1 FROM sys_base_menus WHERE path = 'expertHelp' AND deleted_at IS NULL
+);

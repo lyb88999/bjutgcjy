@@ -5,7 +5,7 @@
 -- 菜单权限：把专家库父菜单 + 子菜单 + 隐藏的专家详情整合页都挂给该角色
 INSERT IGNORE INTO sys_authority_menus (sys_base_menu_id, sys_authority_authority_id)
 SELECT id, 1 FROM sys_base_menus
-WHERE path IN ('expertDatabase','expertApproval','expertProfile','expertAchievement','expertAdoptionRecord','expertAcademicPosition','expertTag','expertSearch','expertProfileDetail/:id','sysOrganization','expertDashboard')
+WHERE path IN ('expertDatabase','expertApproval','expertProfile','expertAchievement','expertAdoptionRecord','expertAcademicPosition','expertTag','expertSearch','expertProfileDetail/:id','sysOrganization','expertDashboard','expertHelp')
   AND deleted_at IS NULL;
 
 -- 接口权限：Casbin 策略（v0=角色ID, v1=接口路径, v2=HTTP方法）
