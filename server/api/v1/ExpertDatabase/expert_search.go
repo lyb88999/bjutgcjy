@@ -61,7 +61,7 @@ func (expertSearchApi *ExpertSearchApi) ExportSearchResults(c *gin.Context) {
 	f, err := expertSearchService.ExportSearchResults(req)
 	if err != nil {
 		global.GVA_LOG.Error("导出失败!", zap.Error(err))
-		response.FailWithMessage("导出失败", c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	buf, err := f.WriteToBuffer()

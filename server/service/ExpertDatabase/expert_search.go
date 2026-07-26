@@ -1,6 +1,7 @@
 package ExpertDatabase
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -188,6 +189,9 @@ func (s *ExpertSearchService) ExportSearchResults(req ExpertDatabaseReq.ExpertSe
 	items, err := s.rankedCandidates(req)
 	if err != nil {
 		return nil, err
+	}
+	if len(items) > exportRowLimit {
+		return nil, fmt.Errorf("命中 %d 条记录，超过单次导出上限 %d 条，请缩小检索范围后再导出", len(items), exportRowLimit)
 	}
 
 	f := excelize.NewFile()

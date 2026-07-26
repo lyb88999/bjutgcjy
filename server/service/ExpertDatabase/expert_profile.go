@@ -2,6 +2,7 @@ package ExpertDatabase
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase"
@@ -16,7 +17,8 @@ import (
 var ErrProfileAccessDenied = errors.New("无权访问该专家档案")
 
 // 专家库三个角色ID：个人申报人/单位审核员/市级审核员。专家主档列表对审核员角色做数据域收敛
-// （见 GetExpertProfileInfoList），个人申报人角色ID被本单位账号管理功能用来固定新建账号的角色
+// （见 GetExpertProfileInfoList），个人申报人角色ID被本单位账号管理功能用来固定新建账号的角色。
+// 这三个值必须与 docs/expert-database-roles-seed.sql 里种子的 authority_id 保持一致，改一处要同步另一处
 const (
 	authorityIndividualApplicant = 9001
 	authorityOrgReviewer         = 9002
@@ -243,6 +245,10 @@ func (expertProfileService *ExpertProfileService) GetExpertProfileInfoList(info 
 	return profiles, total, err
 }
 
+// exportRowLimit 导出接口一次性把全部命中记录拉进内存生成 Excel，行数不设防的话大库直接把
+// 服务内存打爆；超限时明确报错让用户缩小筛选范围，而不是悄悄截断让人误以为导全了
+const exportRowLimit = 10000
+
 var profileExportHeaders = []string{
 	"姓名", "性别", "民族", "政治面貌", "所在单位", "院系/部门", "行政职务", "专业技术职称",
 	"办公电话", "手机号码", "电子邮箱", "最高学历", "最高学位", "毕业院校", "所学专业",
@@ -257,6 +263,9 @@ func (expertProfileService *ExpertProfileService) ExportExpertProfiles(info Expe
 	list, _, err := expertProfileService.GetExpertProfileInfoList(info, operatorID)
 	if err != nil {
 		return nil, err
+	}
+	if len(list) > exportRowLimit {
+		return nil, fmt.Errorf("命中 %d 条记录，超过单次导出上限 %d 条，请缩小筛选范围后再导出", len(list), exportRowLimit)
 	}
 
 	f := excelize.NewFile()
