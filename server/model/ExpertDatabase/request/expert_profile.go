@@ -18,6 +18,7 @@ type ExpertProfileSearch struct {
 	ResearchKeywords string `json:"researchKeywords" form:"researchKeywords"`
 	Status           string `json:"status" form:"status"`
 	OrgId            *uint  `json:"orgId" form:"orgId"`
+	OrgUnmatched     bool   `json:"orgUnmatched" form:"orgUnmatched"` // 只看 org_id 为空（单位没能匹配到"单位管理"里任何记录）的档案，供管理员清理历史数据用
 
 	request.PageInfo
 	Sort  string `json:"sort" form:"sort"`

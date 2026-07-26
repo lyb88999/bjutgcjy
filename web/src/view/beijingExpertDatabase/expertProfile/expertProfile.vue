@@ -22,6 +22,9 @@
             <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
+        <el-form-item v-if="!isReadOnlyReviewer" label="单位归属" prop="orgUnmatched">
+          <el-checkbox v-model="searchInfo.orgUnmatched">只看未关联单位</el-checkbox>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="search" @click="onSubmit">查询</el-button>
           <el-button icon="refresh" @click="onReset">重置</el-button>
@@ -38,7 +41,14 @@
         @selection-change="handleSelectionChange">
         <el-table-column v-if="!isReadOnlyReviewer" type="selection" fixed width="55" />
         <el-table-column align="left" label="姓名" prop="name" width="100" />
-        <el-table-column align="left" label="所在单位" prop="unitName" width="160" />
+        <el-table-column align="left" label="所在单位" prop="unitName" width="180">
+          <template #default="scope">
+            {{ scope.row.unitName }}
+            <el-tooltip v-if="!scope.row.orgId" content="单位没能关联到「单位管理」里的记录，编辑时可以在下拉里重新选一下" placement="top">
+              <el-tag type="warning" size="small" style="margin-left: 4px;">未关联</el-tag>
+            </el-tooltip>
+          </template>
+        </el-table-column>
         <el-table-column align="left" label="专业技术职称" prop="techTitle" width="120" />
         <el-table-column align="left" label="一级学科" prop="disciplineL1" width="120" />
         <el-table-column align="left" label="研究关键词" prop="researchKeywords" width="180" show-overflow-tooltip />
@@ -87,7 +97,17 @@
           <el-col :span="8"><el-form-item label="性别" prop="gender"><el-input v-model="formData.gender" placeholder="请输入性别" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="民族" prop="ethnicity"><el-input v-model="formData.ethnicity" placeholder="请输入民族" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="政治面貌" prop="politicalStatus"><el-input v-model="formData.politicalStatus" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="所在单位" prop="unitName"><el-input v-model="formData.unitName" /></el-form-item></el-col>
+          <el-col :span="8">
+            <el-form-item label="所在单位" prop="unitName">
+              <el-select
+                v-model="formData.unitName" filterable allow-create default-first-option
+                placeholder="输入或选择所在单位" style="width: 100%;" @change="onUnitNameChange"
+              >
+                <el-option v-for="org in orgOptions" :key="org.id" :label="org.name" :value="org.name" />
+              </el-select>
+              <div class="unit-hint">单位列表里找不到？可以先直接输入，之后再去"单位管理"里补建并关联</div>
+            </el-form-item>
+          </el-col>
           <el-col :span="8"><el-form-item label="院系/部门" prop="department"><el-input v-model="formData.department" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="行政职务" prop="adminTitle"><el-input v-model="formData.adminTitle" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="专业技术职称" prop="techTitle"><el-input v-model="formData.techTitle" /></el-form-item></el-col>
@@ -155,6 +175,13 @@
           type="success" :closable="false"
           :title="`导入成功：新建专家 ${importResult.createdProfiles} 位，复用已有档案 ${importResult.reusedProfiles} 位，新增研究成果 ${importResult.createdAchievements} 条，标题重复跳过 ${importResult.skippedAchievements} 条`"
         />
+        <el-alert
+          v-if="importResult.success && importResult.unmatchedUnits && importResult.unmatchedUnits.length"
+          type="warning" :closable="false" style="margin-top: 10px;"
+          title="以下单位名在「单位管理」里找不到对应记录，已按空单位导入（不影响本次导入结果），建议去单位管理核实是不是打法不一致或者需要新建"
+        >
+          <div>{{ importResult.unmatchedUnits.join('、') }}</div>
+        </el-alert>
         <template v-else>
           <el-alert type="error" :closable="false" title="校验未通过，以下问题需要改完重新上传，本次没有导入任何数据" />
           <el-table :data="importResult.errors" size="small" style="margin-top: 10px; max-height: 260px; overflow-y: auto;">
@@ -186,6 +213,7 @@ import {
   importExpertBatch
 } from '@/api/expertProfile'
 import { submitExpertProfile } from '@/api/expertApproval'
+import { getSysOrganizationTree } from '@/api/sysOrganization'
 
 import { formatDate } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -219,6 +247,7 @@ const initFormData = () => ({
   ethnicity: '',
   politicalStatus: '',
   unitName: '',
+  orgId: null,
   department: '',
   adminTitle: '',
   techTitle: '',
@@ -246,6 +275,34 @@ const initFormData = () => ({
 })
 
 const formData = ref(initFormData())
+
+// 所在单位下拉的候选项：来自单位管理维护的真实单位树，摊平成一维列表方便过滤/选择。
+// 选中已有单位时顺带记下 orgId，写入档案后就能直接进对应单位的审核队列，不用再靠后端
+// 按单位名做模糊匹配（这也是导入功能一直存在"单位匹配不上就成孤儿档案"问题的根源）
+const orgOptions = ref([])
+const flattenOrgTree = (nodes, acc = []) => {
+  nodes.forEach(n => {
+    // id=1 是顶层的"北京市哲学社会科学规划办公室"，是主管单位本身而不是专家挂靠的实际单位，
+    // 跟后端 matchOrgId() 的排除逻辑保持一致，不作为可选单位出现
+    if (n.name && n.ID !== 1) acc.push({ id: n.ID, name: n.name })
+    if (n.children && n.children.length) flattenOrgTree(n.children, acc)
+  })
+  return acc
+}
+const fetchOrgOptions = async () => {
+  const res = await getSysOrganizationTree()
+  if (res.code === 0) {
+    orgOptions.value = flattenOrgTree(res.data.tree || [])
+  }
+}
+fetchOrgOptions()
+
+// 选中的名字如果能在单位列表里找到，就带上 orgId；找不到（新输入的自由文本）就清空 orgId，
+// 跟现在后端"org_id 为空时兜底交给市级审核"的逻辑保持一致，不强行卡死流程
+const onUnitNameChange = (name) => {
+  const matched = orgOptions.value.find(org => org.name === name)
+  formData.value.orgId = matched ? matched.id : null
+}
 
 const rule = reactive({
   name: [
@@ -446,4 +503,11 @@ const handleImportSubmit = async () => {
 }
 </script>
 
-<style></style>
+<style>
+.unit-hint {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+</style>

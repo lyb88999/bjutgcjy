@@ -119,6 +119,9 @@ func (expertProfileService *ExpertProfileService) GetExpertProfileInfoList(info 
 	if info.OrgId != nil {
 		db = db.Where("org_id = ?", info.OrgId)
 	}
+	if info.OrgUnmatched {
+		db = db.Where("org_id IS NULL")
+	}
 
 	err = db.Count(&total).Error
 	if err != nil {

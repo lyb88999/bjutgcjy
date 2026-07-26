@@ -17,4 +17,5 @@ type ExpertBatchImportResult struct {
 	CreatedAchievements  int                         `json:"createdAchievements"`  // 新建的成果记录数
 	SkippedAchievements  int                         `json:"skippedAchievements"`  // 该专家名下已有同标题成果、跳过的数量
 	Errors               []ExpertBatchImportRowError `json:"errors"`               // 校验失败的行，成功时为空
+	UnmatchedUnits       []string                    `json:"unmatchedUnits"`       // 填写的单位名在"单位管理"里找不到对应记录，不阻断导入，但需要人工核实/补建
 }

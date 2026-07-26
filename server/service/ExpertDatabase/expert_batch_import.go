@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
@@ -275,6 +276,7 @@ func (expertProfileService *ExpertProfileService) ImportBatch(src io.Reader, ope
 	}
 
 	nameToExpertID := map[string]uint{}
+	unmatchedUnits := map[string]bool{}
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		for _, pr := range profileList {
 			var existing ExpertDatabase.ExpertProfile
@@ -288,6 +290,14 @@ func (expertProfileService *ExpertProfileService) ImportBatch(src io.Reader, ope
 				return findErr
 			}
 
+			// 单位名在"单位管理"里按关键词匹配不上，不阻断导入——只是先留空 org_id（提交审核时
+			// 会兜底交给市级审核），同时把这个单位名记下来，导入完成后提示管理员去核实/补建，
+			// 而不是自动建一个新单位（自由文本打法五花八门，自动建容易堆出一堆重复/近似的单位记录）
+			orgId := matchOrgId(pr.fields["unitName"])
+			if orgId == nil {
+				unmatchedUnits[pr.fields["unitName"]] = true
+			}
+
 			profile := ExpertDatabase.ExpertProfile{
 				Name: pr.name, Gender: pr.fields["gender"], Ethnicity: pr.fields["ethnicity"], PoliticalStatus: pr.fields["politicalStatus"],
 				UnitName: pr.fields["unitName"], Department: pr.fields["department"], AdminTitle: pr.fields["adminTitle"], TechTitle: pr.fields["techTitle"],
@@ -296,7 +306,7 @@ func (expertProfileService *ExpertProfileService) ImportBatch(src io.Reader, ope
 				DisciplineL1: pr.fields["disciplineL1"], DisciplineL2: pr.fields["disciplineL2"], ResearchDirections: pr.fields["researchDirections"], ResearchKeywords: pr.fields["researchKeywords"],
 				Status:         initialStatus,
 				ReviewBypassed: skipReview,
-				OrgId:          matchOrgId(pr.fields["unitName"]),
+				OrgId:          orgId,
 				SubmittedBy:    &operatorID,
 				CreatedBy:      operatorID,
 				UpdatedBy:      operatorID,
@@ -345,6 +355,11 @@ func (expertProfileService *ExpertProfileService) ImportBatch(src io.Reader, ope
 			expertScoreSvc.recomputeIfPublished(expertID)
 		}
 	}
+
+	for unitName := range unmatchedUnits {
+		result.UnmatchedUnits = append(result.UnmatchedUnits, unitName)
+	}
+	sort.Strings(result.UnmatchedUnits)
 
 	result.Success = true
 	return result, nil
