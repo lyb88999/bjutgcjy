@@ -13,27 +13,54 @@ import (
 
 type ExpertSearchService struct{}
 
-// buildSearchCorpus 拼接某专家用于相关性计算的检索语料：成果标题/关键词 + 关联标签
-func (s *ExpertSearchService) buildSearchCorpus(expertID uint) string {
+// buildSearchCorpusMap 一次性预取一批候选专家的检索语料（成果标题/关键词 + 关联标签），
+// 整批只发两条 SQL——替代原先逐个专家各查两次的写法，候选集几百上千条时检索耗时不再随
+// 人数线性膨胀。标签 JOIN 只认未解除的关联（relation 是软删除，解除过的标签不该再计入语料）
+func (s *ExpertSearchService) buildSearchCorpusMap(expertIDs []uint) (map[uint]string, error) {
+	builders := make(map[uint]*strings.Builder, len(expertIDs))
+	appendTerm := func(expertID uint, term string) {
+		if term == "" {
+			return
+		}
+		sb, ok := builders[expertID]
+		if !ok {
+			sb = &strings.Builder{}
+			builders[expertID] = sb
+		}
+		sb.WriteString(term)
+		sb.WriteString(" ")
+	}
+
 	var achievements []ExpertDatabase.ExpertAchievement
-	global.GVA_DB.Where("expert_id = ?", expertID).Find(&achievements)
-	var sb strings.Builder
+	if err := global.GVA_DB.Where("expert_id IN ?", expertIDs).Find(&achievements).Error; err != nil {
+		return nil, err
+	}
 	for _, a := range achievements {
-		sb.WriteString(a.Title)
-		sb.WriteString(" ")
-		sb.WriteString(a.Keywords)
-		sb.WriteString(" ")
+		appendTerm(a.ExpertId, a.Title)
+		appendTerm(a.ExpertId, a.Keywords)
 	}
-	var tags []ExpertDatabase.ExpertTag
-	global.GVA_DB.
-		Joins("JOIN expert_tag_relation ON expert_tag_relation.tag_id = expert_tag.id").
-		Where("expert_tag_relation.expert_id = ?", expertID).
-		Find(&tags)
-	for _, t := range tags {
-		sb.WriteString(t.TagValue)
-		sb.WriteString(" ")
+
+	type expertTagRow struct {
+		ExpertId uint
+		TagValue string
 	}
-	return sb.String()
+	var tagRows []expertTagRow
+	if err := global.GVA_DB.Model(&ExpertDatabase.ExpertTag{}).
+		Select("expert_tag_relation.expert_id AS expert_id, expert_tag.tag_value AS tag_value").
+		Joins("JOIN expert_tag_relation ON expert_tag_relation.tag_id = expert_tag.id AND expert_tag_relation.deleted_at IS NULL").
+		Where("expert_tag_relation.expert_id IN ?", expertIDs).
+		Scan(&tagRows).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range tagRows {
+		appendTerm(row.ExpertId, row.TagValue)
+	}
+
+	corpus := make(map[uint]string, len(builders))
+	for id, sb := range builders {
+		corpus[id] = sb.String()
+	}
+	return corpus, nil
 }
 
 // splitKeyword 检索词切分 V1：按常见分隔符拆词，够用即可；后续量大再引入分词库/ES（见技术方案 2.2）
@@ -81,9 +108,21 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 	rankingWeights := expertScoreSvc.dictWeights(DictTypeRankingWeight, defaultRankingWeights)
 	titleWeights := expertScoreSvc.dictWeights(DictTypeTitleLevel, defaultTitleLevelWeights)
 
+	// 只有带关键词检索才需要语料；默认浏览（不带关键词）时 relevance 恒为 1，语料查询整个跳过
+	corpus := map[uint]string{}
+	if req.Keyword != "" && len(candidates) > 0 {
+		ids := make([]uint, 0, len(candidates))
+		for _, c := range candidates {
+			ids = append(ids, c.ID)
+		}
+		if corpus, err = s.buildSearchCorpusMap(ids); err != nil {
+			return nil, err
+		}
+	}
+
 	items = make([]ExpertDatabaseRes.ExpertSearchItem, 0, len(candidates))
 	for _, c := range candidates {
-		relevance := s.relevance(s.buildSearchCorpus(c.ID), req.Keyword)
+		relevance := s.relevance(corpus[c.ID], req.Keyword)
 		// 填了关键词却一个词都没命中的候选人直接跳过，不进结果集——不然职称权重、社会贡献分
 		// 这些不受相关性影响的分项会把一堆跟关键词毫不沾边的人顶到排名前面，"检索"就退化成了
 		// "不管搜什么都是把全库按职称排一遍"，relevance 字段形同虚设。关键词为空时 relevance()

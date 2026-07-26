@@ -18,7 +18,7 @@ type ExpertProfile struct {
 	UnitName         string     `json:"unitName" form:"unitName" gorm:"column:unit_name;comment:所在单位;"`                         //所在单位
 	Department       string     `json:"department" form:"department" gorm:"column:department;comment:所属院系或部门;"`                 //所属院系或部门
 	AdminTitle       string     `json:"adminTitle" form:"adminTitle" gorm:"column:admin_title;comment:行政职务;"`                   //行政职务
-	TechTitle        string     `json:"techTitle" form:"techTitle" gorm:"column:tech_title;comment:专业技术职称;"`                    //专业技术职称
+	TechTitle        string     `json:"techTitle" form:"techTitle" gorm:"column:tech_title;index;comment:专业技术职称;"`              //专业技术职称
 	Phone            string     `json:"phone" form:"phone" gorm:"column:phone;comment:办公电话;"`                                   //办公电话
 	Mobile           string     `json:"mobile" form:"mobile" gorm:"column:mobile;comment:手机号码;"`                                //手机号码
 	Email            string     `json:"email" form:"email" gorm:"column:email;comment:电子邮箱;"`                                   //电子邮箱
@@ -31,8 +31,8 @@ type ExpertProfile struct {
 	HonorTitle       string     `json:"honorTitle" form:"honorTitle" gorm:"column:honor_title;comment:荣誉称号;"`                   //荣誉称号
 
 	// 二、学科领域画像
-	DisciplineL1       string `json:"disciplineL1" form:"disciplineL1" gorm:"column:discipline_l1;comment:一级学科;"`                          //一级学科
-	DisciplineL2       string `json:"disciplineL2" form:"disciplineL2" gorm:"column:discipline_l2;comment:二级学科;"`                          //二级学科
+	DisciplineL1       string `json:"disciplineL1" form:"disciplineL1" gorm:"column:discipline_l1;index;comment:一级学科;"`                    //一级学科
+	DisciplineL2       string `json:"disciplineL2" form:"disciplineL2" gorm:"column:discipline_l2;index;comment:二级学科;"`                    //二级学科
 	CrossDiscipline    string `json:"crossDiscipline" form:"crossDiscipline" gorm:"column:cross_discipline;comment:交叉学科领域;"`               //交叉学科领域
 	DisciplinePlatform string `json:"disciplinePlatform" form:"disciplinePlatform" gorm:"column:discipline_platform;comment:所属学科平台/研究基地;"` //所属学科平台/研究基地
 
@@ -46,7 +46,7 @@ type ExpertProfile struct {
 	MethodExpertise    string `json:"methodExpertise" form:"methodExpertise" gorm:"column:method_expertise;comment:研究方法专长;"`             //研究方法专长
 
 	// 审核工作流字段（状态机逻辑在里程碑 B 补充，这里先建列）
-	Status      string `json:"status" form:"status" gorm:"column:status;default:draft;comment:审核状态;"`      //draft/pending_org_review/org_rejected/pending_city_review/city_rejected/published
+	Status      string `json:"status" form:"status" gorm:"column:status;index;default:draft;comment:审核状态;"` //draft/pending_org_review/org_rejected/pending_city_review/city_rejected/published
 	OrgId       *uint  `json:"orgId" form:"orgId" gorm:"column:org_id;index;comment:申报单位ID;"`              //申报单位ID
 	SubmittedBy *uint  `json:"submittedBy" form:"submittedBy" gorm:"column:submitted_by;comment:申报人用户ID;"` //申报人用户ID
 	CurrentStep string `json:"currentStep" form:"currentStep" gorm:"column:current_step;comment:当前审核环节;"`  //当前审核环节

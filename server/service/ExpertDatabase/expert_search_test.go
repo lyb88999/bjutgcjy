@@ -91,3 +91,42 @@ func TestRankedCandidates_EmptyKeywordReturnsEveryone(t *testing.T) {
 		t.Fatalf("不带关键词应该是默认浏览，返回全部已发布记录，想要 3 条，实际 %d 条", len(items))
 	}
 }
+
+// 标签关联是软删除的：解除关联之后再搜这个标签词，不应该还能命中这位专家
+func TestRankedCandidates_RemovedTagRelationExcludedFromCorpus(t *testing.T) {
+	db := setupTestDB(t)
+
+	expert := ExpertDatabase.ExpertProfile{Name: "曾有标签的专家", Status: StatusPublished}
+	if err := db.Create(&expert).Error; err != nil {
+		t.Fatalf("建档案失败: %v", err)
+	}
+	tag := ExpertDatabase.ExpertTag{TagType: "keyword", TagValue: "碳中和"}
+	if err := db.Create(&tag).Error; err != nil {
+		t.Fatalf("建标签失败: %v", err)
+	}
+	relation := ExpertDatabase.ExpertTagRelation{ExpertId: expert.ID, TagId: tag.ID}
+	if err := db.Create(&relation).Error; err != nil {
+		t.Fatalf("建关联失败: %v", err)
+	}
+
+	svc := &ExpertSearchService{}
+	items, err := svc.rankedCandidates(ExpertDatabaseReq.ExpertSearchReq{Keyword: "碳中和"})
+	if err != nil {
+		t.Fatalf("检索不应该报错: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("标签关联存在时应命中 1 条，实际 %d 条", len(items))
+	}
+
+	// 解除关联（软删除），语料里不应再有这个标签
+	if err := db.Delete(&relation).Error; err != nil {
+		t.Fatalf("解除关联失败: %v", err)
+	}
+	items, err = svc.rankedCandidates(ExpertDatabaseReq.ExpertSearchReq{Keyword: "碳中和"})
+	if err != nil {
+		t.Fatalf("检索不应该报错: %v", err)
+	}
+	if len(items) != 0 {
+		t.Fatalf("关联已解除，不应再命中，实际 %d 条", len(items))
+	}
+}
