@@ -1,11 +1,30 @@
 <template>
-  <div v-if="!items || !items.length" class="ranking-empty">暂无数据</div>
-  <div v-else class="ranking-list">
-    <div v-for="(item, index) in items" :key="item.label + index" class="ranking-item">
-      <span class="rank-badge" :class="rankClass(index)">{{ index + 1 }}</span>
-      <span class="rank-label" :title="item.label">{{ item.label }}</span>
+  <div
+    v-if="!items || !items.length"
+    class="ranking-empty"
+  >暂无数据</div>
+  <div
+    v-else
+    class="ranking-list"
+  >
+    <div
+      v-for="(item, index) in items"
+      :key="item.label + index"
+      class="ranking-item"
+    >
+      <span
+        class="rank-badge"
+        :class="rankClass(index)"
+      >{{ index + 1 }}</span>
+      <span
+        class="rank-label"
+        :title="item.label"
+      >{{ item.label }}</span>
       <div class="rank-bar-track">
-        <div class="rank-bar-fill" :style="{ width: (item.count / max * 100) + '%' }" />
+        <div
+          class="rank-bar-fill"
+          :style="{ width: (item.count / max * 100) + '%' }"
+        />
       </div>
       <span class="rank-count">{{ item.count }}</span>
     </div>

@@ -71,14 +71,20 @@
         <div class="panel-header">
           <span class="panel-title">审核状态分布</span>
         </div>
-        <div ref="statusChartRef" class="chart-box" />
+        <div
+          ref="statusChartRef"
+          class="chart-box"
+        />
       </div>
       <div class="panel">
         <div class="panel-header">
           <span class="panel-title">最近30天新增趋势</span>
           <span class="panel-sub">共 {{ trendTotal }} 条</span>
         </div>
-        <div ref="trendChartRef" class="chart-box" />
+        <div
+          ref="trendChartRef"
+          class="chart-box"
+        />
       </div>
     </div>
 
@@ -182,7 +188,7 @@ const renderTrendChart = () => {
     tooltip: { trigger: 'axis' },
     grid: { left: 40, right: 20, top: 20, bottom: 40 },
     xAxis: { type: 'category', data: stats.value.recentTrend.map(item => item.date.slice(5)), boundaryGap: false },
-    yAxis: { type: 'value', minInterval: 1, splitLine: { lineStyle: { type: 'dashed' } } },
+    yAxis: { type: 'value', minInterval: 1, splitLine: { lineStyle: { type: 'dashed' }}},
     series: [{
       type: 'line',
       smooth: true,
@@ -200,7 +206,7 @@ const renderTrendChart = () => {
   })
 }
 
-const loadData = async () => {
+const loadData = async() => {
   const res = await getDashboardStats()
   if (res.code === 0) {
     stats.value = res.data
