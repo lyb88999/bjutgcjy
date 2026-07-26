@@ -24,4 +24,12 @@ type ExpertDashboardStats struct {
 	OrgBreakdown        []ExpertDashboardCount      `json:"orgBreakdown"`
 	DisciplineBreakdown []ExpertDashboardCount      `json:"disciplineBreakdown"`
 	RecentTrend         []ExpertDashboardTrendPoint `json:"recentTrend"`
+
+	// 内容质量类指标：跟"库里有多少人"无关，反映已发布数据本身的完整度和含金量
+	CoveredOrgCount           int64                  `json:"coveredOrgCount"`           // 有至少一位已发布专家的单位数量
+	TaggedRatio               float64                `json:"taggedRatio"`               // 已发布专家里，打过至少一个标签的比例（0~100）
+	AvgCompositeScore         float64                `json:"avgCompositeScore"`         // 已发布专家的平均综合排序得分
+	SeniorTitleRatio          float64                `json:"seniorTitleRatio"`          // 已发布专家里，教授/研究员级别职称的比例（0~100）
+	AchievementLevelBreakdown []ExpertDashboardCount `json:"achievementLevelBreakdown"` // 已发布专家名下研究成果，按级别分布
+	AdoptionLevelBreakdown    []ExpertDashboardCount `json:"adoptionLevelBreakdown"`    // 已发布专家名下决策影响记录，按采纳/批示单位级别分布
 }

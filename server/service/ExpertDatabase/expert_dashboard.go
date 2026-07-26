@@ -113,5 +113,67 @@ func (s *ExpertDashboardService) GetDashboardStats(operatorID uint) (ExpertDatab
 		})
 	}
 
+	// 覆盖单位数：有至少一位已发布专家的单位数量（org_id 为空的不算数，那些还没关联到具体单位）
+	if err := baseQuery().Where("status = ? AND org_id IS NOT NULL", StatusPublished).
+		Distinct("org_id").Count(&stats.CoveredOrgCount).Error; err != nil {
+		return stats, err
+	}
+
+	// 平均综合排序得分、高级职称（教授/研究员）占比，都是衡量"已发布数据含金量"的指标，
+	// 跟"库里有多少人"是两件事——哪怕只有几十条，也应该看得出质量高不高
+	type scoreAggRow struct {
+		AvgScore    float64
+		SeniorCount int64
+	}
+	var scoreAgg scoreAggRow
+	if err := baseQuery().Where("status = ?", StatusPublished).
+		Select("COALESCE(AVG(composite_score), 0) as avg_score, SUM(CASE WHEN tech_title IN ('教授','研究员') THEN 1 ELSE 0 END) as senior_count").
+		Scan(&scoreAgg).Error; err != nil {
+		return stats, err
+	}
+	stats.AvgCompositeScore = scoreAgg.AvgScore
+	if stats.TotalPublished > 0 {
+		stats.SeniorTitleRatio = float64(scoreAgg.SeniorCount) / float64(stats.TotalPublished) * 100
+	}
+
+	// 标签覆盖率：打过标签才谈得上被检索关键词准确命中，这个比例低说明检索大概率会失灵
+	var taggedCount int64
+	tagDB := global.GVA_DB.Table("expert_profile p").
+		Joins("JOIN expert_tag_relation r ON r.expert_id = p.id AND r.deleted_at IS NULL").
+		Where("p.status = ? AND p.deleted_at IS NULL", StatusPublished)
+	if orgScope {
+		tagDB = tagDB.Where("p.org_id = ?", *operator.OrgId)
+	}
+	if err := tagDB.Distinct("p.id").Count(&taggedCount).Error; err != nil {
+		return stats, err
+	}
+	if stats.TotalPublished > 0 {
+		stats.TaggedRatio = float64(taggedCount) / float64(stats.TotalPublished) * 100
+	}
+
+	// 已发布专家名下研究成果按级别分布，看看"国家级"这种含金量高的成果占比多不多
+	achievementDB := global.GVA_DB.Table("expert_achievement a").
+		Select("CASE WHEN a.level IS NULL OR a.level = '' THEN '未标注' ELSE a.level END as label, COUNT(*) as count").
+		Joins("JOIN expert_profile p ON p.id = a.expert_id").
+		Where("p.status = ? AND p.deleted_at IS NULL AND a.deleted_at IS NULL", StatusPublished)
+	if orgScope {
+		achievementDB = achievementDB.Where("p.org_id = ?", *operator.OrgId)
+	}
+	if err := achievementDB.Group("label").Order("count DESC").Scan(&stats.AchievementLevelBreakdown).Error; err != nil {
+		return stats, err
+	}
+
+	// 已发布专家名下决策影响记录，按采纳/批示单位级别分布，跟成果级别分布是同一个思路
+	adoptionDB := global.GVA_DB.Table("expert_adoption_record r").
+		Select("CASE WHEN r.adopting_unit_level IS NULL OR r.adopting_unit_level = '' THEN '未标注' ELSE r.adopting_unit_level END as label, COUNT(*) as count").
+		Joins("JOIN expert_profile p ON p.id = r.expert_id").
+		Where("p.status = ? AND p.deleted_at IS NULL AND r.deleted_at IS NULL", StatusPublished)
+	if orgScope {
+		adoptionDB = adoptionDB.Where("p.org_id = ?", *operator.OrgId)
+	}
+	if err := adoptionDB.Group("label").Order("count DESC").Scan(&stats.AdoptionLevelBreakdown).Error; err != nil {
+		return stats, err
+	}
+
 	return stats, nil
 }
