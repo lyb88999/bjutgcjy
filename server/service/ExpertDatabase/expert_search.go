@@ -8,6 +8,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase"
 	ExpertDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase/request"
 	ExpertDatabaseRes "github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase/response"
+	"github.com/xuri/excelize/v2"
 )
 
 type ExpertSearchService struct{}
@@ -56,9 +57,11 @@ func (s *ExpertSearchService) relevance(corpus string, keyword string) float64 {
 	return float64(hit) / float64(len(terms))
 }
 
-// Search 专家综合推荐排序检索：先按筛选条件圈定已发布候选集，再按
-// realtimeScore = w1*achievement_score*relevance + w2*influence_score*relevance + w3*title_score + w4*social_score 排序
-func (s *ExpertSearchService) Search(req ExpertDatabaseReq.ExpertSearchReq) (list []ExpertDatabaseRes.ExpertSearchItem, total int64, err error) {
+// rankedCandidates 按筛选条件圈定已发布候选集，并按
+// realtimeScore = w1*achievement_score*relevance + w2*influence_score*relevance + w3*title_score + w4*social_score
+// 算好相关性/实时得分、排好序，返回不分页的完整结果——Search()（列表分页）和 ExportSearchResults()
+// （导出全部）共用同一份排序逻辑，避免排序算法在两个地方各写一遍、后续改权重容易漏改一处
+func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearchReq) (items []ExpertDatabaseRes.ExpertSearchItem, err error) {
 	db := global.GVA_DB.Model(&ExpertDatabase.ExpertProfile{}).Where("status = ?", "published")
 	if req.DisciplineL1 != "" {
 		db = db.Where("discipline_l1 = ?", req.DisciplineL1)
@@ -74,14 +77,20 @@ func (s *ExpertSearchService) Search(req ExpertDatabaseReq.ExpertSearchReq) (lis
 	if err = db.Find(&candidates).Error; err != nil {
 		return
 	}
-	total = int64(len(candidates))
 
 	rankingWeights := expertScoreSvc.dictWeights(DictTypeRankingWeight, defaultRankingWeights)
 	titleWeights := expertScoreSvc.dictWeights(DictTypeTitleLevel, defaultTitleLevelWeights)
 
-	items := make([]ExpertDatabaseRes.ExpertSearchItem, 0, len(candidates))
+	items = make([]ExpertDatabaseRes.ExpertSearchItem, 0, len(candidates))
 	for _, c := range candidates {
 		relevance := s.relevance(s.buildSearchCorpus(c.ID), req.Keyword)
+		// 填了关键词却一个词都没命中的候选人直接跳过，不进结果集——不然职称权重、社会贡献分
+		// 这些不受相关性影响的分项会把一堆跟关键词毫不沾边的人顶到排名前面，"检索"就退化成了
+		// "不管搜什么都是把全库按职称排一遍"，relevance 字段形同虚设。关键词为空时 relevance()
+		// 总是返回 1，这里的判断天然不影响不带关键词的默认浏览场景。
+		if req.Keyword != "" && relevance == 0 {
+			continue
+		}
 		titleScore, ok := titleWeights[c.TechTitle]
 		if !ok {
 			titleScore = 1
@@ -100,6 +109,16 @@ func (s *ExpertSearchService) Search(req ExpertDatabaseReq.ExpertSearchReq) (lis
 	sort.Slice(items, func(i, j int) bool {
 		return items[i].RealtimeScore > items[j].RealtimeScore
 	})
+	return items, nil
+}
+
+// Search 专家综合推荐排序检索：圈定候选集、排好序之后再分页返回
+func (s *ExpertSearchService) Search(req ExpertDatabaseReq.ExpertSearchReq) (list []ExpertDatabaseRes.ExpertSearchItem, total int64, err error) {
+	items, err := s.rankedCandidates(req)
+	if err != nil {
+		return
+	}
+	total = int64(len(items))
 
 	page := req.Page
 	pageSize := req.PageSize
@@ -118,4 +137,42 @@ func (s *ExpertSearchService) Search(req ExpertDatabaseReq.ExpertSearchReq) (lis
 		end = len(items)
 	}
 	return items[start:end], total, nil
+}
+
+var searchExportHeaders = []string{
+	"姓名", "所在单位", "专业技术职称", "一级学科", "研究关键词",
+	"相关性", "实时综合得分", "成果分", "决策影响分", "社会贡献分",
+}
+
+// ExportSearchResults 导出当前检索条件下命中的全部结果（按相关性/实时得分排好序，不分页）
+func (s *ExpertSearchService) ExportSearchResults(req ExpertDatabaseReq.ExpertSearchReq) (*excelize.File, error) {
+	items, err := s.rankedCandidates(req)
+	if err != nil {
+		return nil, err
+	}
+
+	f := excelize.NewFile()
+	sheetName := "检索结果"
+	if err := f.SetSheetName("Sheet1", sheetName); err != nil {
+		return nil, err
+	}
+	for i, h := range searchExportHeaders {
+		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
+		if err := f.SetCellValue(sheetName, cell, h); err != nil {
+			return nil, err
+		}
+	}
+	for rowIdx, item := range items {
+		row := []interface{}{
+			item.Name, item.UnitName, item.TechTitle, item.DisciplineL1, item.ResearchKeywords,
+			item.Relevance, item.RealtimeScore, item.AchievementScore, item.InfluenceScore, item.SocialScore,
+		}
+		for i, v := range row {
+			cell, _ := excelize.CoordinatesToCellName(i+1, rowIdx+2)
+			if err := f.SetCellValue(sheetName, cell, v); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return f, nil
 }

@@ -49,10 +49,14 @@ JOIN (
   SELECT '/user/getUserInfo', 'GET'
 ) base ON 1=1;
 
--- 专家检索：三个角色都能查看已发布专家的综合排序结果
+-- 专家检索：三个角色都能查看已发布专家的综合排序结果，以及导出当前检索结果
 INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5)
-SELECT 'p', a.authority_id, '/expertDatabase/search', 'GET', '', '', ''
-FROM (SELECT 9001 AS authority_id UNION SELECT 9002 UNION SELECT 9003) a;
+SELECT 'p', a.authority_id, ep.path, 'GET', '', '', ''
+FROM (SELECT 9001 AS authority_id UNION SELECT 9002 UNION SELECT 9003) a
+JOIN (
+  SELECT '/expertDatabase/search' AS path UNION ALL
+  SELECT '/expertDatabase/exportSearchResults'
+) ep ON 1=1;
 
 -- 审核台是三个角色共用的同一个页面：一进页面就会请求"我发起的"（myDrafts），
 -- 点开"待我审核的"tab 会同时请求单位待审（pendingOrgReview）和市级待审（pendingCityReview）——
@@ -75,6 +79,7 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','9001','/expertProfile/updateExpertProfile','PUT','','',''),
 ('p','9001','/expertProfile/findExpertProfile','GET','','',''),
 ('p','9001','/expertProfile/getExpertProfileList','GET','','',''),
+('p','9001','/expertProfile/exportExpertProfiles','GET','','',''),
 
 ('p','9001','/expertAchievement/createExpertAchievement','POST','','',''),
 ('p','9001','/expertAchievement/deleteExpertAchievement','DELETE','','',''),
@@ -114,6 +119,7 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','9002','/expertProfile/findExpertProfile','GET','','',''),
 ('p','9002','/expertProfile/getExpertProfileList','GET','','',''),
+('p','9002','/expertProfile/exportExpertProfiles','GET','','',''),
 ('p','9002','/expertAchievement/findExpertAchievement','GET','','',''),
 ('p','9002','/expertAchievement/getExpertAchievementList','GET','','',''),
 ('p','9002','/expertAdoptionRecord/findExpertAdoptionRecord','GET','','',''),
@@ -125,6 +131,7 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','9002','/expertTag/getExpertTagsByExpertId','GET','','',''),
 ('p','9002','/expertApproval/pendingOrgReview','GET','','',''),
 ('p','9002','/expertApproval/orgApprove','POST','','',''),
+('p','9002','/expertApproval/batchOrgApprove','POST','','',''),
 ('p','9002','/expertApproval/orgReject','POST','','',''),
 ('p','9002','/expertApproval/getApprovalLogList','GET','','',''),
 
@@ -142,6 +149,7 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','9003','/expertProfile/findExpertProfile','GET','','',''),
 ('p','9003','/expertProfile/getExpertProfileList','GET','','',''),
+('p','9003','/expertProfile/exportExpertProfiles','GET','','',''),
 ('p','9003','/expertAchievement/findExpertAchievement','GET','','',''),
 ('p','9003','/expertAchievement/getExpertAchievementList','GET','','',''),
 ('p','9003','/expertAdoptionRecord/findExpertAdoptionRecord','GET','','',''),
@@ -153,6 +161,7 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','9003','/expertTag/getExpertTagsByExpertId','GET','','',''),
 ('p','9003','/expertApproval/pendingCityReview','GET','','',''),
 ('p','9003','/expertApproval/cityApprove','POST','','',''),
+('p','9003','/expertApproval/batchCityApprove','POST','','',''),
 ('p','9003','/expertApproval/cityReject','POST','','',''),
 ('p','9003','/expertApproval/getApprovalLogList','GET','','',''),
 ('p','9003','/expertDatabase/dashboardStats','GET','','','');

@@ -35,6 +35,7 @@
       <div v-if="!isReadOnlyReviewer" class="gva-btn-list">
         <el-button type="primary" icon="plus" @click="openDialog">新增</el-button>
         <el-button icon="upload" style="margin-left: 10px;" @click="openImportDialog">批量导入</el-button>
+        <el-button icon="download" style="margin-left: 10px;" :loading="exporting" @click="handleExport">导出当前结果</el-button>
         <el-button icon="delete" style="margin-left: 10px;" :disabled="!multipleSelection.length" @click="onDelete">删除</el-button>
       </div>
       <el-table ref="multipleTable" style="width: 100%" tooltip-effect="dark" :data="tableData" row-key="ID"
@@ -210,7 +211,8 @@ import {
   findExpertProfile,
   getExpertProfileList,
   downloadImportTemplate,
-  importExpertBatch
+  importExpertBatch,
+  exportExpertProfiles
 } from '@/api/expertProfile'
 import { submitExpertProfile } from '@/api/expertApproval'
 import { getSysOrganizationTree } from '@/api/sysOrganization'
@@ -473,6 +475,24 @@ const handleFileChange = (file) => {
   importFile.value = file.raw
   importResult.value = null
 }
+const exporting = ref(false)
+const handleExport = async () => {
+  exporting.value = true
+  try {
+    // 导出跟当前列表页完全相同的筛选条件（不带分页参数，后端会返回全部匹配结果，不只是当前这一页）
+    const res = await exportExpertProfiles(searchInfo.value)
+    const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '专家列表导出.xlsx'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  } finally {
+    exporting.value = false
+  }
+}
+
 const handleDownloadTemplate = async () => {
   const res = await downloadImportTemplate()
   const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })

@@ -1,6 +1,8 @@
 package ExpertDatabase
 
 import (
+	"net/http"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase"
 	ExpertDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase/request"
@@ -149,4 +151,34 @@ func (expertProfileApi *ExpertProfileApi) GetExpertProfileList(c *gin.Context) {
 			PageSize: pageInfo.PageSize,
 		}, "获取成功", c)
 	}
+}
+
+// ExportExpertProfiles 导出当前查询条件下命中的专家列表（跟列表页筛选条件、角色数据域收敛完全一致）
+// @Tags ExpertProfile
+// @Summary 导出当前筛选结果
+// @Security ApiKeyAuth
+// @Produce application/octet-stream
+// @Param data query ExpertDatabaseReq.ExpertProfileSearch true "导出当前筛选结果"
+// @Router /expertProfile/exportExpertProfiles [get]
+func (expertProfileApi *ExpertProfileApi) ExportExpertProfiles(c *gin.Context) {
+	var pageInfo ExpertDatabaseReq.ExpertProfileSearch
+	if err := c.ShouldBindQuery(&pageInfo); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	f, err := expertProfileService.ExportExpertProfiles(pageInfo, utils.GetUserID(c))
+	if err != nil {
+		global.GVA_LOG.Error("导出失败!", zap.Error(err))
+		response.FailWithMessage("导出失败", c)
+		return
+	}
+	buf, err := f.WriteToBuffer()
+	if err != nil {
+		global.GVA_LOG.Error("导出失败!", zap.Error(err))
+		response.FailWithMessage("导出失败", c)
+		return
+	}
+	c.Header("Content-Disposition", "attachment; filename=expert_profile_export.xlsx")
+	c.Header("success", "true")
+	c.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buf.Bytes())
 }

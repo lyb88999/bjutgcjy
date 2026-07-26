@@ -15,6 +15,13 @@ export const orgApproveExpertProfile = (data) => {
 }
 
 // @Tags ExpertApproval
+// @Summary 批量单位审核通过
+// @Router /expertApproval/batchOrgApprove [post]
+export const batchOrgApproveExpertProfile = (data) => {
+  return service({ url: '/expertApproval/batchOrgApprove', method: 'post', data })
+}
+
+// @Tags ExpertApproval
 // @Summary 单位审核退回
 // @Router /expertApproval/orgReject [post]
 export const orgRejectExpertProfile = (data) => {
@@ -26,6 +33,13 @@ export const orgRejectExpertProfile = (data) => {
 // @Router /expertApproval/cityApprove [post]
 export const cityApproveExpertProfile = (data) => {
   return service({ url: '/expertApproval/cityApprove', method: 'post', data })
+}
+
+// @Tags ExpertApproval
+// @Summary 批量市级审核通过
+// @Router /expertApproval/batchCityApprove [post]
+export const batchCityApproveExpertProfile = (data) => {
+  return service({ url: '/expertApproval/batchCityApprove', method: 'post', data })
 }
 
 // @Tags ExpertApproval

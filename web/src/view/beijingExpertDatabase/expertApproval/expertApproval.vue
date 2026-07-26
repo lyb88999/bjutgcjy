@@ -36,7 +36,13 @@
       <el-tab-pane label="待我审核的" name="pending">
         <template v-if="showOrgSection">
           <el-divider content-position="left">待本单位审核</el-divider>
-          <el-table :data="orgData" style="width: 100%">
+          <div class="batch-bar">
+            <el-button
+              type="primary" :disabled="!orgSelection.length" @click="openBatchApprove('org')"
+            >批量通过（{{ orgSelection.length }}）</el-button>
+          </div>
+          <el-table :data="orgData" style="width: 100%" @selection-change="v => orgSelection = v">
+            <el-table-column type="selection" width="45" />
             <el-table-column align="left" label="姓名" prop="name" width="110" />
             <el-table-column align="left" label="所在单位" prop="unitName" min-width="220" show-overflow-tooltip />
             <el-table-column align="left" label="专业技术职称" prop="techTitle" min-width="130" show-overflow-tooltip />
@@ -53,10 +59,20 @@
               </template>
             </el-table-column>
           </el-table>
+          <div class="gva-pagination">
+            <el-pagination :current-page="orgPage" :page-size="orgPageSize" :total="orgTotal"
+              layout="total, prev, pager, next" @current-change="v => { orgPage = v; fetchOrgPending() }" />
+          </div>
         </template>
         <template v-if="showCitySection">
           <el-divider content-position="left">待市级审核</el-divider>
-          <el-table :data="cityData" style="width: 100%">
+          <div class="batch-bar">
+            <el-button
+              type="primary" :disabled="!citySelection.length" @click="openBatchApprove('city')"
+            >批量通过（{{ citySelection.length }}）</el-button>
+          </div>
+          <el-table :data="cityData" style="width: 100%" @selection-change="v => citySelection = v">
+            <el-table-column type="selection" width="45" />
             <el-table-column align="left" label="姓名" prop="name" width="110" />
             <el-table-column align="left" label="所在单位" prop="unitName" min-width="220" show-overflow-tooltip />
             <el-table-column align="left" label="专业技术职称" prop="techTitle" min-width="130" show-overflow-tooltip />
@@ -73,10 +89,26 @@
               </template>
             </el-table-column>
           </el-table>
+          <div class="gva-pagination">
+            <el-pagination :current-page="cityPage" :page-size="cityPageSize" :total="cityTotal"
+              layout="total, prev, pager, next" @current-change="v => { cityPage = v; fetchCityPending() }" />
+          </div>
         </template>
         <el-empty v-if="!showOrgSection && !showCitySection" description="当前角色没有需要审核的记录" />
       </el-tab-pane>
     </el-tabs>
+
+    <el-dialog v-model="batchApproveDialogVisible" title="批量审核通过" width="420px">
+      <p>
+        确定要批量通过选中的 <strong>{{ batchApproveTarget === 'org' ? orgSelection.length : citySelection.length }}</strong> 条记录吗？
+        {{ batchApproveTarget === 'city' ? '通过后会直接发布，进入检索排序范围。' : '通过后会流转到市级审核。' }}
+      </p>
+      <p style="color: #909399; font-size: 12px;">批量操作跳过逐条核对，请确认这些记录确实不需要单独退回后再继续。</p>
+      <template #footer>
+        <el-button @click="batchApproveDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="batchApproving" @click="confirmBatchApprove">确定通过</el-button>
+      </template>
+    </el-dialog>
 
     <el-dialog v-model="rejectDialogVisible" title="退回并填写审核意见" width="40%">
       <el-form :model="rejectForm">
@@ -106,8 +138,10 @@
 import {
   submitExpertProfile,
   orgApproveExpertProfile,
+  batchOrgApproveExpertProfile,
   orgRejectExpertProfile,
   cityApproveExpertProfile,
+  batchCityApproveExpertProfile,
   cityRejectExpertProfile,
   getMyDrafts,
   getPendingOrgReview,
@@ -162,18 +196,28 @@ const fetchMine = async () => {
 }
 
 const orgData = ref([])
+const orgPage = ref(1)
+const orgPageSize = ref(20)
+const orgTotal = ref(0)
+const orgSelection = ref([])
 const fetchOrgPending = async () => {
-  const res = await getPendingOrgReview({ page: 1, pageSize: 50 })
+  const res = await getPendingOrgReview({ page: orgPage.value, pageSize: orgPageSize.value })
   if (res.code === 0) {
     orgData.value = res.data.list
+    orgTotal.value = res.data.total
   }
 }
 
 const cityData = ref([])
+const cityPage = ref(1)
+const cityPageSize = ref(20)
+const cityTotal = ref(0)
+const citySelection = ref([])
 const fetchCityPending = async () => {
-  const res = await getPendingCityReview({ page: 1, pageSize: 50 })
+  const res = await getPendingCityReview({ page: cityPage.value, pageSize: cityPageSize.value })
   if (res.code === 0) {
     cityData.value = res.data.list
+    cityTotal.value = res.data.total
   }
 }
 
@@ -211,6 +255,50 @@ const cityApprove = async (row) => {
   }
 }
 
+// 批量通过特意加一步二次确认，不做成勾完就静默一键全过——批量操作本来就少了逐条核对，
+// 至少让审核员在点下去之前再确认一遍，别手滑批量放过了不该放过的记录
+const batchApproveDialogVisible = ref(false)
+const batchApproveTarget = ref('')
+const batchApproving = ref(false)
+const openBatchApprove = (target) => {
+  batchApproveTarget.value = target
+  batchApproveDialogVisible.value = true
+}
+const confirmBatchApprove = async () => {
+  const isOrg = batchApproveTarget.value === 'org'
+  const ids = (isOrg ? orgSelection.value : citySelection.value).map(row => row.ID)
+  if (!ids.length) return
+  batchApproving.value = true
+  try {
+    const res = isOrg
+      ? await batchOrgApproveExpertProfile({ expertIds: ids })
+      : await batchCityApproveExpertProfile({ expertIds: ids })
+    if (res.code === 0) {
+      const { successCount, failCount, failures } = res.data
+      if (failCount > 0) {
+        ElMessage({
+          type: 'warning',
+          message: `成功 ${successCount} 条，失败 ${failCount} 条：${failures.map(f => `#${f.expertId} ${f.message}`).join('；')}`,
+          duration: 8000,
+          showClose: true
+        })
+      } else {
+        ElMessage({ type: 'success', message: `批量通过成功，共 ${successCount} 条` })
+      }
+      batchApproveDialogVisible.value = false
+      if (isOrg) {
+        orgSelection.value = []
+        fetchOrgPending()
+      } else {
+        citySelection.value = []
+        fetchCityPending()
+      }
+    }
+  } finally {
+    batchApproving.value = false
+  }
+}
+
 const rejectDialogVisible = ref(false)
 const rejectForm = ref({ expertId: null, opinion: '', scope: '' })
 const openReject = (row, scope) => {
@@ -245,4 +333,8 @@ const openLog = async (row) => {
 }
 </script>
 
-<style></style>
+<style>
+.batch-bar {
+  margin-bottom: 10px;
+}
+</style>

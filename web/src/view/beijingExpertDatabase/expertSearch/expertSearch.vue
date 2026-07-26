@@ -17,6 +17,7 @@
         <el-form-item>
           <el-button type="primary" icon="search" @click="onSearch">检索</el-button>
           <el-button icon="refresh" @click="onReset">重置</el-button>
+          <el-button icon="download" :loading="exporting" @click="handleExport">导出当前结果</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -54,7 +55,7 @@
 </template>
 
 <script setup>
-import { searchExpert } from '@/api/expertSearch'
+import { searchExpert, exportSearchResults } from '@/api/expertSearch'
 import { ref, reactive } from 'vue'
 
 defineOptions({
@@ -84,6 +85,24 @@ const onSearch = async () => {
     }
   } finally {
     loading.value = false
+  }
+}
+
+const exporting = ref(false)
+const handleExport = async () => {
+  exporting.value = true
+  try {
+    // 导出跟当前检索条件完全相同的结果，不带分页参数，后端按相关性/实时得分排好序返回全部命中记录
+    const res = await exportSearchResults(searchForm)
+    const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '专家检索结果导出.xlsx'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  } finally {
+    exporting.value = false
   }
 }
 

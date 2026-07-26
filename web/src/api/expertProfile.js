@@ -88,3 +88,15 @@ export const importExpertBatch = (formData) => {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
+
+// @Tags ExpertProfile
+// @Summary 导出当前筛选结果
+// @Router /expertProfile/exportExpertProfiles [get]
+export const exportExpertProfiles = (params) => {
+  return service({
+    url: '/expertProfile/exportExpertProfiles',
+    method: 'get',
+    params,
+    responseType: 'blob'
+  })
+}

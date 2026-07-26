@@ -23,6 +23,7 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','1','/expertProfile/updateExpertProfile','PUT','','',''),
 ('p','1','/expertProfile/findExpertProfile','GET','','',''),
 ('p','1','/expertProfile/getExpertProfileList','GET','','',''),
+('p','1','/expertProfile/exportExpertProfiles','GET','','',''),
 
 ('p','1','/expertAchievement/createExpertAchievement','POST','','',''),
 ('p','1','/expertAchievement/deleteExpertAchievement','DELETE','','',''),
@@ -55,8 +56,10 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 
 ('p','1','/expertApproval/submit','POST','','',''),
 ('p','1','/expertApproval/orgApprove','POST','','',''),
+('p','1','/expertApproval/batchOrgApprove','POST','','',''),
 ('p','1','/expertApproval/orgReject','POST','','',''),
 ('p','1','/expertApproval/cityApprove','POST','','',''),
+('p','1','/expertApproval/batchCityApprove','POST','','',''),
 ('p','1','/expertApproval/cityReject','POST','','',''),
 ('p','1','/expertApproval/adminSetStatus','POST','','',''),
 ('p','1','/expertApproval/myDrafts','GET','','',''),
@@ -66,6 +69,7 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 
 ('p','1','/expertDatabase/recomputeScore','POST','','',''),
 ('p','1','/expertDatabase/search','GET','','',''),
+('p','1','/expertDatabase/exportSearchResults','GET','','',''),
 
 ('p','1','/expertProfile/downloadImportTemplate','GET','','',''),
 ('p','1','/expertProfile/importBatch','POST','','',''),

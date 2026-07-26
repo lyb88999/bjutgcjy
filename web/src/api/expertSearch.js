@@ -13,3 +13,10 @@ export const searchExpert = (params) => {
 export const recomputeExpertScore = (data) => {
   return service({ url: '/expertDatabase/recomputeScore', method: 'post', data })
 }
+
+// @Tags ExpertSearch
+// @Summary 导出当前检索结果
+// @Router /expertDatabase/exportSearchResults [get]
+export const exportSearchResults = (params) => {
+  return service({ url: '/expertDatabase/exportSearchResults', method: 'get', params, responseType: 'blob' })
+}

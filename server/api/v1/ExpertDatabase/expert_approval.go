@@ -61,6 +61,25 @@ func (expertApprovalApi *ExpertApprovalApi) OrgApproveExpertProfile(c *gin.Conte
 	response.OkWithMessage("审核通过", c)
 }
 
+// BatchOrgApproveExpertProfile 批量单位审核通过
+// @Tags ExpertApproval
+// @Summary 批量单位审核通过
+// @Security ApiKeyAuth
+// @accept application/json
+// @Produce application/json
+// @Param data body ExpertDatabaseReq.ExpertBatchApprovalAction true "批量单位审核通过"
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"批量审核完成"}"
+// @Router /expertApproval/batchOrgApprove [post]
+func (expertApprovalApi *ExpertApprovalApi) BatchOrgApproveExpertProfile(c *gin.Context) {
+	var req ExpertDatabaseReq.ExpertBatchApprovalAction
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	result := expertApprovalService.BatchOrgApprove(req.ExpertIds, utils.GetUserID(c))
+	response.OkWithDetailed(result, "批量审核完成", c)
+}
+
 // OrgRejectExpertProfile 单位审核退回
 // @Tags ExpertApproval
 // @Summary 单位审核退回
@@ -105,6 +124,25 @@ func (expertApprovalApi *ExpertApprovalApi) CityApproveExpertProfile(c *gin.Cont
 		return
 	}
 	response.OkWithMessage("审核通过", c)
+}
+
+// BatchCityApproveExpertProfile 批量市级审核通过
+// @Tags ExpertApproval
+// @Summary 批量市级审核通过
+// @Security ApiKeyAuth
+// @accept application/json
+// @Produce application/json
+// @Param data body ExpertDatabaseReq.ExpertBatchApprovalAction true "批量市级审核通过"
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"批量审核完成"}"
+// @Router /expertApproval/batchCityApprove [post]
+func (expertApprovalApi *ExpertApprovalApi) BatchCityApproveExpertProfile(c *gin.Context) {
+	var req ExpertDatabaseReq.ExpertBatchApprovalAction
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	result := expertApprovalService.BatchCityApprove(req.ExpertIds, utils.GetUserID(c))
+	response.OkWithDetailed(result, "批量审核完成", c)
 }
 
 // CityRejectExpertProfile 市级审核退回

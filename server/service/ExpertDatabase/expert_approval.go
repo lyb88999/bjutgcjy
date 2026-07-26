@@ -6,6 +6,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase"
 	ExpertDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase/request"
+	ExpertDatabaseResp "github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase/response"
 	commonRequest "github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"gorm.io/gorm"
@@ -116,6 +117,21 @@ func (s *ExpertApprovalService) OrgApprove(expertID uint, operatorID uint) error
 	})
 }
 
+// BatchOrgApprove 批量单位审核通过：逐条复用 OrgApprove 的校验和流转逻辑，某一条失败不影响其余记录，
+// 失败原因逐条收集返回，方便审核员知道哪几条没过、为什么（比如混进了一条不是本单位提交的记录）
+func (s *ExpertApprovalService) BatchOrgApprove(expertIDs []uint, operatorID uint) ExpertDatabaseResp.ExpertBatchApprovalResult {
+	result := ExpertDatabaseResp.ExpertBatchApprovalResult{}
+	for _, id := range expertIDs {
+		if err := s.OrgApprove(id, operatorID); err != nil {
+			result.FailCount++
+			result.Failures = append(result.Failures, ExpertDatabaseResp.ExpertBatchApprovalFailure{ExpertId: id, Message: err.Error()})
+			continue
+		}
+		result.SuccessCount++
+	}
+	return result
+}
+
 // OrgReject 单位审核退回：待单位审核 -> 单位已退回，需填写意见；只能审核本单位提交的档案
 func (s *ExpertApprovalService) OrgReject(expertID uint, operatorID uint, opinion string) error {
 	if opinion == "" {
@@ -152,6 +168,20 @@ func (s *ExpertApprovalService) CityApprove(expertID uint, operatorID uint) erro
 	// 首次发布，得分缓存此前从未算过，这里立即算一次，不用等每日兜底任务
 	expertScoreSvc.recomputeIfPublished(expertID)
 	return nil
+}
+
+// BatchCityApprove 批量市级审核通过：逐条复用 CityApprove（含发布 + 得分重算），某一条失败不影响其余记录
+func (s *ExpertApprovalService) BatchCityApprove(expertIDs []uint, operatorID uint) ExpertDatabaseResp.ExpertBatchApprovalResult {
+	result := ExpertDatabaseResp.ExpertBatchApprovalResult{}
+	for _, id := range expertIDs {
+		if err := s.CityApprove(id, operatorID); err != nil {
+			result.FailCount++
+			result.Failures = append(result.Failures, ExpertDatabaseResp.ExpertBatchApprovalFailure{ExpertId: id, Message: err.Error()})
+			continue
+		}
+		result.SuccessCount++
+	}
+	return result
 }
 
 // CityReject 市级审核退回：待市级审核 -> 市级已退回，需填写意见

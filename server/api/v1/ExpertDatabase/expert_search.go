@@ -1,6 +1,8 @@
 package ExpertDatabase
 
 import (
+	"net/http"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	ExpertDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
@@ -41,6 +43,36 @@ func (expertSearchApi *ExpertSearchApi) SearchExpert(c *gin.Context) {
 		Page:     req.Page,
 		PageSize: req.PageSize,
 	}, "检索成功", c)
+}
+
+// ExportSearchResults 导出当前检索条件下命中的全部结果
+// @Tags ExpertSearch
+// @Summary 导出检索结果
+// @Security ApiKeyAuth
+// @Produce application/octet-stream
+// @Param data query ExpertDatabaseReq.ExpertSearchReq true "检索关键词与筛选条件"
+// @Router /expertDatabase/exportSearchResults [get]
+func (expertSearchApi *ExpertSearchApi) ExportSearchResults(c *gin.Context) {
+	var req ExpertDatabaseReq.ExpertSearchReq
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	f, err := expertSearchService.ExportSearchResults(req)
+	if err != nil {
+		global.GVA_LOG.Error("导出失败!", zap.Error(err))
+		response.FailWithMessage("导出失败", c)
+		return
+	}
+	buf, err := f.WriteToBuffer()
+	if err != nil {
+		global.GVA_LOG.Error("导出失败!", zap.Error(err))
+		response.FailWithMessage("导出失败", c)
+		return
+	}
+	c.Header("Content-Disposition", "attachment; filename=expert_search_export.xlsx")
+	c.Header("success", "true")
+	c.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buf.Bytes())
 }
 
 // RecomputeExpertScore 手动触发单个专家的得分重算（管理员/数据变更排查用）

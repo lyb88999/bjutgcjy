@@ -17,6 +17,11 @@ type ExpertAdminSetStatus struct {
 	Opinion  string `json:"opinion"`
 }
 
+// ExpertBatchApprovalAction 批量审核通过入参：一次性对多条记录做同一个审核动作
+type ExpertBatchApprovalAction struct {
+	ExpertIds []uint `json:"expertIds" binding:"required"`
+}
+
 // ExpertApprovalLogSearch 审核日志查询
 type ExpertApprovalLogSearch struct {
 	ExpertId uint `json:"expertId" form:"expertId" binding:"required"`

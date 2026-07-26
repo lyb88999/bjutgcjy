@@ -14,12 +14,14 @@ func (s *ExpertApprovalRouter) InitExpertApprovalRouter(Router *gin.RouterGroup)
 	expertApprovalRouterWithoutRecord := Router.Group("expertApproval")
 	expertApprovalApi := v1.ApiGroupApp.ExpertDatabaseApiGroup.ExpertApprovalApi
 	{
-		expertApprovalRouter.POST("submit", expertApprovalApi.SubmitExpertProfile)                 // 提交审核
-		expertApprovalRouter.POST("orgApprove", expertApprovalApi.OrgApproveExpertProfile)         // 单位审核通过
-		expertApprovalRouter.POST("orgReject", expertApprovalApi.OrgRejectExpertProfile)           // 单位审核退回
-		expertApprovalRouter.POST("cityApprove", expertApprovalApi.CityApproveExpertProfile)       // 市级审核通过
-		expertApprovalRouter.POST("cityReject", expertApprovalApi.CityRejectExpertProfile)         // 市级审核退回
-		expertApprovalRouter.POST("adminSetStatus", expertApprovalApi.AdminSetExpertProfileStatus) // 管理员直接改写状态
+		expertApprovalRouter.POST("submit", expertApprovalApi.SubmitExpertProfile)                     // 提交审核
+		expertApprovalRouter.POST("orgApprove", expertApprovalApi.OrgApproveExpertProfile)             // 单位审核通过
+		expertApprovalRouter.POST("batchOrgApprove", expertApprovalApi.BatchOrgApproveExpertProfile)   // 批量单位审核通过
+		expertApprovalRouter.POST("orgReject", expertApprovalApi.OrgRejectExpertProfile)               // 单位审核退回
+		expertApprovalRouter.POST("cityApprove", expertApprovalApi.CityApproveExpertProfile)           // 市级审核通过
+		expertApprovalRouter.POST("batchCityApprove", expertApprovalApi.BatchCityApproveExpertProfile) // 批量市级审核通过
+		expertApprovalRouter.POST("cityReject", expertApprovalApi.CityRejectExpertProfile)             // 市级审核退回
+		expertApprovalRouter.POST("adminSetStatus", expertApprovalApi.AdminSetExpertProfileStatus)     // 管理员直接改写状态
 	}
 	{
 		expertApprovalRouterWithoutRecord.GET("myDrafts", expertApprovalApi.GetMyDrafts)                        // 我发起的

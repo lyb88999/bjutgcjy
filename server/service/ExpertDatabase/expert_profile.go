@@ -5,6 +5,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase"
 	ExpertDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
+	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm"
 )
 
@@ -150,4 +151,48 @@ func (expertProfileService *ExpertProfileService) GetExpertProfileInfoList(info 
 
 	err = db.Find(&profiles).Error
 	return profiles, total, err
+}
+
+var profileExportHeaders = []string{
+	"姓名", "性别", "民族", "政治面貌", "所在单位", "院系/部门", "行政职务", "专业技术职称",
+	"办公电话", "手机号码", "电子邮箱", "最高学历", "最高学位", "毕业院校", "所学专业",
+	"一级学科", "二级学科", "研究方向", "研究关键词", "审核状态", "综合排序得分", "创建日期",
+}
+
+// ExportExpertProfiles 导出当前筛选条件下命中的专家列表（尊重跟列表页完全相同的筛选条件和角色数据域
+// 收敛，见 GetExpertProfileInfoList）；PageSize 强制清零，拿全部匹配记录而不是当前这一页
+func (expertProfileService *ExpertProfileService) ExportExpertProfiles(info ExpertDatabaseReq.ExpertProfileSearch, operatorID uint) (*excelize.File, error) {
+	info.Page = 1
+	info.PageSize = 0
+	list, _, err := expertProfileService.GetExpertProfileInfoList(info, operatorID)
+	if err != nil {
+		return nil, err
+	}
+
+	f := excelize.NewFile()
+	sheetName := "专家列表"
+	if err := f.SetSheetName("Sheet1", sheetName); err != nil {
+		return nil, err
+	}
+	for i, h := range profileExportHeaders {
+		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
+		if err := f.SetCellValue(sheetName, cell, h); err != nil {
+			return nil, err
+		}
+	}
+	for rowIdx, p := range list {
+		row := []interface{}{
+			p.Name, p.Gender, p.Ethnicity, p.PoliticalStatus, p.UnitName, p.Department, p.AdminTitle, p.TechTitle,
+			p.Phone, p.Mobile, p.Email, p.HighestEducation, p.HighestDegree, p.GraduateSchool, p.Major,
+			p.DisciplineL1, p.DisciplineL2, p.ResearchDirections, p.ResearchKeywords,
+			statusLabel[p.Status], p.CompositeScore, p.CreatedAt.Format("2006-01-02"),
+		}
+		for i, v := range row {
+			cell, _ := excelize.CoordinatesToCellName(i+1, rowIdx+2)
+			if err := f.SetCellValue(sheetName, cell, v); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return f, nil
 }
