@@ -1,6 +1,7 @@
 package ExpertDatabase
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
@@ -43,6 +44,11 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	}
 	global.GVA_DB = db
 	return db
+}
+
+// idStr 把主键转成 service 层接口用的字符串 ID
+func idStr(id uint) string {
+	return strconv.FormatUint(uint64(id), 10)
 }
 
 // createTestUser 建一个测试用户，orgID 为 0 表示不挂靠任何单位（对应 profile.OrgId == nil 的场景）

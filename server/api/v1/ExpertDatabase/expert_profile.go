@@ -1,6 +1,7 @@
 package ExpertDatabase
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
@@ -8,6 +9,7 @@ import (
 	ExpertDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/service"
+	ExpertDatabaseService "github.com/flipped-aurora/gin-vue-admin/server/service/ExpertDatabase"
 	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -56,6 +58,10 @@ func (expertProfileApi *ExpertProfileApi) DeleteExpertProfile(c *gin.Context) {
 	userID := utils.GetUserID(c)
 	if err := expertProfileService.DeleteExpertProfile(ID, userID); err != nil {
 		global.GVA_LOG.Error("删除失败!", zap.Error(err))
+		if errors.Is(err, ExpertDatabaseService.ErrProfileAccessDenied) {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
 		response.FailWithMessage("删除失败", c)
 	} else {
 		response.OkWithMessage("删除成功", c)
@@ -75,6 +81,10 @@ func (expertProfileApi *ExpertProfileApi) DeleteExpertProfileByIds(c *gin.Contex
 	userID := utils.GetUserID(c)
 	if err := expertProfileService.DeleteExpertProfileByIds(IDs, userID); err != nil {
 		global.GVA_LOG.Error("批量删除失败!", zap.Error(err))
+		if errors.Is(err, ExpertDatabaseService.ErrProfileAccessDenied) {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
 		response.FailWithMessage("批量删除失败", c)
 	} else {
 		response.OkWithMessage("批量删除成功", c)
@@ -98,8 +108,12 @@ func (expertProfileApi *ExpertProfileApi) UpdateExpertProfile(c *gin.Context) {
 		return
 	}
 	profile.UpdatedBy = utils.GetUserID(c)
-	if err := expertProfileService.UpdateExpertProfile(profile); err != nil {
+	if err := expertProfileService.UpdateExpertProfile(profile, profile.UpdatedBy); err != nil {
 		global.GVA_LOG.Error("更新失败!", zap.Error(err))
+		if errors.Is(err, ExpertDatabaseService.ErrProfileAccessDenied) {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
 		response.FailWithMessage("更新失败", c)
 	} else {
 		response.OkWithMessage("更新成功", c)
@@ -116,8 +130,12 @@ func (expertProfileApi *ExpertProfileApi) UpdateExpertProfile(c *gin.Context) {
 // @Router /expertProfile/findExpertProfile [get]
 func (expertProfileApi *ExpertProfileApi) FindExpertProfile(c *gin.Context) {
 	ID := c.Query("ID")
-	if profile, err := expertProfileService.GetExpertProfile(ID); err != nil {
+	if profile, err := expertProfileService.GetExpertProfile(ID, utils.GetUserID(c)); err != nil {
 		global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		if errors.Is(err, ExpertDatabaseService.ErrProfileAccessDenied) {
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
 		response.FailWithMessage("查询失败", c)
 	} else {
 		response.OkWithData(gin.H{"reExpertProfile": profile}, c)

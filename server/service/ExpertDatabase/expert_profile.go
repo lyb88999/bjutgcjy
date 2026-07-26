@@ -1,6 +1,8 @@
 package ExpertDatabase
 
 import (
+	"errors"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase"
 	ExpertDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase/request"
@@ -8,6 +10,10 @@ import (
 	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm"
 )
+
+// ErrProfileAccessDenied 数据域校验不通过时统一返回这个错误，API 层据此把权限问题原样提示给
+// 用户，而不是笼统的"查询失败/更新失败"
+var ErrProfileAccessDenied = errors.New("无权访问该专家档案")
 
 // 专家库三个角色ID：个人申报人/单位审核员/市级审核员。专家主档列表对审核员角色做数据域收敛
 // （见 GetExpertProfileInfoList），个人申报人角色ID被本单位账号管理功能用来固定新建账号的角色
@@ -35,34 +41,118 @@ func (expertProfileService *ExpertProfileService) CreateExpertProfile(profile *E
 	return nil
 }
 
-// DeleteExpertProfile 删除专家主档
-func (expertProfileService *ExpertProfileService) DeleteExpertProfile(ID string, userID uint) (err error) {
-	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&ExpertDatabase.ExpertProfile{}).Where("id = ?", ID).Update("deleted_by", userID).Error; err != nil {
-			return err
+// canViewProfile 单条详情的可见性规则，必须跟列表页 GetExpertProfileInfoList 的数据域收敛完全
+// 一致——列表上看不到的记录，拿着 ID 直接调详情接口也不能看到，否则收敛就只是"藏了个入口"
+func canViewProfile(operator system.SysUser, profile ExpertDatabase.ExpertProfile) bool {
+	switch operator.AuthorityId {
+	case authorityOrgReviewer:
+		if profile.Status == StatusPublished {
+			return true
 		}
-		return tx.Delete(&ExpertDatabase.ExpertProfile{}, "id = ?", ID).Error
-	})
+		return operator.OrgId != nil && profile.OrgId != nil &&
+			*operator.OrgId == *profile.OrgId && profile.Status != StatusDraft
+	case authorityCityReviewer:
+		return profile.Status == StatusPublished || profile.Status == StatusPendingCityReview
+	default:
+		return true
+	}
 }
 
-// DeleteExpertProfileByIds 批量删除专家主档
-func (expertProfileService *ExpertProfileService) DeleteExpertProfileByIds(IDs []string, deletedBy uint) (err error) {
+// canModifyProfile 更新/删除比查看更严：个人申报人只能动自己创建的档案；单位审核员只能动本单位
+// 的档案（他人草稿除外）；市级审核员只能动其可见范围内的档案；管理员等其余角色不受限
+func canModifyProfile(operator system.SysUser, profile ExpertDatabase.ExpertProfile) bool {
+	switch operator.AuthorityId {
+	case authorityIndividualApplicant:
+		return profile.CreatedBy == operator.ID
+	case authorityOrgReviewer:
+		if operator.OrgId == nil || profile.OrgId == nil || *operator.OrgId != *profile.OrgId {
+			return false
+		}
+		return profile.Status != StatusDraft || profile.CreatedBy == operator.ID
+	case authorityCityReviewer:
+		return profile.Status == StatusPublished || profile.Status == StatusPendingCityReview
+	default:
+		return true
+	}
+}
+
+func loadOperator(operatorID uint) (operator system.SysUser, err error) {
+	err = global.GVA_DB.Where("id = ?", operatorID).First(&operator).Error
+	return
+}
+
+// DeleteExpertProfile 删除专家主档；操作人对这条档案没有修改权时整体拒绝
+func (expertProfileService *ExpertProfileService) DeleteExpertProfile(ID string, operatorID uint) (err error) {
+	return expertProfileService.DeleteExpertProfileByIds([]string{ID}, operatorID)
+}
+
+// DeleteExpertProfileByIds 批量删除专家主档；任何一条越出操作人的数据域就整体拒绝——删除是
+// 管理操作，全成或全败比"部分删掉了但不知道哪几条没删"更容易核对
+func (expertProfileService *ExpertProfileService) DeleteExpertProfileByIds(IDs []string, operatorID uint) (err error) {
+	operator, err := loadOperator(operatorID)
+	if err != nil {
+		return err
+	}
+	var profiles []ExpertDatabase.ExpertProfile
+	if err = global.GVA_DB.Where("id in ?", IDs).Find(&profiles).Error; err != nil {
+		return err
+	}
+	for _, p := range profiles {
+		if !canModifyProfile(operator, p) {
+			return ErrProfileAccessDenied
+		}
+	}
 	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&ExpertDatabase.ExpertProfile{}).Where("id in ?", IDs).Update("deleted_by", deletedBy).Error; err != nil {
+		if err := tx.Model(&ExpertDatabase.ExpertProfile{}).Where("id in ?", IDs).Update("deleted_by", operatorID).Error; err != nil {
 			return err
 		}
 		return tx.Where("id in ?", IDs).Delete(&ExpertDatabase.ExpertProfile{}).Error
 	})
 }
 
-// UpdateExpertProfile 更新专家主档
-func (expertProfileService *ExpertProfileService) UpdateExpertProfile(profile ExpertDatabase.ExpertProfile) (err error) {
+// UpdateExpertProfile 更新专家主档。这个接口只负责画像/背景字段的编辑：审核状态、得分缓存、
+// 归属人这些字段一律以库里现值为准，请求体里就算夹带了也会被覆盖回去——改状态必须走审核
+// 流转接口或管理员的 AdminSetStatus，改得分只能靠重算，否则任何能编辑档案的人都能把自己
+// 的草稿直接"改"成已发布
+func (expertProfileService *ExpertProfileService) UpdateExpertProfile(profile ExpertDatabase.ExpertProfile, operatorID uint) (err error) {
+	operator, err := loadOperator(operatorID)
+	if err != nil {
+		return err
+	}
+	var existing ExpertDatabase.ExpertProfile
+	if err = global.GVA_DB.Where("id = ?", profile.ID).First(&existing).Error; err != nil {
+		return err
+	}
+	if !canModifyProfile(operator, existing) {
+		return ErrProfileAccessDenied
+	}
+	profile.CreatedAt = existing.CreatedAt
+	profile.Status = existing.Status
+	profile.CurrentStep = existing.CurrentStep
+	profile.SubmittedBy = existing.SubmittedBy
+	profile.ReviewBypassed = existing.ReviewBypassed
+	profile.AchievementScore = existing.AchievementScore
+	profile.InfluenceScore = existing.InfluenceScore
+	profile.SocialScore = existing.SocialScore
+	profile.CompositeScore = existing.CompositeScore
+	profile.ScoreUpdatedAt = existing.ScoreUpdatedAt
+	profile.CreatedBy = existing.CreatedBy
+	profile.DeletedBy = existing.DeletedBy
 	return global.GVA_DB.Save(&profile).Error
 }
 
-// GetExpertProfile 根据ID获取专家主档
-func (expertProfileService *ExpertProfileService) GetExpertProfile(ID string) (profile ExpertDatabase.ExpertProfile, err error) {
-	err = global.GVA_DB.Where("id = ?", ID).First(&profile).Error
+// GetExpertProfile 根据ID获取专家主档，按操作人角色做数据域校验（规则见 canViewProfile）
+func (expertProfileService *ExpertProfileService) GetExpertProfile(ID string, operatorID uint) (profile ExpertDatabase.ExpertProfile, err error) {
+	operator, err := loadOperator(operatorID)
+	if err != nil {
+		return
+	}
+	if err = global.GVA_DB.Where("id = ?", ID).First(&profile).Error; err != nil {
+		return
+	}
+	if !canViewProfile(operator, profile) {
+		return ExpertDatabase.ExpertProfile{}, ErrProfileAccessDenied
+	}
 	return
 }
 
