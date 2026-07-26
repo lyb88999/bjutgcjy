@@ -29,3 +29,9 @@ yarn-error.log*
 *.iml
 web/.pnpm-debug.log
 web/pnpm-lock.yaml
+
+# 本地数据库整库 dump（含真实数据），不进版本库
+gcjy.sql
+# 演示准备材料：含明文初始密码，仅本地留存
+docs/expert-database-demo-script.md
+docs/expert-database-org-reviewer-accounts.md
