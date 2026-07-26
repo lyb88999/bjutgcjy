@@ -81,8 +81,13 @@ func (s *ExpertOrgUserService) GetOrgUserList(operatorID uint, page ExpertDataba
 	if err = db.Count(&total).Error; err != nil {
 		return
 	}
+	db = db.Order("id desc")
+	// 跟其他列表接口保持一致：PageSize 为 0 表示不分页拿全部，而不是 LIMIT 0 什么都不返回
+	if limit != 0 {
+		db = db.Limit(limit).Offset(offset)
+	}
 	var users []system.SysUser
-	if err = db.Order("id desc").Limit(limit).Offset(offset).Find(&users).Error; err != nil {
+	if err = db.Find(&users).Error; err != nil {
 		return
 	}
 	for _, u := range users {
