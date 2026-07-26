@@ -9,10 +9,14 @@
           <el-input v-model="searchInfo.unitName" placeholder="搜索条件" />
         </el-form-item>
         <el-form-item label="职称" prop="techTitle">
-          <el-input v-model="searchInfo.techTitle" placeholder="搜索条件" />
+          <el-select v-model="searchInfo.techTitle" clearable filterable placeholder="请选择" style="width: 140px;">
+            <el-option v-for="t in titleOptions" :key="t" :label="t" :value="t" />
+          </el-select>
         </el-form-item>
         <el-form-item label="一级学科" prop="disciplineL1">
-          <el-input v-model="searchInfo.disciplineL1" placeholder="搜索条件" />
+          <el-select v-model="searchInfo.disciplineL1" clearable filterable allow-create default-first-option placeholder="选择或输入" style="width: 160px;">
+            <el-option v-for="d in disciplineOptions" :key="d" :label="d" :value="d" />
+          </el-select>
         </el-form-item>
         <el-form-item label="研究关键词" prop="researchKeywords">
           <el-input v-model="searchInfo.researchKeywords" placeholder="搜索条件" />
@@ -53,9 +57,9 @@
         <el-table-column align="left" label="专业技术职称" prop="techTitle" width="120" />
         <el-table-column align="left" label="一级学科" prop="disciplineL1" width="120" />
         <el-table-column align="left" label="研究关键词" prop="researchKeywords" width="180" show-overflow-tooltip />
-        <el-table-column align="left" label="审核状态" prop="status" width="150">
+        <el-table-column align="left" label="审核状态" prop="status" width="160">
           <template #default="scope">
-            {{ statusLabel(scope.row.status) }}
+            <el-tag :type="statusTagType(scope.row.status)" size="small">{{ statusLabel(scope.row.status) }}</el-tag>
             <el-tag v-if="scope.row.reviewBypassed" type="warning" size="small" style="margin-left: 4px;">免审核发布</el-tag>
           </template>
         </el-table-column>
@@ -95,9 +99,21 @@
         <el-divider content-position="left">背景信息</el-divider>
         <el-row :gutter="20">
           <el-col :span="8"><el-form-item label="姓名" prop="name"><el-input v-model="formData.name" placeholder="请输入姓名" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="性别" prop="gender"><el-input v-model="formData.gender" placeholder="请输入性别" /></el-form-item></el-col>
+          <el-col :span="8">
+            <el-form-item label="性别" prop="gender">
+              <el-select v-model="formData.gender" clearable placeholder="请选择" style="width: 100%;">
+                <el-option v-for="g in GENDER_OPTIONS" :key="g" :label="g" :value="g" />
+              </el-select>
+            </el-form-item>
+          </el-col>
           <el-col :span="8"><el-form-item label="民族" prop="ethnicity"><el-input v-model="formData.ethnicity" placeholder="请输入民族" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="政治面貌" prop="politicalStatus"><el-input v-model="formData.politicalStatus" /></el-form-item></el-col>
+          <el-col :span="8">
+            <el-form-item label="政治面貌" prop="politicalStatus">
+              <el-select v-model="formData.politicalStatus" clearable placeholder="请选择" style="width: 100%;">
+                <el-option v-for="p in POLITICAL_STATUS_OPTIONS" :key="p" :label="p" :value="p" />
+              </el-select>
+            </el-form-item>
+          </el-col>
           <el-col :span="8">
             <el-form-item label="所在单位" prop="unitName">
               <el-select
@@ -111,13 +127,32 @@
           </el-col>
           <el-col :span="8"><el-form-item label="院系/部门" prop="department"><el-input v-model="formData.department" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="行政职务" prop="adminTitle"><el-input v-model="formData.adminTitle" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="专业技术职称" prop="techTitle"><el-input v-model="formData.techTitle" /></el-form-item></el-col>
+          <el-col :span="8">
+            <el-form-item label="专业技术职称" prop="techTitle">
+              <el-select v-model="formData.techTitle" clearable filterable placeholder="请选择" style="width: 100%;">
+                <el-option v-for="t in titleOptions" :key="t" :label="t" :value="t" />
+              </el-select>
+              <div class="unit-hint">职称直接参与综合排序打分，选项与"职称权重"字典保持一致</div>
+            </el-form-item>
+          </el-col>
           <el-col :span="8"><el-form-item label="办公电话" prop="phone"><el-input v-model="formData.phone" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="手机号码" prop="mobile"><el-input v-model="formData.mobile" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="电子邮箱" prop="email"><el-input v-model="formData.email" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="通讯地址" prop="address"><el-input v-model="formData.address" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="最高学历" prop="highestEducation"><el-input v-model="formData.highestEducation" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="最高学位" prop="highestDegree"><el-input v-model="formData.highestDegree" /></el-form-item></el-col>
+          <el-col :span="8">
+            <el-form-item label="最高学历" prop="highestEducation">
+              <el-select v-model="formData.highestEducation" clearable placeholder="请选择" style="width: 100%;">
+                <el-option v-for="e in EDUCATION_OPTIONS" :key="e" :label="e" :value="e" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="最高学位" prop="highestDegree">
+              <el-select v-model="formData.highestDegree" clearable placeholder="请选择" style="width: 100%;">
+                <el-option v-for="d in DEGREE_OPTIONS" :key="d" :label="d" :value="d" />
+              </el-select>
+            </el-form-item>
+          </el-col>
           <el-col :span="8"><el-form-item label="毕业院校" prop="graduateSchool"><el-input v-model="formData.graduateSchool" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="所学专业" prop="major"><el-input v-model="formData.major" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="人才计划" prop="talentProgram"><el-input v-model="formData.talentProgram" /></el-form-item></el-col>
@@ -126,7 +161,13 @@
 
         <el-divider content-position="left">学科领域</el-divider>
         <el-row :gutter="20">
-          <el-col :span="8"><el-form-item label="一级学科" prop="disciplineL1"><el-input v-model="formData.disciplineL1" /></el-form-item></el-col>
+          <el-col :span="8">
+            <el-form-item label="一级学科" prop="disciplineL1">
+              <el-select v-model="formData.disciplineL1" clearable filterable allow-create default-first-option placeholder="选择或输入" style="width: 100%;">
+                <el-option v-for="d in disciplineOptions" :key="d" :label="d" :value="d" />
+              </el-select>
+            </el-form-item>
+          </el-col>
           <el-col :span="8"><el-form-item label="二级学科" prop="disciplineL2"><el-input v-model="formData.disciplineL2" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="交叉学科领域" prop="crossDiscipline"><el-input v-model="formData.crossDiscipline" /></el-form-item></el-col>
           <el-col :span="24"><el-form-item label="学科平台/研究基地" prop="disciplinePlatform"><el-input v-model="formData.disciplinePlatform" /></el-form-item></el-col>
@@ -216,8 +257,19 @@ import {
 } from '@/api/expertProfile'
 import { submitExpertProfile } from '@/api/expertApproval'
 import { getSysOrganizationTree } from '@/api/sysOrganization'
+import { getExpertTagList } from '@/api/expertTag'
+import {
+  STATUS_OPTIONS,
+  statusLabel,
+  statusTagType,
+  GENDER_OPTIONS,
+  POLITICAL_STATUS_OPTIONS,
+  EDUCATION_OPTIONS,
+  DEGREE_OPTIONS
+} from '../expertStatus'
 
 import { formatDate } from '@/utils/format'
+import { getDict } from '@/utils/dictionary'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -233,15 +285,24 @@ const userStore = useUserStore()
 // 前端直接不展示这些按钮，避免审核员填完一整张表单才发现白填了
 const isReadOnlyReviewer = computed(() => [9002, 9003].includes(userStore.userInfo.authorityId))
 
-const statusOptions = [
-  { label: '草稿', value: 'draft' },
-  { label: '待单位审核', value: 'pending_org_review' },
-  { label: '单位已退回', value: 'org_rejected' },
-  { label: '待市级审核', value: 'pending_city_review' },
-  { label: '市级已退回', value: 'city_rejected' },
-  { label: '已发布', value: 'published' }
-]
-const statusLabel = (value) => statusOptions.find(item => item.value === value)?.label || value
+const statusOptions = STATUS_OPTIONS
+
+// 职称选项来自打分用的权重字典，保证"表单里能选的"和"打分认的"完全一致——
+// 手填职称一旦带空格或写法不同，职称分会静默匹配不上
+const titleOptions = ref([])
+getDict('expert_title_level').then((items) => {
+  titleOptions.value = (items || []).map((i) => i.label)
+})
+
+// 一级学科选项复用标签库里 discipline_l1 类型的标签值，允许输入新值（学科口径不强制封闭）
+const disciplineOptions = ref([])
+getExpertTagList({ page: 1, pageSize: 500 }).then((res) => {
+  if (res.code === 0) {
+    disciplineOptions.value = (res.data.list || [])
+      .filter((t) => t.tagType === 'discipline_l1')
+      .map((t) => t.tagValue)
+  }
+})
 
 const initFormData = () => ({
   name: '',

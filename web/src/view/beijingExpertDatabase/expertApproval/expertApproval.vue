@@ -7,9 +7,9 @@
           <el-table-column align="left" label="所在单位" prop="unitName" min-width="220" show-overflow-tooltip />
           <el-table-column align="left" label="专业技术职称" prop="techTitle" min-width="130" show-overflow-tooltip />
           <el-table-column align="left" label="一级学科" prop="disciplineL1" min-width="130" show-overflow-tooltip />
-          <el-table-column align="left" label="审核状态" prop="status" width="150">
+          <el-table-column align="left" label="审核状态" prop="status" width="160">
             <template #default="scope">
-              {{ statusLabel(scope.row.status) }}
+              <el-tag :type="statusTagType(scope.row.status)" size="small">{{ statusLabel(scope.row.status) }}</el-tag>
               <el-tag v-if="scope.row.reviewBypassed" type="warning" size="small" style="margin-left: 4px;">免审核发布</el-tag>
             </template>
           </el-table-column>
@@ -150,6 +150,7 @@ import {
 } from '@/api/expertApproval'
 
 import { formatDate } from '@/utils/format'
+import { statusLabel, statusTagType } from '../expertStatus'
 import { ElMessage } from 'element-plus'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -171,15 +172,6 @@ const viewDetail = (row) => {
   router.push({ name: 'expertProfileDetail', params: { id: row.ID } })
 }
 
-const statusMap = {
-  draft: '草稿',
-  pending_org_review: '待单位审核',
-  org_rejected: '单位已退回',
-  pending_city_review: '待市级审核',
-  city_rejected: '市级已退回',
-  published: '已发布'
-}
-const statusLabel = (value) => statusMap[value] || value
 
 const activeTab = ref('mine')
 

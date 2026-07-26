@@ -139,7 +139,7 @@
     <div class="gva-table-box">
       <el-tabs v-model="activeTab">
         <el-tab-pane
-          label="研究成果"
+          :label="`研究成果 (${achievementData.length})`"
           name="achievement"
         >
           <div
@@ -207,7 +207,7 @@
         </el-tab-pane>
 
         <el-tab-pane
-          label="决策影响记录"
+          :label="`决策影响记录 (${adoptionData.length})`"
           name="adoption"
         >
           <div
@@ -269,7 +269,7 @@
         </el-tab-pane>
 
         <el-tab-pane
-          label="学术兼职"
+          :label="`学术兼职 (${positionData.length})`"
           name="position"
         >
           <div
@@ -331,7 +331,7 @@
         </el-tab-pane>
 
         <el-tab-pane
-          label="标签"
+          :label="`标签 (${selectedTagIds.length})`"
           name="tag"
         >
           <p style="color: #909399; font-size: 13px; margin-bottom: 12px;">
@@ -624,6 +624,7 @@ import {
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { statusLabel, statusTagType } from '../expertStatus'
 import { useUserStore } from '@/pinia/modules/user'
 
 defineOptions({
@@ -638,24 +639,6 @@ const userStore = useUserStore()
 // 前端直接不展示这些按钮，避免审核员填完一整张表单才发现白填了
 const isReadOnlyReviewer = computed(() => [9002, 9003].includes(userStore.userInfo.authorityId))
 
-const statusMap = {
-  draft: '草稿',
-  pending_org_review: '待单位审核',
-  org_rejected: '单位已退回',
-  pending_city_review: '待市级审核',
-  city_rejected: '市级已退回',
-  published: '已发布'
-}
-const statusLabel = (value) => statusMap[value] || value
-const statusTagTypeMap = {
-  draft: 'info',
-  pending_org_review: 'warning',
-  org_rejected: 'danger',
-  pending_city_review: 'warning',
-  city_rejected: 'danger',
-  published: 'success'
-}
-const statusTagType = (value) => statusTagTypeMap[value] || 'info'
 
 // 空字段统一显示占位符，避免整块描述表里大片空白格看起来像渲染出错
 const dv = (v) => (v === undefined || v === null || v === '' ? '—' : v)

@@ -1,5 +1,8 @@
 <template>
-  <div class="expert-dashboard">
+  <div
+    v-loading="loading"
+    class="expert-dashboard"
+  >
     <div class="kpi-grid">
       <div class="kpi-card kpi-blue">
         <div class="kpi-top">
@@ -333,12 +336,18 @@ const watchTheme = () => {
   })
 }
 
+const loading = ref(false)
 const loadData = async() => {
-  const res = await getDashboardStats()
-  if (res.code === 0) {
-    stats.value = res.data
-    await nextTick()
-    renderCharts()
+  loading.value = true
+  try {
+    const res = await getDashboardStats()
+    if (res.code === 0) {
+      stats.value = res.data
+      await nextTick()
+      renderCharts()
+    }
+  } finally {
+    loading.value = false
   }
 }
 

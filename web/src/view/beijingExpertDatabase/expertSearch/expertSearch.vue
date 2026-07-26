@@ -15,11 +15,22 @@
           />
         </el-form-item>
         <el-form-item label="一级学科">
-          <el-input
+          <el-select
             v-model="searchForm.disciplineL1"
-            placeholder="筛选条件"
             clearable
-          />
+            filterable
+            allow-create
+            default-first-option
+            placeholder="选择或输入"
+            style="width: 160px"
+          >
+            <el-option
+              v-for="d in disciplineOptions"
+              :key="d"
+              :label="d"
+              :value="d"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="区域/国别专长">
           <el-input
@@ -29,11 +40,20 @@
           />
         </el-form-item>
         <el-form-item label="专业技术职称">
-          <el-input
+          <el-select
             v-model="searchForm.techTitle"
-            placeholder="筛选条件"
             clearable
-          />
+            filterable
+            placeholder="请选择"
+            style="width: 140px"
+          >
+            <el-option
+              v-for="t in titleOptions"
+              :key="t"
+              :label="t"
+              :value="t"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button
@@ -174,6 +194,20 @@
           </div>
         </template>
       </el-table-column>
+      <el-table-column
+        align="center"
+        label="操作"
+        fixed="right"
+        width="90"
+      >
+        <template #default="scope">
+          <el-button
+            type="primary"
+            link
+            @click="viewDetail(scope.row)"
+          >查看详情</el-button>
+        </template>
+      </el-table-column>
       <template #empty>
         <el-empty
           description="没有命中的专家，换个关键词或放宽筛选条件试试"
@@ -201,10 +235,33 @@
 
 <script setup>
 import { searchExpert, exportSearchResults } from '@/api/expertSearch'
+import { getExpertTagList } from '@/api/expertTag'
+import { getDict } from '@/utils/dictionary'
 import { ref, reactive, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 defineOptions({
   name: 'ExpertSearch'
+})
+
+const router = useRouter()
+const viewDetail = (row) => {
+  router.push({ name: 'expertProfileDetail', params: { id: row.ID } })
+}
+
+// 筛选选项与主档编辑表单同源：职称来自打分权重字典，一级学科来自标签库，
+// 用户不用猜库里有什么值
+const titleOptions = ref([])
+getDict('expert_title_level').then((items) => {
+  titleOptions.value = (items || []).map((i) => i.label)
+})
+const disciplineOptions = ref([])
+getExpertTagList({ page: 1, pageSize: 500 }).then((res) => {
+  if (res.code === 0) {
+    disciplineOptions.value = (res.data.list || [])
+      .filter((t) => t.tagType === 'discipline_l1')
+      .map((t) => t.tagValue)
+  }
 })
 
 const searchForm = reactive({
