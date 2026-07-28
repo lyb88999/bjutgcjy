@@ -68,7 +68,12 @@ jobs:
           fi
         working-directory: ./server
 
-      - name: Test and Build
+      - name: Test
+        run: |
+          go test -v -race ./...
+        working-directory: ./server
+
+      - name: Build
         run: |
           go build -v -race
         working-directory: ./server

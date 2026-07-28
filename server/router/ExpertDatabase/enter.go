@@ -1,0 +1,13 @@
+package ExpertDatabase
+
+type RouterGroup struct {
+	ExpertProfileRouter
+	ExpertAchievementRouter
+	ExpertAdoptionRecordRouter
+	ExpertTagRouter
+	ExpertAcademicPositionRouter
+	ExpertApprovalRouter
+	ExpertSearchRouter
+	ExpertOrgUserRouter
+	ExpertDashboardRouter
+}

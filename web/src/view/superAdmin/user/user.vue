@@ -57,6 +57,15 @@
         />
         <el-table-column
           align="left"
+          label="所属单位"
+          min-width="150"
+        >
+          <template #default="scope">
+            {{ orgName(scope.row.orgId) }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          align="left"
           label="用户角色"
           min-width="200"
         >
@@ -176,6 +185,19 @@
             <el-input v-model="userInfo.email" />
           </el-form-item>
           <el-form-item
+            label="所属单位"
+            prop="orgId"
+          >
+            <el-cascader
+              v-model="userInfo.orgId"
+              style="width:100%"
+              placeholder="用于三级审核的数据归属，个人申报人/单位审核员需要设置"
+              clearable
+              :options="orgOptions"
+              :props="{ checkStrictly: true, label: 'name', value: 'ID', emitPath: false }"
+            />
+          </el-form-item>
+          <el-form-item
             label="用户角色"
             prop="authorityId"
           >
@@ -252,6 +274,7 @@ import {
 } from '@/api/user'
 
 import { getAuthorityList } from '@/api/authority'
+import { getSysOrganizationTree } from '@/api/sysOrganization'
 import CustomPic from '@/components/customPic/index.vue'
 import ChooseImg from '@/components/chooseImg/index.vue'
 import WarningBar from '@/components/warningBar/warningBar.vue'
@@ -321,6 +344,10 @@ const initPage = async() => {
   getTableData()
   const res = await getAuthorityList({ page: 1, pageSize: 999 })
   setOptions(res.data.list)
+  const orgRes = await getSysOrganizationTree()
+  if (orgRes.code === 0) {
+    orgOptions.value = orgRes.data.tree || []
+  }
 }
 
 initPage()
@@ -370,6 +397,22 @@ const setOptions = (authData) => {
   setAuthorityOptions(authData, authOptions.value)
 }
 
+const orgOptions = ref([])
+const orgNameMap = (nodes, map) => {
+  nodes && nodes.forEach(node => {
+    map[node.ID] = node.name
+    if (node.children && node.children.length) {
+      orgNameMap(node.children, map)
+    }
+  })
+}
+const orgName = (orgId) => {
+  if (!orgId) return '-'
+  const map = {}
+  orgNameMap(orgOptions.value, map)
+  return map[orgId] || '-'
+}
+
 const deleteUserFunc = async(row) => {
   ElMessageBox.confirm('确定要删除吗?', '提示', {
     confirmButtonText: '确定',
@@ -392,6 +435,7 @@ const userInfo = ref({
   headerImg: '',
   authorityId: '',
   authorityIds: [],
+  orgId: null,
   enable: 1,
 })
 
@@ -450,6 +494,7 @@ const closeAddUserDialog = () => {
   userForm.value.resetFields()
   userInfo.value.headerImg = ''
   userInfo.value.authorityIds = []
+  userInfo.value.orgId = null
   addUserDialog.value = false
 }
 

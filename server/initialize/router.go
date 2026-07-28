@@ -75,6 +75,7 @@ func Routers() *gin.Engine {
 		systemRouter.InitSysDictionaryDetailRouter(PrivateGroup)
 		systemRouter.InitAuthorityBtnRouterRouter(PrivateGroup)
 		systemRouter.InitSysExportTemplateRouter(PrivateGroup)
+		systemRouter.InitSysOrganizationRouter(PrivateGroup)
 		exampleRouter.InitCustomerRouter(PrivateGroup)
 		exampleRouter.InitFileUploadAndDownloadRouter(PrivateGroup)
 	}
@@ -94,7 +95,17 @@ func Routers() *gin.Engine {
 
 	}
 	{
+		ExpertDatabaseRouter := router.RouterGroupApp.ExpertDatabase
 
+		ExpertDatabaseRouter.InitExpertProfileRouter(PrivateGroup)
+		ExpertDatabaseRouter.InitExpertAchievementRouter(PrivateGroup)
+		ExpertDatabaseRouter.InitExpertAdoptionRecordRouter(PrivateGroup)
+		ExpertDatabaseRouter.InitExpertTagRouter(PrivateGroup)
+		ExpertDatabaseRouter.InitExpertAcademicPositionRouter(PrivateGroup)
+		ExpertDatabaseRouter.InitExpertApprovalRouter(PrivateGroup)
+		ExpertDatabaseRouter.InitExpertSearchRouter(PrivateGroup)
+		ExpertDatabaseRouter.InitExpertOrgUserRouter(PrivateGroup)
+		ExpertDatabaseRouter.InitExpertDashboardRouter(PrivateGroup)
 	}
 	{
 		utilRouter := router.RouterGroupApp.Util

@@ -29,3 +29,11 @@ yarn-error.log*
 *.iml
 web/.pnpm-debug.log
 web/pnpm-lock.yaml
+
+# 本地数据库整库 dump（含真实数据），不进版本库
+gcjy.sql
+# 演示准备材料：含明文初始密码，仅本地留存
+docs/expert-database-demo-script.md
+docs/expert-database-org-reviewer-accounts.md
+# 2026-07-28 专家库汇总表导入的备份/清单：含真实个人信息，仅本地留存
+rm_file/import-20260728/
