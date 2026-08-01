@@ -6,6 +6,22 @@
         :model="searchForm"
         @keyup.enter="onSearch"
       >
+        <el-form-item label="姓名">
+          <el-input
+            v-model="searchForm.name"
+            placeholder="按姓名精确查找"
+            style="width: 140px"
+            clearable
+          />
+        </el-form-item>
+        <el-form-item label="所在单位">
+          <el-input
+            v-model="searchForm.unitName"
+            placeholder="按单位查找"
+            style="width: 160px"
+            clearable
+          />
+        </el-form-item>
         <el-form-item label="检索主题">
           <el-input
             v-model="searchForm.keyword"
@@ -265,6 +281,8 @@ getExpertTagList({ page: 1, pageSize: 500 }).then((res) => {
 })
 
 const searchForm = reactive({
+  name: '',
+  unitName: '',
   keyword: '',
   disciplineL1: '',
   regionExpertise: '',
@@ -324,6 +342,8 @@ const handleExport = async() => {
 }
 
 const onReset = () => {
+  searchForm.name = ''
+  searchForm.unitName = ''
   searchForm.keyword = ''
   searchForm.disciplineL1 = ''
   searchForm.regionExpertise = ''

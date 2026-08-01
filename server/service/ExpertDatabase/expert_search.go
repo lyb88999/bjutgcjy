@@ -91,6 +91,12 @@ func (s *ExpertSearchService) relevance(corpus string, keyword string) float64 {
 // （导出全部）共用同一份排序逻辑，避免排序算法在两个地方各写一遍、后续改权重容易漏改一处
 func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearchReq) (items []ExpertDatabaseRes.ExpertSearchItem, err error) {
 	db := global.GVA_DB.Model(&ExpertDatabase.ExpertProfile{}).Where("status = ?", "published")
+	if req.Name != "" {
+		db = db.Where("name LIKE ?", "%"+req.Name+"%")
+	}
+	if req.UnitName != "" {
+		db = db.Where("unit_name LIKE ?", "%"+req.UnitName+"%")
+	}
 	if req.DisciplineL1 != "" {
 		db = db.Where("discipline_l1 = ?", req.DisciplineL1)
 	}

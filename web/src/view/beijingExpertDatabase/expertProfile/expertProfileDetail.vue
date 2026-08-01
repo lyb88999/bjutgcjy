@@ -635,9 +635,9 @@ const route = useRoute()
 const router = useRouter()
 const expertId = Number(route.params.id)
 const userStore = useUserStore()
-// 单位审核员/市级审核员在后端只有只读权限，写操作一定会被 Casbin 拒绝——
-// 前端直接不展示这些按钮，避免审核员填完一整张表单才发现白填了
-const isReadOnlyReviewer = computed(() => [9002, 9003].includes(userStore.userInfo.authorityId))
+// 单位审核员/市级审核员/专家（纯检索用户）在后端只有只读权限，写操作一定会被 Casbin 拒绝——
+// 前端直接不展示这些按钮，避免填完一整张表单才发现白填了
+const isReadOnlyReviewer = computed(() => [9002, 9003, 9005].includes(userStore.userInfo.authorityId))
 
 
 // 空字段统一显示占位符，避免整块描述表里大片空白格看起来像渲染出错

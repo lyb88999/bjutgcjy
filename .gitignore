@@ -37,3 +37,6 @@ docs/expert-database-demo-script.md
 docs/expert-database-org-reviewer-accounts.md
 # 2026-07-28 专家库汇总表导入的备份/清单：含真实个人信息，仅本地留存
 rm_file/import-20260728/
+rm_file/release-20260728/
+# 2026-07-29 SEID/PEID 死菜单清理前的表数据/配置快照，仅本地留存
+rm_file/cleanup-seid-peid-20260729/
