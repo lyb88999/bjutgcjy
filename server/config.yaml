@@ -187,6 +187,9 @@ sqlite:
     max-open-conns: 100
     singular: false
     log-zap: false
+expert-embedding:
+    url: http://127.0.0.1:8901
+    timeout-sec: 5
 system:
     db-type: mysql
     oss-type: local

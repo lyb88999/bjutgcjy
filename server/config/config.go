@@ -29,4 +29,7 @@ type Server struct {
 
 	// 跨域配置
 	Cors CORS `mapstructure:"cors" json:"cors" yaml:"cors"`
+
+	// 专家检索语义向量服务
+	ExpertEmbedding ExpertEmbedding `mapstructure:"expert-embedding" json:"expertEmbedding" yaml:"expert-embedding"`
 }

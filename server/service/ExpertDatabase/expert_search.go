@@ -1,6 +1,7 @@
 package ExpertDatabase
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -14,11 +15,13 @@ import (
 
 type ExpertSearchService struct{}
 
-// buildSearchCorpusMap 一次性预取一批候选专家的检索语料（成果标题/关键词 + 关联标签），
-// 整批只发两条 SQL——替代原先逐个专家各查两次的写法，候选集几百上千条时检索耗时不再随
-// 人数线性膨胀。标签 JOIN 只认未解除的关联（relation 是软删除，解除过的标签不该再计入语料）
-func (s *ExpertSearchService) buildSearchCorpusMap(expertIDs []uint) (map[uint]string, error) {
-	builders := make(map[uint]*strings.Builder, len(expertIDs))
+// buildSearchCorpusMap 一次性预取一批候选专家的检索语料。语料来源三块：① 专家档案自己填的
+// 研究方向/关键词/关注议题等字段——这块以前漏掉了，导致专家档案里明明白白写着的主题词都搜不到，
+// 是最基础的召回缺口；② 成果标题/关键词；③ 关联标签。②③整批只发两条 SQL——替代原先逐个专家
+// 各查两次的写法，候选集几百上千条时检索耗时不再随人数线性膨胀。标签 JOIN 只认未解除的关联
+// （relation 是软删除，解除过的标签不该再计入语料）
+func (s *ExpertSearchService) buildSearchCorpusMap(candidates []ExpertDatabase.ExpertProfile) (map[uint]string, error) {
+	builders := make(map[uint]*strings.Builder, len(candidates))
 	appendTerm := func(expertID uint, term string) {
 		if term == "" {
 			return
@@ -30,6 +33,18 @@ func (s *ExpertSearchService) buildSearchCorpusMap(expertIDs []uint) (map[uint]s
 		}
 		sb.WriteString(term)
 		sb.WriteString(" ")
+	}
+
+	expertIDs := make([]uint, 0, len(candidates))
+	for _, p := range candidates {
+		expertIDs = append(expertIDs, p.ID)
+		for _, f := range []string{
+			p.ResearchDirections, p.ResearchKeywords, p.FocusTopics, p.ResearchObjects,
+			p.MethodExpertise, p.RegionExpertise, p.DisciplineL1, p.DisciplineL2,
+			p.CrossDiscipline, p.PolicyFields,
+		} {
+			appendTerm(p.ID, f)
+		}
 	}
 
 	var achievements []ExpertDatabase.ExpertAchievement
@@ -115,26 +130,86 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 	rankingWeights := expertScoreSvc.dictWeights(DictTypeRankingWeight, defaultRankingWeights)
 	titleWeights := expertScoreSvc.dictWeights(DictTypeTitleLevel, defaultTitleLevelWeights)
 
-	// 只有带关键词检索才需要语料；默认浏览（不带关键词）时 relevance 恒为 1，语料查询整个跳过
+	// 只有带关键词检索才需要算相关性；默认浏览（不带关键词）时 relevance 恒为 1，下面这些查询整个跳过
 	corpus := map[uint]string{}
+	candidateVectors := map[uint][]float32{}
+	var keywordVector []float32
+	useSemanticMatch := false
 	if req.Keyword != "" && len(candidates) > 0 {
-		ids := make([]uint, 0, len(candidates))
-		for _, c := range candidates {
-			ids = append(ids, c.ID)
-		}
-		if corpus, err = s.buildSearchCorpusMap(ids); err != nil {
+		if corpus, err = s.buildSearchCorpusMap(candidates); err != nil {
 			return nil, err
+		}
+
+		// 语义向量匹配优先于关键词子串匹配：子串匹配要求检索词整体原样出现在语料里，"人工智能"
+		// 搜不出"具身智能"这类相关但不同字面的内容；向量是离线预算好存在 expert_search_embedding
+		// 里的（见 cmd/recompute-embeddings），这里只需要现算一次关键词的向量。embedding 服务
+		// 调不通时（网络问题/服务没起来）整体退回子串匹配，不能让语义检索的故障拖垮基本检索能力
+		if vecs, embedErr := embedTexts([]string{req.Keyword}); embedErr == nil && len(vecs) == 1 {
+			keywordVector = vecs[0]
+			ids := make([]uint, 0, len(candidates))
+			for _, c := range candidates {
+				ids = append(ids, c.ID)
+			}
+			var embRows []ExpertDatabase.ExpertSearchEmbedding
+			if dbErr := global.GVA_DB.Where("expert_id IN ?", ids).Find(&embRows).Error; dbErr == nil {
+				for _, row := range embRows {
+					var v []float32
+					if json.Unmarshal([]byte(row.Vector), &v) == nil {
+						candidateVectors[row.ExpertId] = v
+					}
+				}
+				useSemanticMatch = true
+			}
 		}
 	}
 
+	// minSemanticRelevance 语义相似度低于这个阈值就当作没命中——余弦相似度是连续值，几乎不会
+	// 正好等于 0，不做下限截断的话每次检索都会把全库按相似度排一遍，"不相关"这个概念就没有了。
+	// 0.5 是拿"人工智能"实测校出来的经验值：真正相关的一批集中在 0.5 以上（且往上分布很陡），
+	// 0.5 以下开始快速掺进"数字经济""科技政策"这类只是泛泛沾边的方向；bge-small-zh 这个量级
+	// 的模型对短学术短语的区分度有限，这个阈值后续应该跟着实际检索效果继续调
+	const minSemanticRelevance = 0.5
+	// literalHitRelevanceFloor 关键词原样出现在语料里时的相关性保底值——语义相似度是模糊估计，
+	// 可能因为句子整体风格不像而给出偏低的分数（范明志"数据法治、数字司法与人工智能法律治理"
+	// 实测只有 0.49，卡在阈值下面），但字面命中是无可辩驳的强信号，不该让语义分把这种结果排没了
+	const literalHitRelevanceFloor = 0.6
+
 	items = make([]ExpertDatabaseRes.ExpertSearchItem, 0, len(candidates))
 	for _, c := range candidates {
-		relevance := s.relevance(corpus[c.ID], req.Keyword)
-		// 填了关键词却一个词都没命中的候选人直接跳过，不进结果集——不然职称权重、社会贡献分
-		// 这些不受相关性影响的分项会把一堆跟关键词毫不沾边的人顶到排名前面，"检索"就退化成了
-		// "不管搜什么都是把全库按职称排一遍"，relevance 字段形同虚设。关键词为空时 relevance()
-		// 总是返回 1，这里的判断天然不影响不带关键词的默认浏览场景。
-		if req.Keyword != "" && relevance == 0 {
+		var relevance float64
+		matched := true
+		switch {
+		case req.Keyword == "":
+			relevance = 1
+		case useSemanticMatch:
+			if vec, ok := candidateVectors[c.ID]; ok {
+				sim := cosineSim(keywordVector, vec)
+				if sim < 0 {
+					sim = 0
+				}
+				relevance = sim
+				matched = sim >= minSemanticRelevance
+				if literalHit := s.relevance(corpus[c.ID], req.Keyword) > 0; literalHit {
+					matched = true
+					if relevance < literalHitRelevanceFloor {
+						relevance = literalHitRelevanceFloor
+					}
+				}
+			} else {
+				// 这个专家还没生成向量（刚发布/刚导入，还没跑过 cmd/recompute-embeddings），
+				// 不能因为向量缺失就把人整个漏掉，退回子串匹配
+				relevance = s.relevance(corpus[c.ID], req.Keyword)
+				matched = relevance > 0
+			}
+		default:
+			relevance = s.relevance(corpus[c.ID], req.Keyword)
+			matched = relevance > 0
+		}
+		// 填了关键词却没命中的候选人直接跳过，不进结果集——不然职称权重、社会贡献分这些不受
+		// 相关性影响的分项会把一堆跟关键词毫不沾边的人顶到排名前面，"检索"就退化成了"不管搜
+		// 什么都是把全库按职称排一遍"。关键词为空时 relevance 恒为 1 且 matched 恒为 true，
+		// 这里的判断天然不影响不带关键词的默认浏览场景。
+		if req.Keyword != "" && !matched {
 			continue
 		}
 		titleScore, ok := titleWeights[c.TechTitle]
