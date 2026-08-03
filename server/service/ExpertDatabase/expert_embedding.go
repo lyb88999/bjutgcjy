@@ -13,12 +13,19 @@ import (
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase"
-	"gorm.io/gorm/clause"
 )
 
 // embeddingModelName 落库时记一下用的哪个模型生成的向量，以后换模型能一眼看出哪些记录是旧模型
 // 生成的、需要整体重算（换模型后新旧向量不在同一个空间里，不能混着比余弦相似度）
 const embeddingModelName = "BAAI/bge-small-zh-v1.5"
+
+// 语料条目类型：一个专家拆成好几条独立语料分别算向量，而不是拼成一整段文本只算一个向量，
+// 检索时取"跟关键词最相似的那一条"作为整体相关性，避免不相关内容把真正对上的那条稀释掉
+const (
+	embeddingItemTypeProfile     = "profile"
+	embeddingItemTypeAchievement = "achievement"
+	embeddingItemTypeTag         = "tag"
+)
 
 type embedRequestBody struct {
 	Texts []string `json:"texts"`
@@ -32,8 +39,8 @@ type embedResponseBody struct {
 // 归一化后的向量；服务地址在 config.yaml 的 expert-embedding.url 配置，默认 127.0.0.1:8901。
 // 这一层出错时调用方一律要能优雅退回关键词子串匹配，不能让语义检索的故障拖垮整个检索功能。
 // timeout 由调用方指定而不是固定读配置——实时检索只编码一个关键词，一次请求要快；离线批量
-// 重算一批几十条、每条又是拼起来的长语料，在配置较低的服务器上（2核 CPU 实测一批 32 条能到
-// 11 秒+）会远超检索用的超时，两个场景的时延预算天然不同，不能共用一个数字
+// 重算一批几十条语料，在配置较低的服务器上（2核 CPU 实测一批 32 条能到 11 秒+）会远超检索用
+// 的超时，两个场景的时延预算天然不同，不能共用一个数字
 func embedTexts(texts []string, timeout time.Duration) ([][]float32, error) {
 	if len(texts) == 0 {
 		return nil, nil
@@ -91,10 +98,9 @@ func cosineSim(a, b []float32) float64 {
 	return dot
 }
 
-// buildExpertCorpusText 拼出一个专家参与语义匹配的全部语料：档案自身的研究方向/关键词/关注
-// 议题等字段 + 这个专家的成果标题关键词 + 标签（后两者来自 buildSearchCorpusMap，跟老的子串
-// 匹配共用同一份"素材"，避免同一份数据在两个地方各拼一遍、后续改字段容易漏改一处）
-func buildExpertCorpusText(p ExpertDatabase.ExpertProfile, achievementAndTagCorpus string) string {
+// buildProfileChunkText 专家档案自己填的研究方向/关键词等字段拼成一条独立语料（不含成果和标签，
+// 那两块各自拆成单独的条目）
+func buildProfileChunkText(p ExpertDatabase.ExpertProfile) string {
 	var sb strings.Builder
 	for _, f := range []string{
 		p.ResearchDirections, p.ResearchKeywords, p.FocusTopics, p.ResearchObjects,
@@ -106,12 +112,38 @@ func buildExpertCorpusText(p ExpertDatabase.ExpertProfile, achievementAndTagCorp
 			sb.WriteString(" ")
 		}
 	}
-	sb.WriteString(achievementAndTagCorpus)
-	return sb.String()
+	return strings.TrimSpace(sb.String())
 }
 
-// RecomputeExpertEmbeddings 重算全部已发布专家的检索语义向量。语料没变化的专家会跳过（按
-// corpus_hash 比对），不会每次全量重调 embedding 服务；供运维脚本 cmd/recompute-embeddings 调用，
+// pendingEmbeddingItem 一条待生成/更新向量的语料条目
+type pendingEmbeddingItem struct {
+	expertID  uint
+	itemType  string
+	itemRefID uint
+	itemLabel string
+	text      string
+	hash      string
+}
+
+// embeddingItemKey 用 (专家ID, 条目类型, 关联记录ID) 三元组标识一条语料条目，同一个专家的
+// 研究方向和每一篇成果各自是独立的条目
+func embeddingItemKey(expertID uint, itemType string, itemRefID uint) string {
+	return fmt.Sprintf("%d|%s|%d", expertID, itemType, itemRefID)
+}
+
+// truncateLabel 按 rune 截断展示文本，避免中文单字节截断出现乱码，也避免检索结果里的
+// "命中原因"提示因为一条很长的研究方向/成果标题而把界面撑爆
+func truncateLabel(s string, maxRunes int) string {
+	r := []rune(s)
+	if len(r) <= maxRunes {
+		return s
+	}
+	return string(r[:maxRunes]) + "…"
+}
+
+// RecomputeExpertEmbeddings 重算全部已发布专家的检索语义向量条目：研究方向算一条、每篇研究
+// 成果各算一条、标签算一条。语料没变化的条目会跳过（按 corpus_hash 比对），成果被删掉或改没了
+// 的旧条目也会一并清理，不会留着占检索时的比对开销。供运维脚本 cmd/recompute-embeddings 调用，
 // 用法和打分缓存的 cmd/recompute 一致——数据导入/大批量修改之后手动跑一次
 func (s *ExpertSearchService) RecomputeExpertEmbeddings() error {
 	var profiles []ExpertDatabase.ExpertProfile
@@ -121,42 +153,93 @@ func (s *ExpertSearchService) RecomputeExpertEmbeddings() error {
 	if len(profiles) == 0 {
 		return nil
 	}
-
-	achievementTagCorpus, err := s.buildSearchCorpusMap(profiles)
-	if err != nil {
-		return err
-	}
-
 	ids := make([]uint, 0, len(profiles))
 	for _, p := range profiles {
 		ids = append(ids, p.ID)
 	}
-	var existing []ExpertDatabase.ExpertSearchEmbedding
+
+	var achievements []ExpertDatabase.ExpertAchievement
+	if err := global.GVA_DB.Where("expert_id IN ?", ids).Find(&achievements).Error; err != nil {
+		return err
+	}
+	achByExpert := make(map[uint][]ExpertDatabase.ExpertAchievement, len(profiles))
+	for _, a := range achievements {
+		achByExpert[a.ExpertId] = append(achByExpert[a.ExpertId], a)
+	}
+
+	type expertTagRow struct {
+		ExpertId uint
+		TagValue string
+	}
+	var tagRows []expertTagRow
+	if err := global.GVA_DB.Model(&ExpertDatabase.ExpertTag{}).
+		Select("expert_tag_relation.expert_id AS expert_id, expert_tag.tag_value AS tag_value").
+		Joins("JOIN expert_tag_relation ON expert_tag_relation.tag_id = expert_tag.id AND expert_tag_relation.deleted_at IS NULL").
+		Where("expert_tag_relation.expert_id IN ?", ids).
+		Scan(&tagRows).Error; err != nil {
+		return err
+	}
+	tagsByExpert := make(map[uint][]string, len(profiles))
+	for _, row := range tagRows {
+		tagsByExpert[row.ExpertId] = append(tagsByExpert[row.ExpertId], row.TagValue)
+	}
+
+	var existing []ExpertDatabase.ExpertSearchEmbeddingItem
 	if err := global.GVA_DB.Where("expert_id IN ?", ids).Find(&existing).Error; err != nil {
 		return err
 	}
-	existingHash := make(map[uint]string, len(existing))
+	existingByKey := make(map[string]ExpertDatabase.ExpertSearchEmbeddingItem, len(existing))
 	for _, e := range existing {
-		existingHash[e.ExpertId] = e.CorpusHash
+		existingByKey[embeddingItemKey(e.ExpertId, e.ItemType, e.ItemRefId)] = e
 	}
 
-	type pendingItem struct {
-		expertID uint
-		text     string
-		hash     string
-	}
-	var todo []pendingItem
-	for _, p := range profiles {
-		text := buildExpertCorpusText(p, achievementTagCorpus[p.ID])
+	desiredKeys := make(map[string]bool, len(existing))
+	var todo []pendingEmbeddingItem
+	addItem := func(expertID uint, itemType string, itemRefID uint, itemLabel, text string) {
+		text = strings.TrimSpace(text)
 		if text == "" {
-			continue
+			return
 		}
+		key := embeddingItemKey(expertID, itemType, itemRefID)
+		desiredKeys[key] = true
 		hash := corpusHash(text)
-		if existingHash[p.ID] == hash {
-			continue
+		if prev, ok := existingByKey[key]; ok && prev.CorpusHash == hash {
+			return // 语料没变，不用重新调 embedding
 		}
-		todo = append(todo, pendingItem{expertID: p.ID, text: text, hash: hash})
+		todo = append(todo, pendingEmbeddingItem{
+			expertID: expertID, itemType: itemType, itemRefID: itemRefID,
+			itemLabel: itemLabel, text: text, hash: hash,
+		})
 	}
+
+	for _, p := range profiles {
+		if profileText := buildProfileChunkText(p); profileText != "" {
+			addItem(p.ID, embeddingItemTypeProfile, 0, "研究方向："+truncateLabel(profileText, 40), profileText)
+		}
+		for _, a := range achByExpert[p.ID] {
+			title := strings.Join(strings.Fields(a.Title), " ") // 有些成果标题里带换行，展示时拉平成一行
+			addItem(p.ID, embeddingItemTypeAchievement, a.ID, "成果：《"+truncateLabel(title, 30)+"》", a.Title+" "+a.Keywords)
+		}
+		if tags := tagsByExpert[p.ID]; len(tags) > 0 {
+			tagText := strings.Join(tags, " ")
+			addItem(p.ID, embeddingItemTypeTag, 0, "标签："+truncateLabel(strings.Join(tags, "、"), 40), tagText)
+		}
+	}
+
+	// 清理不再需要的旧条目：成果被删了/改空了，对应的向量条目也要跟着删，不然检索时还会拿
+	// 一条早就不存在的成果去比相似度
+	var staleIDs []uint
+	for key, e := range existingByKey {
+		if !desiredKeys[key] {
+			staleIDs = append(staleIDs, e.ID)
+		}
+	}
+	if len(staleIDs) > 0 {
+		if err := global.GVA_DB.Delete(&ExpertDatabase.ExpertSearchEmbeddingItem{}, staleIDs).Error; err != nil {
+			return err
+		}
+	}
+
 	if len(todo) == 0 {
 		return nil
 	}
@@ -185,17 +268,31 @@ func (s *ExpertSearchService) RecomputeExpertEmbeddings() error {
 			if err != nil {
 				return err
 			}
-			record := ExpertDatabase.ExpertSearchEmbedding{
+			key := embeddingItemKey(b.expertID, b.itemType, b.itemRefID)
+			if prev, ok := existingByKey[key]; ok {
+				if err := global.GVA_DB.Model(&ExpertDatabase.ExpertSearchEmbeddingItem{}).Where("id = ?", prev.ID).
+					Updates(map[string]interface{}{
+						"item_label":  b.itemLabel,
+						"model":       embeddingModelName,
+						"vector":      string(vecJSON),
+						"corpus_hash": b.hash,
+						"updated_at":  time.Now(),
+					}).Error; err != nil {
+					return err
+				}
+				continue
+			}
+			record := ExpertDatabase.ExpertSearchEmbeddingItem{
 				ExpertId:   b.expertID,
+				ItemType:   b.itemType,
+				ItemRefId:  b.itemRefID,
+				ItemLabel:  b.itemLabel,
 				Model:      embeddingModelName,
 				Vector:     string(vecJSON),
 				CorpusHash: b.hash,
 				UpdatedAt:  time.Now(),
 			}
-			if err := global.GVA_DB.Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "expert_id"}},
-				DoUpdates: clause.AssignmentColumns([]string{"model", "vector", "corpus_hash", "updated_at"}),
-			}).Create(&record).Error; err != nil {
+			if err := global.GVA_DB.Create(&record).Error; err != nil {
 				return err
 			}
 		}

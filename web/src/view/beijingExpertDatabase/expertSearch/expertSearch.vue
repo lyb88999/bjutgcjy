@@ -145,10 +145,20 @@
       <el-table-column
         align="left"
         label="研究方向"
-        prop="researchDirections"
-        min-width="180"
-        show-overflow-tooltip
-      />
+        min-width="220"
+      >
+        <template #default="scope">
+          <div
+            class="research-directions"
+            :title="scope.row.researchDirections"
+          >{{ scope.row.researchDirections }}</div>
+          <div
+            v-if="scope.row.matchReason"
+            class="match-reason"
+            :title="scope.row.matchReason"
+          >命中：{{ scope.row.matchReason }}</div>
+        </template>
+      </el-table-column>
       <el-table-column
         align="left"
         label="相关性"
@@ -380,6 +390,20 @@ onSearch()
   font-size: 12px;
   color: var(--el-text-color-secondary);
   margin-top: 2px;
+}
+
+.research-directions {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.match-reason {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--el-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .score-cell {

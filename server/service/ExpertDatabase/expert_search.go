@@ -133,7 +133,7 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 
 	// 只有带关键词检索才需要算相关性；默认浏览（不带关键词）时 relevance 恒为 1，下面这些查询整个跳过
 	corpus := map[uint]string{}
-	candidateVectors := map[uint][]float32{}
+	itemsByExpert := map[uint][]ExpertDatabase.ExpertSearchEmbeddingItem{}
 	var keywordVector []float32
 	useSemanticMatch := false
 	if req.Keyword != "" && len(candidates) > 0 {
@@ -142,9 +142,10 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 		}
 
 		// 语义向量匹配优先于关键词子串匹配：子串匹配要求检索词整体原样出现在语料里，"人工智能"
-		// 搜不出"具身智能"这类相关但不同字面的内容；向量是离线预算好存在 expert_search_embedding
-		// 里的（见 cmd/recompute-embeddings），这里只需要现算一次关键词的向量。embedding 服务
-		// 调不通时（网络问题/服务没起来）整体退回子串匹配，不能让语义检索的故障拖垮基本检索能力
+		// 搜不出"具身智能"这类相关但不同字面的内容。每个专家名下拆成好几条独立语料条目分别存好
+		// 向量（研究方向一条、每篇成果各一条、标签一条，见 cmd/recompute-embeddings），这里只
+		// 需要现算一次关键词的向量，再挨个专家取"跟关键词最相似的那一条"。embedding 服务调不通时
+		// （网络问题/服务没起来）整体退回子串匹配，不能让语义检索的故障拖垮基本检索能力
 		keywordEmbedTimeout := time.Duration(global.GVA_CONFIG.ExpertEmbedding.TimeoutSec) * time.Second
 		if vecs, embedErr := embedTexts([]string{req.Keyword}, keywordEmbedTimeout); embedErr == nil && len(vecs) == 1 {
 			keywordVector = vecs[0]
@@ -152,47 +153,54 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 			for _, c := range candidates {
 				ids = append(ids, c.ID)
 			}
-			var embRows []ExpertDatabase.ExpertSearchEmbedding
+			var embRows []ExpertDatabase.ExpertSearchEmbeddingItem
 			if dbErr := global.GVA_DB.Where("expert_id IN ?", ids).Find(&embRows).Error; dbErr == nil {
 				for _, row := range embRows {
-					var v []float32
-					if json.Unmarshal([]byte(row.Vector), &v) == nil {
-						candidateVectors[row.ExpertId] = v
-					}
+					itemsByExpert[row.ExpertId] = append(itemsByExpert[row.ExpertId], row)
 				}
 				useSemanticMatch = true
 			}
 		}
 	}
 
-	// minSemanticRelevance 语义相似度低于这个阈值就当作没命中——余弦相似度是连续值，几乎不会
-	// 正好等于 0，不做下限截断的话每次检索都会把全库按相似度排一遍，"不相关"这个概念就没有了。
-	// 0.5 是多组关键词实测折中出来的经验值。这里有个已知的真实局限，记录下来别以后重新踩一遍：
-	// 调低到 0.45 能多召回一点"碳中和→低碳"这类近义词场景，但会把"京津冀协同发展"这类较长复合
-	// 短语的命中数从 177 冲到 300（超过全库 70%），显然是噪音而不是真的相关——bge-small-zh 这个
-	// 量级的模型对短语越长、越具体，区分度反而越模糊，全局阈值没法同时让两类查询都满意。0.5 对
-	// 多数场景更稳，代价是偶尔漏掉个别近义词（碳中和/低碳这种），比多数查询混进一堆噪音更可接受
-	const minSemanticRelevance = 0.5
+	// minSemanticRelevance 语义相似度低于这个阈值就当作没命中。改成按条目（研究方向/每篇成果/
+	// 标签各自独立）取最大相似度之后，同一个阈值不能沿用旧的 0.5——按条目匹配相当于给每个专家
+	// 多了好几次"够到"关键词的机会，同样的阈值下噪音会变多（实测"京津冀协同发展"从旧方案的 177
+	// 条冲到 227 条）。校到 0.6 之后"人工智能""养老服务"命中的都是干净结果，"京津冀协同发展"
+	// 压到 37 条（比旧方案的 177 还准）。已知局限依旧在："碳中和"搜不出"低碳"相关的专家——查过
+	// 陆小成这批人按条目算的最高分也就 0.46~0.48，本质是 bge-small-zh 对这两个词的语义关联判断
+	// 得不够高，不是语料拼接方式的问题，调阈值解决不了，只能靠更大的模型或者人工同义词表兜底
+	const minSemanticRelevance = 0.6
 	// literalHitRelevanceFloor 关键词原样出现在语料里时的相关性保底值——语义相似度是模糊估计，
-	// 可能因为句子整体风格不像而给出偏低的分数（范明志"数据法治、数字司法与人工智能法律治理"
-	// 实测只有 0.49，卡在阈值下面），但字面命中是无可辩驳的强信号，不该让语义分把这种结果排没了
+	// 偶尔会打偏低分，但字面命中是无可辩驳的强信号，不该让语义分把这种结果排没了
 	const literalHitRelevanceFloor = 0.6
 
 	items = make([]ExpertDatabaseRes.ExpertSearchItem, 0, len(candidates))
 	for _, c := range candidates {
 		var relevance float64
+		var matchReason string
 		matched := true
 		switch {
 		case req.Keyword == "":
 			relevance = 1
 		case useSemanticMatch:
-			if vec, ok := candidateVectors[c.ID]; ok {
-				sim := cosineSim(keywordVector, vec)
-				if sim < 0 {
-					sim = 0
+			if embItems, ok := itemsByExpert[c.ID]; ok && len(embItems) > 0 {
+				bestSim := -1.0
+				for _, it := range embItems {
+					var v []float32
+					if json.Unmarshal([]byte(it.Vector), &v) != nil {
+						continue
+					}
+					if sim := cosineSim(keywordVector, v); sim > bestSim {
+						bestSim = sim
+						matchReason = it.ItemLabel
+					}
 				}
-				relevance = sim
-				matched = sim >= minSemanticRelevance
+				if bestSim < 0 {
+					bestSim = 0
+				}
+				relevance = bestSim
+				matched = bestSim >= minSemanticRelevance
 				if literalHit := s.relevance(corpus[c.ID], req.Keyword) > 0; literalHit {
 					matched = true
 					if relevance < literalHitRelevanceFloor {
@@ -200,14 +208,20 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 					}
 				}
 			} else {
-				// 这个专家还没生成向量（刚发布/刚导入，还没跑过 cmd/recompute-embeddings），
+				// 这个专家还没生成向量条目（刚发布/刚导入，还没跑过 cmd/recompute-embeddings），
 				// 不能因为向量缺失就把人整个漏掉，退回子串匹配
 				relevance = s.relevance(corpus[c.ID], req.Keyword)
 				matched = relevance > 0
+				if matched {
+					matchReason = "包含关键词「" + req.Keyword + "」"
+				}
 			}
 		default:
 			relevance = s.relevance(corpus[c.ID], req.Keyword)
 			matched = relevance > 0
+			if matched {
+				matchReason = "包含关键词「" + req.Keyword + "」"
+			}
 		}
 		// 填了关键词却没命中的候选人直接跳过，不进结果集——不然职称权重、社会贡献分这些不受
 		// 相关性影响的分项会把一堆跟关键词毫不沾边的人顶到排名前面，"检索"就退化成了"不管搜
@@ -228,6 +242,7 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 			ExpertProfile: c,
 			Relevance:     relevance,
 			RealtimeScore: realtimeScore,
+			MatchReason:   matchReason,
 		})
 	}
 
@@ -266,7 +281,7 @@ func (s *ExpertSearchService) Search(req ExpertDatabaseReq.ExpertSearchReq) (lis
 
 var searchExportHeaders = []string{
 	"姓名", "所在单位", "专业技术职称", "一级学科", "研究关键词",
-	"相关性", "实时综合得分", "成果分", "决策影响分", "社会贡献分",
+	"相关性", "命中依据", "实时综合得分", "成果分", "决策影响分", "社会贡献分",
 }
 
 // ExportSearchResults 导出当前检索条件下命中的全部结果（按相关性/实时得分排好序，不分页）
@@ -293,7 +308,7 @@ func (s *ExpertSearchService) ExportSearchResults(req ExpertDatabaseReq.ExpertSe
 	for rowIdx, item := range items {
 		row := []interface{}{
 			item.Name, item.UnitName, item.TechTitle, item.DisciplineL1, item.ResearchKeywords,
-			item.Relevance, item.RealtimeScore, item.AchievementScore, item.InfluenceScore, item.SocialScore,
+			item.Relevance, item.MatchReason, item.RealtimeScore, item.AchievementScore, item.InfluenceScore, item.SocialScore,
 		}
 		for i, v := range row {
 			cell, _ := excelize.CoordinatesToCellName(i+1, rowIdx+2)

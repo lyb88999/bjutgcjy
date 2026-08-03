@@ -10,4 +10,7 @@ type ExpertSearchItem struct {
 	ExpertDatabase.ExpertProfile
 	Relevance     float64 `json:"relevance"`
 	RealtimeScore float64 `json:"realtimeScore"`
+	// MatchReason 相关性最主要是由哪一条语料贡献的（比如具体是哪条研究成果、还是研究方向本身），
+	// 关键词为空的默认浏览场景下留空。给用户一个"为什么排在前面"的直观依据，而不是只有一个百分比
+	MatchReason string `json:"matchReason"`
 }

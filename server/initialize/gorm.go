@@ -57,7 +57,7 @@ func RegisterTables() {
 		example.ExaFileChunk{},
 		example.ExaFileUploadAndDownload{}, EngineeringEducationDatabase.SocialServiceDatabase{}, EngineeringEducationDatabase.ConditionalGuaranteeDatabase{}, EngineeringEducationDatabase.PolicyDatabase{}, EngineeringEducationDatabase.ProfessionalConstructionDatabase{}, EngineeringEducationDatabase.SubjectConstructionDatabase{}, EngineeringEducationDatabase.TalentTrainingDatabase{}, EngineeringEducationDatabase.InternationalExchangeDatabase{}, EngineeringEducationDatabase.BasicInfomationDatabase{}, util.InviteCode{},
 
-		ExpertDatabase.ExpertProfile{}, ExpertDatabase.ExpertAchievement{}, ExpertDatabase.ExpertAdoptionRecord{}, ExpertDatabase.ExpertTag{}, ExpertDatabase.ExpertTagRelation{}, ExpertDatabase.ExpertAcademicPosition{}, ExpertDatabase.ExpertApprovalLog{}, ExpertDatabase.ExpertSearchEmbedding{},
+		ExpertDatabase.ExpertProfile{}, ExpertDatabase.ExpertAchievement{}, ExpertDatabase.ExpertAdoptionRecord{}, ExpertDatabase.ExpertTag{}, ExpertDatabase.ExpertTagRelation{}, ExpertDatabase.ExpertAcademicPosition{}, ExpertDatabase.ExpertApprovalLog{}, ExpertDatabase.ExpertSearchEmbeddingItem{},
 	)
 	if err != nil {
 		global.GVA_LOG.Error("register table failed", zap.Error(err))
