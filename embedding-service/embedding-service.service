@@ -1,0 +1,22 @@
+[Unit]
+Description=expert search embedding service (BGE-small-zh)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/embedding-service
+# 生产服务器连不上 huggingface.co，模型文件是提前打包传过去的（见部署记录），必须显式声明
+# 离线模式，否则每次启动都会先尝试联网校验版本，连不上还会拖慢甚至卡住启动
+Environment=HF_HOME=/root/.cache/huggingface
+Environment=HF_HUB_OFFLINE=1
+ExecStart=/var/www/embedding-service/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8901
+Restart=always
+RestartSec=3
+# 进程真的挂了会被 systemd 拉起来；但机器学习服务偶尔会"卡住不退出"（比如某次请求触发底层
+# 库死锁），这种情况 Restart 不会触发——配合同目录下 watchdog.sh 的健康检查兜底
+MemoryMax=1500M
+StandardOutput=append:/var/log/embedding-service.log
+StandardError=append:/var/log/embedding-service.log
+
+[Install]
+WantedBy=multi-user.target

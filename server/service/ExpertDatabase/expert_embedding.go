@@ -30,8 +30,11 @@ type embedResponseBody struct {
 
 // embedTexts 调用本地自建的轻量语义向量服务（仓库根目录 embedding-service/），把文本转成
 // 归一化后的向量；服务地址在 config.yaml 的 expert-embedding.url 配置，默认 127.0.0.1:8901。
-// 这一层出错时调用方一律要能优雅退回关键词子串匹配，不能让语义检索的故障拖垮整个检索功能
-func embedTexts(texts []string) ([][]float32, error) {
+// 这一层出错时调用方一律要能优雅退回关键词子串匹配，不能让语义检索的故障拖垮整个检索功能。
+// timeout 由调用方指定而不是固定读配置——实时检索只编码一个关键词，一次请求要快；离线批量
+// 重算一批几十条、每条又是拼起来的长语料，在配置较低的服务器上（2核 CPU 实测一批 32 条能到
+// 11 秒+）会远超检索用的超时，两个场景的时延预算天然不同，不能共用一个数字
+func embedTexts(texts []string, timeout time.Duration) ([][]float32, error) {
 	if len(texts) == 0 {
 		return nil, nil
 	}
@@ -39,7 +42,6 @@ func embedTexts(texts []string) ([][]float32, error) {
 	if cfg.Url == "" {
 		return nil, fmt.Errorf("expert-embedding.url 未配置")
 	}
-	timeout := time.Duration(cfg.TimeoutSec) * time.Second
 	if timeout <= 0 {
 		timeout = 5 * time.Second
 	}
@@ -159,8 +161,11 @@ func (s *ExpertSearchService) RecomputeExpertEmbeddings() error {
 		return nil
 	}
 
-	// 分批调用，避免一次性把几百条语料丢给 embedding 服务导致单次请求体过大/超时
-	const batchSize = 32
+	// 分批调用，避免一次性把几百条语料丢给 embedding 服务导致单次请求体过大/超时。这是离线
+	// 批处理，不影响用户实时检索体验，用一个远比检索场景宽松的超时（实测低配 CPU 上一批 32 条
+	// 长语料能跑到 11 秒+，检索用的 5 秒对这里完全不够）
+	const batchSize = 16
+	const batchTimeout = 60 * time.Second
 	for start := 0; start < len(todo); start += batchSize {
 		end := start + batchSize
 		if end > len(todo) {
@@ -171,7 +176,7 @@ func (s *ExpertSearchService) RecomputeExpertEmbeddings() error {
 		for i, b := range batch {
 			texts[i] = b.text
 		}
-		vectors, err := embedTexts(texts)
+		vectors, err := embedTexts(texts, batchTimeout)
 		if err != nil {
 			return fmt.Errorf("embedding 服务调用失败(第 %d/%d 批): %w", start/batchSize+1, (len(todo)+batchSize-1)/batchSize, err)
 		}

@@ -1,0 +1,6 @@
+[Unit]
+Description=embedding-service health check watchdog (one-shot, triggered by timer)
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /var/www/embedding-service/watchdog.sh

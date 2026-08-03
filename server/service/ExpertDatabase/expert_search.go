@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase"
@@ -144,7 +145,8 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 		// 搜不出"具身智能"这类相关但不同字面的内容；向量是离线预算好存在 expert_search_embedding
 		// 里的（见 cmd/recompute-embeddings），这里只需要现算一次关键词的向量。embedding 服务
 		// 调不通时（网络问题/服务没起来）整体退回子串匹配，不能让语义检索的故障拖垮基本检索能力
-		if vecs, embedErr := embedTexts([]string{req.Keyword}); embedErr == nil && len(vecs) == 1 {
+		keywordEmbedTimeout := time.Duration(global.GVA_CONFIG.ExpertEmbedding.TimeoutSec) * time.Second
+		if vecs, embedErr := embedTexts([]string{req.Keyword}, keywordEmbedTimeout); embedErr == nil && len(vecs) == 1 {
 			keywordVector = vecs[0]
 			ids := make([]uint, 0, len(candidates))
 			for _, c := range candidates {

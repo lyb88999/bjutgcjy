@@ -45,3 +45,4 @@ rm_file/release-20260802/
 embedding-service/venv/
 embedding-service/__pycache__/
 embedding-service/.cache/
+rm_file/release-20260804/

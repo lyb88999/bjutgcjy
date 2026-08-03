@@ -1,0 +1,9 @@
+[Unit]
+Description=每 2 分钟探活一次 embedding-service，卡死无响应时自动重启
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=2min
+
+[Install]
+WantedBy=timers.target
