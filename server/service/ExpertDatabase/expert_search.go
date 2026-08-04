@@ -134,21 +134,28 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 	// 只有带关键词检索才需要算相关性；默认浏览（不带关键词）时 relevance 恒为 1，下面这些查询整个跳过
 	corpus := map[uint]string{}
 	itemsByExpert := map[uint][]ExpertDatabase.ExpertSearchEmbeddingItem{}
-	var keywordVector []float32
+	var keywordVectors [][]float32
+	expandedKeywords := []string{req.Keyword}
 	useSemanticMatch := false
 	if req.Keyword != "" && len(candidates) > 0 {
 		if corpus, err = s.buildSearchCorpusMap(candidates); err != nil {
 			return nil, err
 		}
 
+		// 先按同义词字典把检索词展开成一组词（没配同义词的话就还是只有原词一个）。"碳中和"和
+		// "低碳"这类近义关系 embedding 模型自己判断不出来（实测过），这一步是确定性的人工兜底，
+		// 不依赖模型判不判断得准——见 expert_search_synonym.go 顶部注释
+		expandedKeywords = expandKeywordWithSynonyms(req.Keyword, s.searchSynonymGroups())
+
 		// 语义向量匹配优先于关键词子串匹配：子串匹配要求检索词整体原样出现在语料里，"人工智能"
 		// 搜不出"具身智能"这类相关但不同字面的内容。每个专家名下拆成好几条独立语料条目分别存好
-		// 向量（研究方向一条、每篇成果各一条、标签一条，见 cmd/recompute-embeddings），这里只
-		// 需要现算一次关键词的向量，再挨个专家取"跟关键词最相似的那一条"。embedding 服务调不通时
-		// （网络问题/服务没起来）整体退回子串匹配，不能让语义检索的故障拖垮基本检索能力
+		// 向量（研究方向一条、每篇成果各一条、标签一条，见 cmd/recompute-embeddings），这里把
+		// 展开后的每个词都算一次向量，再挨个专家取"跟任意一个展开词、任意一条语料最相似的那一对"。
+		// embedding 服务调不通时（网络问题/服务没起来）整体退回子串匹配，不能让语义检索的故障
+		// 拖垮基本检索能力
 		keywordEmbedTimeout := time.Duration(global.GVA_CONFIG.ExpertEmbedding.TimeoutSec) * time.Second
-		if vecs, embedErr := embedTexts([]string{req.Keyword}, keywordEmbedTimeout); embedErr == nil && len(vecs) == 1 {
-			keywordVector = vecs[0]
+		if vecs, embedErr := embedTexts(expandedKeywords, keywordEmbedTimeout); embedErr == nil && len(vecs) == len(expandedKeywords) {
+			keywordVectors = vecs
 			ids := make([]uint, 0, len(candidates))
 			for _, c := range candidates {
 				ids = append(ids, c.ID)
@@ -191,9 +198,11 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 					if json.Unmarshal([]byte(it.Vector), &v) != nil {
 						continue
 					}
-					if sim := cosineSim(keywordVector, v); sim > bestSim {
-						bestSim = sim
-						matchReason = it.ItemLabel
+					for _, kwVec := range keywordVectors {
+						if sim := cosineSim(kwVec, v); sim > bestSim {
+							bestSim = sim
+							matchReason = it.ItemLabel
+						}
 					}
 				}
 				if bestSim < 0 {
@@ -201,7 +210,7 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 				}
 				relevance = bestSim
 				matched = bestSim >= minSemanticRelevance
-				if literalHit := s.relevance(corpus[c.ID], req.Keyword) > 0; literalHit {
+				if s.anyLiteralHit(corpus[c.ID], expandedKeywords) {
 					matched = true
 					if relevance < literalHitRelevanceFloor {
 						relevance = literalHitRelevanceFloor
@@ -210,16 +219,16 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 			} else {
 				// 这个专家还没生成向量条目（刚发布/刚导入，还没跑过 cmd/recompute-embeddings），
 				// 不能因为向量缺失就把人整个漏掉，退回子串匹配
-				relevance = s.relevance(corpus[c.ID], req.Keyword)
-				matched = relevance > 0
+				matched = s.anyLiteralHit(corpus[c.ID], expandedKeywords)
 				if matched {
+					relevance = 1
 					matchReason = "包含关键词「" + req.Keyword + "」"
 				}
 			}
 		default:
-			relevance = s.relevance(corpus[c.ID], req.Keyword)
-			matched = relevance > 0
+			matched = s.anyLiteralHit(corpus[c.ID], expandedKeywords)
 			if matched {
+				relevance = 1
 				matchReason = "包含关键词「" + req.Keyword + "」"
 			}
 		}
