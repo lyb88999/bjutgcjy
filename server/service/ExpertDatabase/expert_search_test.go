@@ -107,6 +107,38 @@ func TestRankedCandidates_RemovedTagRelationExcludedFromCorpus(t *testing.T) {
 	}
 }
 
+// TestRankedCandidates_RelevanceMultipliesEntireCompositeScore 锁定综合得分公式的形状：
+// relevance 是乘在整个括号外面的（realtimeScore = relevance * (w1*成果分 + w2*决策影响分 +
+// w3*职称权重 + w4*社会贡献分 + w5)），不是只乘成果分/决策影响分那两项。早期版本职称权重和
+// 社会贡献分完全不受关键词匹配程度影响，这两项量级通常不小，导致 relevance 对最终排名的影响
+// 弱到几乎看不出来——这是用户反馈"相关性这个系数的作用不大"的真实原因。
+func TestRankedCandidates_RelevanceMultipliesEntireCompositeScore(t *testing.T) {
+	db := setupTestDB(t)
+
+	profile := ExpertDatabase.ExpertProfile{
+		Name: "全量专家", Status: StatusPublished, TechTitle: "教授",
+		AchievementScore: 3, InfluenceScore: 2, SocialScore: 4,
+		ResearchKeywords: "医生 关键词",
+	}
+	if err := db.Create(&profile).Error; err != nil {
+		t.Fatalf("建档案失败: %v", err)
+	}
+
+	svc := &ExpertSearchService{}
+	items, err := svc.rankedCandidates(ExpertDatabaseReq.ExpertSearchReq{Keyword: "医生"})
+	if err != nil {
+		t.Fatalf("检索不应该报错: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("想要 1 条，实际 %d 条", len(items))
+	}
+	// 默认权重 achievement=1,influence=1,title=1(教授=5),social=1,keyword=10，字面命中 relevance=1：
+	// realtimeScore = 1 * (1*3 + 1*2 + 1*5 + 1*4 + 10) = 24
+	if got := items[0].RealtimeScore; got != 24 {
+		t.Fatalf("综合得分公式变了，想要 24（relevance 乘完整括号），实际 %v", got)
+	}
+}
+
 // TestRankedCandidates_MultiKeywordUnionMatchesAnyTermRanksMoreHitsHigher 复现并回归验证之前
 // "2-3 个关键词无法联合搜索"的 bug：旧实现把整个输入串（比如"人工智能 京津冀"）当一个词去跟
 // 语料整段比对，几乎不可能原样命中，等于多关键词检索直接搜不出东西。修复后应该拆成独立词分别

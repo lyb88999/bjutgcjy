@@ -154,15 +154,19 @@ func (s *ExpertSearchService) termMatch(corpus string, embItems []ExpertDatabase
 }
 
 // rankedCandidates 按筛选条件圈定已发布候选集，并按
-// realtimeScore = w1*achievement_score*relevance + w2*influence_score*relevance + w3*title_score
-//                + w4*social_score + w5*relevance
+// realtimeScore = relevance * (w1*achievement_score + w2*influence_score + w3*title_score + w4*social_score + w5)
 // 算好相关性/实时得分、排好序，返回不分页的完整结果——Search()（列表分页）和 ExportSearchResults()
 // （导出全部）共用同一份排序逻辑，避免排序算法在两个地方各写一遍、后续改权重容易漏改一处。
-// w5*relevance 这一项是单独给"关键词匹配程度本身"的得分：achievement/influence 两项是
-// 乘relevance，对成果分/决策影响分本来就是 0 的专家（比如刚入库、还没攒够成果的专家）不管
-// 关键词匹配得多好，这两项乘出来还是 0，综合得分对这批人形同摆设、看起来"怎么搜都不变"；
-// 加一项不依赖其他分项、只看 relevance 本身的得分，保证关键词匹配程度总能实实在在体现到
-// 综合得分里
+//
+// relevance 是乘在整个括号上的，不是只乘成果分/决策影响分那两项——早期版本只乘了这两项，
+// 职称权重、社会贡献分完全不受关键词匹配程度影响，导致：① 这两项本来就是 0 的专家（还没攒够
+// 成果），综合得分对这批人形同摆设、看起来"怎么搜都不变"；② 更普遍的问题是，就算成果分不是 0，
+// 职称/社会贡献这两块通常量级不小（职称权重 1~5，社会贡献分不封顶），relevance 只能通过很小
+// 一部分分项体现出来，实测下来"关键词匹配得好不好"对最终排名的影响弱到几乎看不出来。改成整体
+// 相乘之后，relevance 从 1.0 掉到 0.6（语义匹配的下限）时，不管这个专家职称多高、社会贡献分
+// 多厚，综合得分都会跟着打对应的折扣，"匹配程度"才真正统筹进了这一个分数里。w5 是关键词匹配
+// 本身的固定加分（默认 10，权重 key 是 keyword），同样被 relevance 乘着，纯粹没匹配上关键词
+// 的候选人在筛选阶段已经被跳过，不会拿到这一项
 func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearchReq) (items []ExpertDatabaseRes.ExpertSearchItem, err error) {
 	db := global.GVA_DB.Model(&ExpertDatabase.ExpertProfile{}).Where("status = ?", "published")
 	if req.Name != "" {
@@ -291,11 +295,11 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 		if !ok {
 			titleScore = 1
 		}
-		realtimeScore := rankingWeights["achievement"]*c.AchievementScore*relevance +
-			rankingWeights["influence"]*c.InfluenceScore*relevance +
+		realtimeScore := relevance * (rankingWeights["achievement"]*c.AchievementScore +
+			rankingWeights["influence"]*c.InfluenceScore +
 			rankingWeights["title"]*titleScore +
 			rankingWeights["social"]*c.SocialScore +
-			rankingWeights["keyword"]*relevance
+			rankingWeights["keyword"])
 		items = append(items, ExpertDatabaseRes.ExpertSearchItem{
 			ExpertProfile: c,
 			Relevance:     relevance,

@@ -25,9 +25,9 @@ var (
 	defaultAdoptionLevelWeights    = map[string]float64{"国家级": 10, "中央": 10, "省部级": 5, "厅局级": 3, "区县级": 1}
 	defaultTitleLevelWeights       = map[string]float64{"教授": 5, "研究员": 5, "副教授": 3, "副研究员": 3, "讲师": 1, "助理研究员": 1}
 	defaultSocialWeights           = map[string]float64{"academic_position": 1, "honor_title": 3}
-	// keyword 是关键词相关性本身的权重（w5）：achievement/influence 两项已经乘了 relevance，
-	// 这里再单独给 relevance 本身一个权重，避免成果分/决策影响分是 0 的专家（还没攒够成果）
-	// 综合得分对关键词匹配程度完全没反应——见 rankedCandidates 顶部注释
+	// keyword 是关键词匹配本身的固定加分（w5）：整个综合得分 = relevance * (前四项 + keyword)，
+	// 这一项跟其他四项一起被 relevance 整体打折，保证哪怕成果分/决策影响分是 0 的专家（还没
+	// 攒够成果）也能靠这一项让综合得分随关键词匹配程度变化——见 rankedCandidates 顶部注释
 	defaultRankingWeights = map[string]float64{"achievement": 1, "influence": 1, "title": 1, "social": 1, "keyword": 10}
 )
 
