@@ -25,7 +25,7 @@
         <el-form-item label="检索主题">
           <el-input
             v-model="searchForm.keyword"
-            placeholder="如：防汛方案"
+            placeholder="如：防汛方案，多个词用空格分隔可联合检索"
             style="width: 220px"
             clearable
           />
@@ -254,7 +254,8 @@
     </div>
     <p class="search-hint">
       综合得分 = w1×成果得分×相关性 + w2×决策影响得分×相关性 + w3×职称权重 +
-      w4×社会贡献得分，权重可在"系统工具-字典管理"里调整（字典类型 expert_ranking_weight）。
+      w4×社会贡献得分 + w5×相关性，权重可在"系统工具-字典管理"里调整（字典类型 expert_ranking_weight）。
+      多个关键词用空格或顿号分隔可联合检索，命中的词越多相关性越高、排名越靠前。
     </p>
   </div>
 </template>

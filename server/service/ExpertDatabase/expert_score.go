@@ -17,7 +17,7 @@ const (
 	DictTypeAdoptionLevel    = "expert_adoption_level"    // 采纳/批示单位级别权重
 	DictTypeTitleLevel       = "expert_title_level"       // 职称权重
 	DictTypeSocialWeight     = "expert_social_weight"     // 社会贡献权重（学术兼职、荣誉称号）
-	DictTypeRankingWeight    = "expert_ranking_weight"    // 综合排序四个分项的权重 w1..w4
+	DictTypeRankingWeight    = "expert_ranking_weight"    // 综合排序各分项的权重 w1..w5
 )
 
 var (
@@ -25,7 +25,10 @@ var (
 	defaultAdoptionLevelWeights    = map[string]float64{"国家级": 10, "中央": 10, "省部级": 5, "厅局级": 3, "区县级": 1}
 	defaultTitleLevelWeights       = map[string]float64{"教授": 5, "研究员": 5, "副教授": 3, "副研究员": 3, "讲师": 1, "助理研究员": 1}
 	defaultSocialWeights           = map[string]float64{"academic_position": 1, "honor_title": 3}
-	defaultRankingWeights          = map[string]float64{"achievement": 1, "influence": 1, "title": 1, "social": 1}
+	// keyword 是关键词相关性本身的权重（w5）：achievement/influence 两项已经乘了 relevance，
+	// 这里再单独给 relevance 本身一个权重，避免成果分/决策影响分是 0 的专家（还没攒够成果）
+	// 综合得分对关键词匹配程度完全没反应——见 rankedCandidates 顶部注释
+	defaultRankingWeights = map[string]float64{"achievement": 1, "influence": 1, "title": 1, "social": 1, "keyword": 10}
 )
 
 type ExpertScoreService struct{}
@@ -33,17 +36,23 @@ type ExpertScoreService struct{}
 // expertScoreSvc 供本包其他 service 文件（成果/决策影响记录变更时）触发得分重算
 var expertScoreSvc = &ExpertScoreService{}
 
-// dictWeights 按字典类型读取 label -> 权重 的映射；字典未配置时返回 fallback，保证功能开箱可用
+// dictWeights 按字典类型读取 label -> 权重 的映射，在 fallback 默认值之上按管理员配置的明细
+// 覆盖，而不是整份替换——这样管理员之前只配置过部分分项（比如早期只有 achievement/influence/
+// title/social 四项）时，代码后续新增的分项（比如这里的 keyword）依然能吃到默认值，不会因为
+// 字典存在就整体退化成"没配置的分项权重是 0"
 func (s *ExpertScoreService) dictWeights(dictType string, fallback map[string]float64) map[string]float64 {
+	weights := make(map[string]float64, len(fallback))
+	for k, v := range fallback {
+		weights[k] = v
+	}
 	var dict system.SysDictionary
 	if err := global.GVA_DB.Where("type = ?", dictType).First(&dict).Error; err != nil {
-		return fallback
+		return weights
 	}
 	var details []system.SysDictionaryDetail
-	if err := global.GVA_DB.Where("sys_dictionary_id = ?", dict.ID).Find(&details).Error; err != nil || len(details) == 0 {
-		return fallback
+	if err := global.GVA_DB.Where("sys_dictionary_id = ?", dict.ID).Find(&details).Error; err != nil {
+		return weights
 	}
-	weights := make(map[string]float64, len(details))
 	for _, d := range details {
 		if w, err := strconv.ParseFloat(d.Extend, 64); err == nil {
 			weights[d.Label] = w
