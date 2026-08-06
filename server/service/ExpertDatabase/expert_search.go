@@ -308,6 +308,23 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 		})
 	}
 
+	// 默认浏览（没填关键词）时排序方式可以按 SortBy 换成"最近更新"或"姓名"——这两种场景下
+	// 综合实力分不是用户真正想看的顺序。带关键词检索必须按相关性/综合得分排序，忽略 SortBy，
+	// 不然搜索结果的顺序跟检索意图脱节
+	if len(terms) == 0 {
+		switch req.SortBy {
+		case "updatedAt":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].UpdatedAt.After(items[j].UpdatedAt)
+			})
+			return items, nil
+		case "name":
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].Name < items[j].Name
+			})
+			return items, nil
+		}
+	}
 	sort.Slice(items, func(i, j int) bool {
 		return items[i].RealtimeScore > items[j].RealtimeScore
 	})

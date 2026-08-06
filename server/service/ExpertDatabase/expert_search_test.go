@@ -3,6 +3,7 @@ package ExpertDatabase
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase"
 	ExpertDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase/request"
@@ -200,5 +201,79 @@ func TestRankedCandidates_KeywordMatchAlwaysMovesCompositeScoreEvenWithZeroBaseS
 	if items[0].RealtimeScore <= items[1].RealtimeScore {
 		t.Fatalf("成果分/决策影响分/职称/社会贡献分都相同时，命中更多关键词的综合得分应该更高，实际 %v vs %v",
 			items[0].RealtimeScore, items[1].RealtimeScore)
+	}
+}
+
+// TestRankedCandidates_SortByNameOrdersAlphabeticallyWhenNoKeyword 默认浏览（不带关键词）场景下
+// SortBy="name" 应该覆盖掉默认的综合实力排序，改成按姓名排。综合实力（职称=教授）本来会让"张三"
+// 排在"李四"前面，这里特意让职称高的那位姓氏排在字母序后面，确保真的是按名字排的，不是巧合排对了。
+func TestRankedCandidates_SortByNameOrdersAlphabeticallyWhenNoKeyword(t *testing.T) {
+	db := setupTestDB(t)
+
+	zhang := ExpertDatabase.ExpertProfile{Name: "张三", Status: StatusPublished, TechTitle: "教授"}
+	li := ExpertDatabase.ExpertProfile{Name: "李四", Status: StatusPublished, TechTitle: "讲师"}
+	if err := db.Create(&zhang).Error; err != nil {
+		t.Fatalf("建档案失败: %v", err)
+	}
+	if err := db.Create(&li).Error; err != nil {
+		t.Fatalf("建档案失败: %v", err)
+	}
+
+	svc := &ExpertSearchService{}
+	items, err := svc.rankedCandidates(ExpertDatabaseReq.ExpertSearchReq{SortBy: "name"})
+	if err != nil {
+		t.Fatalf("检索不应该报错: %v", err)
+	}
+	if len(items) != 2 || items[0].Name != "张三" || items[1].Name != "李四" {
+		t.Fatalf("按姓名字符串排序，'张'在'李'前面，想要 [张三 李四]，实际 %v", []string{items[0].Name, items[1].Name})
+	}
+}
+
+// TestRankedCandidates_SortByUpdatedAtOrdersMostRecentFirstWhenNoKeyword 默认浏览场景下
+// SortBy="updatedAt" 应该让最近更新的专家排最前面。故意让先建档的那位职称更高（本该在综合实力
+// 排序下排第一），确保排序结果不是综合实力分凑巧对了。
+func TestRankedCandidates_SortByUpdatedAtOrdersMostRecentFirstWhenNoKeyword(t *testing.T) {
+	db := setupTestDB(t)
+
+	olderHigherTitle := ExpertDatabase.ExpertProfile{Name: "早建档职称高", Status: StatusPublished, TechTitle: "教授"}
+	newerLowerTitle := ExpertDatabase.ExpertProfile{Name: "晚建档职称低", Status: StatusPublished, TechTitle: "讲师"}
+	if err := db.Create(&olderHigherTitle).Error; err != nil {
+		t.Fatalf("建档案失败: %v", err)
+	}
+	if err := db.Create(&newerLowerTitle).Error; err != nil {
+		t.Fatalf("建档案失败: %v", err)
+	}
+	// 显式错开更新时间，不依赖两次 db.Create 之间自然流逝的系统时钟精度
+	if err := db.Model(&olderHigherTitle).UpdateColumn("updated_at", time.Now().Add(-time.Hour)).Error; err != nil {
+		t.Fatalf("回改更新时间失败: %v", err)
+	}
+
+	svc := &ExpertSearchService{}
+	items, err := svc.rankedCandidates(ExpertDatabaseReq.ExpertSearchReq{SortBy: "updatedAt"})
+	if err != nil {
+		t.Fatalf("检索不应该报错: %v", err)
+	}
+	if len(items) != 2 || items[0].Name != "晚建档职称低" {
+		t.Fatalf("最近更新的应该排第一，想要 晚建档职称低，实际第一名是 %s", items[0].Name)
+	}
+}
+
+// TestRankedCandidates_SortByIgnoredWhenKeywordGiven 带关键词检索时必须按相关性/综合得分排序，
+// SortBy 不该生效——不然搜索结果的顺序跟检索意图脱节。
+func TestRankedCandidates_SortByIgnoredWhenKeywordGiven(t *testing.T) {
+	db := setupTestDB(t)
+
+	relevant := ExpertDatabase.ExpertProfile{Name: "关键词命中", Status: StatusPublished, ResearchKeywords: "人工智能"}
+	if err := db.Create(&relevant).Error; err != nil {
+		t.Fatalf("建档案失败: %v", err)
+	}
+
+	svc := &ExpertSearchService{}
+	items, err := svc.rankedCandidates(ExpertDatabaseReq.ExpertSearchReq{Keyword: "人工智能", SortBy: "name"})
+	if err != nil {
+		t.Fatalf("检索不应该报错: %v", err)
+	}
+	if len(items) != 1 || items[0].Name != "关键词命中" {
+		t.Fatalf("带关键词时应该正常按相关性走命中筛选逻辑，不受 SortBy 影响，实际 %v", items)
 	}
 }

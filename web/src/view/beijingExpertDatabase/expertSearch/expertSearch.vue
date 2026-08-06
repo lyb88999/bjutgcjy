@@ -90,6 +90,30 @@
       </el-form>
     </div>
 
+    <div class="result-toolbar">
+      <span class="result-count">共 <b>{{ total }}</b> 位专家</span>
+      <el-select
+        v-if="!hasKeyword"
+        v-model="searchForm.sortBy"
+        size="small"
+        class="sort-select"
+        @change="() => { page = 1; onSearch() }"
+      >
+        <el-option
+          label="按综合实力排序"
+          value=""
+        />
+        <el-option
+          label="按最近更新排序"
+          value="updatedAt"
+        />
+        <el-option
+          label="按姓名排序"
+          value="name"
+        />
+      </el-select>
+    </div>
+
     <el-table
       v-loading="loading"
       :data="tableData"
@@ -160,6 +184,7 @@
         </template>
       </el-table-column>
       <el-table-column
+        v-if="hasKeyword"
         align="left"
         label="相关性"
         width="120"
@@ -177,37 +202,44 @@
         </template>
       </el-table-column>
       <el-table-column
-        align="right"
-        label="成果分"
-        width="80"
+        align="left"
+        label="分项明细"
+        width="190"
       >
         <template #default="scope">
-          <span class="sub-score">{{ fmt(scope.row.achievementScore) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column
-        align="right"
-        label="决策影响分"
-        width="96"
-      >
-        <template #default="scope">
-          <span class="sub-score">{{ fmt(scope.row.influenceScore) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column
-        align="right"
-        label="社会贡献分"
-        width="96"
-      >
-        <template #default="scope">
-          <span class="sub-score">{{ fmt(scope.row.socialScore) }}</span>
+          <div class="sub-scores">
+            <span
+              class="sub-chip"
+              title="成果分"
+            ><b>成果</b>{{ fmt(scope.row.achievementScore) }}</span>
+            <span
+              class="sub-chip"
+              title="决策影响分"
+            ><b>影响</b>{{ fmt(scope.row.influenceScore) }}</span>
+            <span
+              class="sub-chip"
+              title="社会贡献分"
+            ><b>贡献</b>{{ fmt(scope.row.socialScore) }}</span>
+          </div>
         </template>
       </el-table-column>
       <el-table-column
         align="left"
-        label="综合得分"
-        width="150"
+        :label="compositeLabel"
+        width="160"
       >
+        <template #header>
+          <span class="col-header-tip">
+            {{ compositeLabel }}
+            <el-tooltip
+              effect="dark"
+              placement="top"
+              :content="compositeTooltip"
+            >
+              <el-icon class="tip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </span>
+        </template>
         <template #default="scope">
           <div class="score-cell">
             <div class="score-track">
@@ -252,11 +284,6 @@
         @size-change="(v) => { pageSize = v; onSearch() }"
       />
     </div>
-    <p class="search-hint">
-      综合得分 = 相关性 ×（w1×成果得分 + w2×决策影响得分 + w3×职称权重 + w4×社会贡献得分 + w5），
-      权重可在"系统工具-字典管理"里调整（字典类型 expert_ranking_weight）。
-      多个关键词用空格或顿号分隔可联合检索，命中的词越多相关性越高、排名越靠前。
-    </p>
   </div>
 </template>
 
@@ -273,7 +300,7 @@ defineOptions({
 
 const router = useRouter()
 const viewDetail = (row) => {
-  router.push({ name: 'expertProfileDetail', params: { id: row.ID } })
+  router.push({ name: 'expertProfileDetail', params: { id: row.ID }})
 }
 
 // 筛选选项与主档编辑表单同源：职称来自打分权重字典，一级学科来自标签库，
@@ -297,7 +324,8 @@ const searchForm = reactive({
   keyword: '',
   disciplineL1: '',
   regionExpertise: '',
-  techTitle: ''
+  techTitle: '',
+  sortBy: ''
 })
 
 const tableData = ref([])
@@ -319,6 +347,18 @@ const maxScore = computed(() =>
 )
 const scoreWidth = (score) => (maxScore.value ? ((score || 0) / maxScore.value) * 100 : 0)
 
+// 跟"当前输入框里打了什么"脱钩，只认"上一次真正提交检索时带没带关键词"——不然用户打字打到一半
+// （还没点检索）相关性列就跟着闪现/消失，观感很跳
+const lastKeyword = ref('')
+const hasKeyword = computed(() => !!lastKeyword.value.trim())
+
+const compositeLabel = computed(() => (hasKeyword.value ? '综合得分' : '综合实力'))
+const compositeTooltip = computed(() =>
+  hasKeyword.value
+    ? '综合得分 = 相关性 ×（成果分×w1 + 决策影响分×w2 + 职称权重×w3 + 社会贡献分×w4 + w5），反映的是与本次检索词的匹配程度，权重可在"系统工具-字典管理"（expert_ranking_weight）调整'
+    : '未输入检索词时相关性恒为 1，这里显示的是专家整体实力（成果、决策影响、职称、社会贡献的加权和），不代表和某个主题相关，权重可在"系统工具-字典管理"（expert_ranking_weight）调整'
+)
+
 const onSearch = async() => {
   loading.value = true
   try {
@@ -326,6 +366,7 @@ const onSearch = async() => {
     if (res.code === 0) {
       tableData.value = res.data.list
       total.value = res.data.total
+      lastKeyword.value = searchForm.keyword
     }
   } finally {
     loading.value = false
@@ -359,6 +400,7 @@ const onReset = () => {
   searchForm.disciplineL1 = ''
   searchForm.regionExpertise = ''
   searchForm.techTitle = ''
+  searchForm.sortBy = ''
   page.value = 1
   onSearch()
 }
@@ -367,6 +409,24 @@ onSearch()
 </script>
 
 <style scoped>
+.result-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.result-count {
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+.result-count b {
+  color: var(--el-text-color-primary);
+  font-weight: 600;
+}
+.sort-select {
+  width: 150px;
+}
+
 .rank-badge {
   display: inline-flex;
   align-items: center;
@@ -414,16 +474,16 @@ onSearch()
 }
 .score-track {
   flex: 1;
-  height: 6px;
-  border-radius: 3px;
+  height: 7px;
+  border-radius: 4px;
   background: var(--el-fill-color-light);
   overflow: hidden;
 }
 .score-fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 4px;
 }
-.score-fill-relevance { background: #69b1ff; }
+.score-fill-relevance { background: linear-gradient(90deg, #95c2ff, #69b1ff); }
 .score-fill-composite { background: linear-gradient(90deg, #1677ff, #69b1ff); }
 .score-num {
   min-width: 36px;
@@ -438,14 +498,38 @@ onSearch()
   color: var(--el-color-primary);
   min-width: 44px;
 }
-.sub-score {
-  font-variant-numeric: tabular-nums;
+
+.sub-scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+.sub-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--el-fill-color-light);
+  font-size: 12px;
   color: var(--el-text-color-regular);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sub-chip b {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--el-text-color-secondary);
 }
 
-.search-hint {
-  margin-top: 12px;
-  font-size: 12px;
+.col-header-tip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.tip-icon {
+  font-size: 14px;
   color: var(--el-text-color-secondary);
+  cursor: help;
 }
 </style>
