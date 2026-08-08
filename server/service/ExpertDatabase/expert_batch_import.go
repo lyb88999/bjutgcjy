@@ -167,6 +167,12 @@ func (expertProfileService *ExpertProfileService) ImportBatch(src io.Reader, ope
 		name   string
 		fields map[string]string
 	}
+	// 同名不同单位是常见情况（多所高校合并导入时尤其多），姓名本身不是这个 sheet 的唯一键，
+	// 姓名+所在单位才是。nameToRow/nameOccurrences 仍按姓名索引，只是给成果表匹配用：
+	// 成果表模板没有单位列，没法唯一定位到具体是哪个同名专家，所以同名出现超过一次时
+	// 该姓名对成果表来说就是"不可用"，真要关联成果得改成可区分的姓名或分开提交。
+	seenKeys := map[string]bool{}
+	nameOccurrences := map[string]int{}
 	nameToRow := map[string]*profileRow{}
 	var profileList []*profileRow
 
@@ -188,10 +194,16 @@ func (expertProfileService *ExpertProfileService) ImportBatch(src io.Reader, ope
 			errs = append(errs, ExpertDatabaseResp.ExpertBatchImportRowError{Sheet: profileSheetName, Row: rowNum, Message: "所在单位不能为空"})
 			continue
 		}
-		if _, dup := nameToRow[name]; dup {
-			errs = append(errs, ExpertDatabaseResp.ExpertBatchImportRowError{Sheet: profileSheetName, Row: rowNum, Message: "姓名「" + name + "」在背景信息表里重复出现，成果表无法唯一关联，请改成可区分的姓名或分开提交"})
+		// 大院校常见同名同单位不同院系的情况（比如两位不同的"赵宏"都在北京大学法学院任教），
+		// 光靠姓名+单位不足以判断是不是同一个人，再叠加院系/部门才够——因此这里的判重键、
+		// 以及下面 DB 里"是否已有档案"的复用查询，都用姓名+单位+院系三者一起匹配
+		key := name + "\x00" + unitName + "\x00" + cellAt(row, 5)
+		if seenKeys[key] {
+			errs = append(errs, ExpertDatabaseResp.ExpertBatchImportRowError{Sheet: profileSheetName, Row: rowNum, Message: "姓名「" + name + "」在「" + unitName + "」「" + cellAt(row, 5) + "」下重复出现，请确认是不是同一人填了两行"})
 			continue
 		}
+		seenKeys[key] = true
+		nameOccurrences[name]++
 		pr := &profileRow{
 			rowNum: rowNum,
 			name:   name,
@@ -240,6 +252,10 @@ func (expertProfileService *ExpertProfileService) ImportBatch(src io.Reader, ope
 			errs = append(errs, ExpertDatabaseResp.ExpertBatchImportRowError{Sheet: achievementSheetName, Row: rowNum, Message: "专家姓名「" + expertName + "」在「" + profileSheetName + "」表里找不到，请先在背景信息表里加上这个人"})
 			continue
 		}
+		if nameOccurrences[expertName] > 1 {
+			errs = append(errs, ExpertDatabaseResp.ExpertBatchImportRowError{Sheet: achievementSheetName, Row: rowNum, Message: "专家姓名「" + expertName + "」在「" + profileSheetName + "」表里对应多个不同单位的同名专家，成果表没有单位列无法唯一关联，请把姓名改得可区分或分开提交"})
+			continue
+		}
 		if achievementType == "" {
 			errs = append(errs, ExpertDatabaseResp.ExpertBatchImportRowError{Sheet: achievementSheetName, Row: rowNum, Message: "成果类型不能为空"})
 			continue
@@ -280,7 +296,7 @@ func (expertProfileService *ExpertProfileService) ImportBatch(src io.Reader, ope
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		for _, pr := range profileList {
 			var existing ExpertDatabase.ExpertProfile
-			findErr := tx.Where("name = ? AND unit_name = ?", pr.name, pr.fields["unitName"]).First(&existing).Error
+			findErr := tx.Where("name = ? AND unit_name = ? AND department = ?", pr.name, pr.fields["unitName"], pr.fields["department"]).First(&existing).Error
 			if findErr == nil {
 				nameToExpertID[pr.name] = existing.ID
 				result.ReusedProfiles++

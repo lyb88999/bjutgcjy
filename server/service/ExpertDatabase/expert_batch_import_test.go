@@ -162,6 +162,89 @@ func TestImportBatch_ReimportReusesProfilesAndSkipsDuplicateAchievements(t *test
 	}
 }
 
+func TestImportBatch_SameNameDifferentUnitBothImport(t *testing.T) {
+	db := setupTestDB(t)
+	src := buildImportFile(t,
+		[][]interface{}{
+			profileRowFor("张伟", "北京大学"),
+			profileRowFor("张伟", "清华大学"),
+		},
+		nil,
+	)
+
+	svc := &ExpertProfileService{}
+	result, err := svc.ImportBatch(src, 42)
+	if err != nil {
+		t.Fatalf("导入不应报错: %v", err)
+	}
+	if !result.Success {
+		t.Fatalf("同名不同单位不应被当成重复行拒绝，错误：%+v", result.Errors)
+	}
+	if result.CreatedProfiles != 2 {
+		t.Fatalf("应各自建档，实际新建 %d", result.CreatedProfiles)
+	}
+	var count int64
+	db.Model(&ExpertDatabase.ExpertProfile{}).Where("name = ?", "张伟").Count(&count)
+	if count != 2 {
+		t.Fatalf("应有 2 条「张伟」档案，实际 %d", count)
+	}
+}
+
+func TestImportBatch_SameNameSameUnitDifferentDepartmentBothImport(t *testing.T) {
+	db := setupTestDB(t)
+	// 大院校里同名同单位不同院系的两个人（比如两位不同的"赵宏"都在北京大学，
+	// 一个法学院一个政府管理学院），不能被姓名+单位这一层粗粒度判重合并成一个人
+	rowWithDept := func(name, unit, dept string) []interface{} {
+		return []interface{}{name, "", "", "", unit, dept}
+	}
+	src := buildImportFile(t,
+		[][]interface{}{
+			rowWithDept("赵宏", "北京大学", "法学院"),
+			rowWithDept("赵宏", "北京大学", "政府管理学院"),
+		},
+		nil,
+	)
+
+	svc := &ExpertProfileService{}
+	result, err := svc.ImportBatch(src, 42)
+	if err != nil {
+		t.Fatalf("导入不应报错: %v", err)
+	}
+	if !result.Success {
+		t.Fatalf("同名同单位但不同院系不应被误判成同一人，错误：%+v", result.Errors)
+	}
+	if result.CreatedProfiles != 2 {
+		t.Fatalf("应各自建档，实际新建 %d", result.CreatedProfiles)
+	}
+	var count int64
+	db.Model(&ExpertDatabase.ExpertProfile{}).Where("name = ? AND unit_name = ?", "赵宏", "北京大学").Count(&count)
+	if count != 2 {
+		t.Fatalf("应有 2 条独立档案，实际 %d", count)
+	}
+}
+
+func TestImportBatch_AmbiguousNameAchievementRejected(t *testing.T) {
+	setupTestDB(t)
+	src := buildImportFile(t,
+		[][]interface{}{
+			profileRowFor("张伟", "北京大学"),
+			profileRowFor("张伟", "清华大学"),
+		},
+		[][]interface{}{
+			{"张伟", "学术论文", "某篇论文", "", ""},
+		},
+	)
+
+	svc := &ExpertProfileService{}
+	result, err := svc.ImportBatch(src, 42)
+	if err != nil {
+		t.Fatalf("校验不通过应通过 result 报告，不应返回 err: %v", err)
+	}
+	if result.Success {
+		t.Fatal("成果表引用了同名但不同单位的姓名，无法唯一关联，应整体拒绝")
+	}
+}
+
 func TestImportBatch_MissingSheetGivesActionableError(t *testing.T) {
 	setupTestDB(t)
 	f := excelize.NewFile()
