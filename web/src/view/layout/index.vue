@@ -170,8 +170,11 @@
             v-loading="loadingFlag"
             element-loading-text="正在加载中"
           >
+            <!-- 不能用 mode="out-in"：懒加载的路由组件第一次访问时要等 Vite/浏览器
+            现拉那个页面的 JS chunk，out-in 会先把旧页面完全淡出、才开始装载新页面，
+            这段等待期间页面是真空的白屏（旧内容已经没了，新内容还没准备好）。
+            去掉 mode 让新组件立刻开始挂载，跟旧组件的淡出动画重叠，就不会有这段空窗 -->
             <transition
-              mode="out-in"
               name="el-fade-in-linear"
             >
               <keep-alive :include="routerStore.keepAliveRouters">
