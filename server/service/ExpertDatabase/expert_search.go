@@ -79,6 +79,16 @@ func (s *ExpertSearchService) buildSearchCorpusMap(candidates []ExpertDatabase.E
 	return corpus, nil
 }
 
+// tieBreakKey 给排序平局打散用的确定性伪随机数：同一个 id 永远算出同一个值（同一次查询内
+// 多次排序、翻页顺序不会跳），但跟 id 本身的大小无关联，不会让平局回到"按 id/导入批次聚堆"
+func tieBreakKey(id uint) uint32 {
+	x := uint32(id)
+	x = ((x >> 16) ^ x) * 0x45d9f3b
+	x = ((x >> 16) ^ x) * 0x45d9f3b
+	x = (x >> 16) ^ x
+	return x
+}
+
 // splitKeyword 检索词切分 V1：按常见分隔符拆词，够用即可；后续量大再引入分词库/ES（见技术方案 2.2）
 func splitKeyword(keyword string) []string {
 	replacer := strings.NewReplacer(",", " ", "，", " ", "、", " ", "/", " ", ";", " ", "；", " ")
@@ -317,8 +327,15 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 			return items, nil
 		}
 	}
+	// 批量导入的档案还没攒够成果/决策采纳记录时，综合得分基本只剩职称分这一项，会有大量专家分数
+	// 完全相同（实测一批几千人导入后，69% 的人扎堆在同一个分数）。这种平局不该按 id 顺序排——
+	// 那等于按"哪个学校哪批导入的"分组，同一学校的人会连成一大片，看着像是漏了别的学校。
+	// 用哈希打散一下顺序：同一批查询里顺序仍然稳定（不是每次刷新都跳），只是不再跟着 id/学校聚堆。
 	sort.Slice(items, func(i, j int) bool {
-		return items[i].RealtimeScore > items[j].RealtimeScore
+		if items[i].RealtimeScore != items[j].RealtimeScore {
+			return items[i].RealtimeScore > items[j].RealtimeScore
+		}
+		return tieBreakKey(items[i].ID) < tieBreakKey(items[j].ID)
 	})
 	return items, nil
 }
