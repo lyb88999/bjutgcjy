@@ -37,7 +37,7 @@ type ExpertProfile struct {
 	DisciplinePlatform string `json:"disciplinePlatform" form:"disciplinePlatform" gorm:"column:discipline_platform;comment:所属学科平台/研究基地;"` //所属学科平台/研究基地
 
 	// 三、研究主题画像
-	ResearchDirections string `json:"researchDirections" form:"researchDirections" gorm:"column:research_directions;comment:近五年重点研究方向;"` //近五年重点研究方向
+	ResearchDirections string `json:"researchDirections" form:"researchDirections" gorm:"column:research_directions;size:2000;comment:近五年重点研究方向;"` //近五年重点研究方向
 	ResearchKeywords   string `json:"researchKeywords" form:"researchKeywords" gorm:"column:research_keywords;comment:研究关键词;"`           //研究关键词，逗号分隔
 	PolicyFields       string `json:"policyFields" form:"policyFields" gorm:"column:policy_fields;comment:所属政策领域;"`                      //所属政策领域
 	ResearchObjects    string `json:"researchObjects" form:"researchObjects" gorm:"column:research_objects;comment:主要研究对象;"`             //主要研究对象
