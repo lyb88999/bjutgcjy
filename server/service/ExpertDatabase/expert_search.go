@@ -1,7 +1,6 @@
 package ExpertDatabase
 
 import (
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -112,7 +111,7 @@ type keywordTerm struct {
 // embedding 服务调不通、或这个专家还没生成向量条目（刚发布/刚导入，没跑过
 // cmd/recompute-embeddings）时整体退回字面子串匹配，不能让语义检索的故障/数据缺失拖垮
 // 基本检索能力
-func (s *ExpertSearchService) termMatch(corpus string, embItems []ExpertDatabase.ExpertSearchEmbeddingItem, kt keywordTerm, useSemanticMatch bool) (relevance float64, matched bool, reason string) {
+func (s *ExpertSearchService) termMatch(corpus string, embItems []parsedEmbeddingItem, kt keywordTerm, useSemanticMatch bool) (relevance float64, matched bool, reason string) {
 	literalHit := s.anyLiteralHit(corpus, kt.expanded)
 	if literalHit {
 		reason = "包含关键词「" + kt.term + "」"
@@ -126,12 +125,8 @@ func (s *ExpertSearchService) termMatch(corpus string, embItems []ExpertDatabase
 	}
 	bestSim := -1.0
 	for _, it := range embItems {
-		var v []float32
-		if json.Unmarshal([]byte(it.Vector), &v) != nil {
-			continue
-		}
 		for _, kwVec := range kt.vectors {
-			if sim := cosineSim(kwVec, v); sim > bestSim {
+			if sim := cosineSim(kwVec, it.Vector); sim > bestSim {
 				bestSim = sim
 				if !literalHit {
 					reason = it.ItemLabel
@@ -199,7 +194,7 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 	// 根源就在这——旧实现把整个输入串当一个词去比对）
 	terms := splitKeyword(req.Keyword)
 	corpus := map[uint]string{}
-	itemsByExpert := map[uint][]ExpertDatabase.ExpertSearchEmbeddingItem{}
+	itemsByExpert := map[uint][]parsedEmbeddingItem{}
 	keywordTerms := make([]keywordTerm, len(terms))
 	useSemanticMatch := false
 	if len(terms) > 0 && len(candidates) > 0 {
@@ -245,11 +240,8 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 			for _, c := range candidates {
 				ids = append(ids, c.ID)
 			}
-			var embRows []ExpertDatabase.ExpertSearchEmbeddingItem
-			if dbErr := global.GVA_DB.Where("expert_id IN ?", ids).Find(&embRows).Error; dbErr == nil {
-				for _, row := range embRows {
-					itemsByExpert[row.ExpertId] = append(itemsByExpert[row.ExpertId], row)
-				}
+			if byExpert, embErr := s.embeddingItemsByExpert(ids); embErr == nil {
+				itemsByExpert = byExpert
 				useSemanticMatch = true
 			}
 		}
