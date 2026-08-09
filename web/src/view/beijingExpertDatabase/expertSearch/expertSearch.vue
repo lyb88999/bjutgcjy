@@ -209,14 +209,17 @@
         <template #default="scope">
           <div class="sub-scores">
             <span
+              v-if="scoreColumnAvailability.hasAchievement"
               class="sub-chip"
               title="成果分"
             ><b>成果</b>{{ fmt(scope.row.achievementScore) }}</span>
             <span
+              v-if="scoreColumnAvailability.hasInfluence"
               class="sub-chip"
               title="决策影响分"
             ><b>影响</b>{{ fmt(scope.row.influenceScore) }}</span>
             <span
+              v-if="scoreColumnAvailability.hasSocial"
               class="sub-chip"
               title="社会贡献分"
             ><b>贡献</b>{{ fmt(scope.row.socialScore) }}</span>
@@ -288,7 +291,7 @@
 </template>
 
 <script setup>
-import { searchExpert, exportSearchResults } from '@/api/expertSearch'
+import { searchExpert, exportSearchResults, getScoreColumnAvailability } from '@/api/expertSearch'
 import { getExpertTagList } from '@/api/expertTag'
 import { getDict } from '@/utils/dictionary'
 import { ref, reactive, computed } from 'vue'
@@ -335,6 +338,16 @@ const total = ref(0)
 const loading = ref(false)
 
 const fmt = (v) => Math.round((v || 0) * 10) / 10
+
+// 决策影响分/社会贡献分这类分项，在批量导入的花名册数据还没配上决策影响/学术兼职记录之前，
+// 全库对谁都是 0，摆一列清一色的 0 没有信息量——查一次全库有没有人非零，没有就不显示这一项，
+// 等真有数据了（哪怕只有一个人）就自动恢复显示，不用改代码
+const scoreColumnAvailability = ref({ hasAchievement: true, hasInfluence: true, hasSocial: true })
+getScoreColumnAvailability().then((res) => {
+  if (res.code === 0) {
+    scoreColumnAvailability.value = res.data
+  }
+})
 
 // 排名跨页连续（第 2 页第 1 行是全局第 11 名），金银铜徽章只属于全局前三
 const globalRank = (index) => (page.value - 1) * pageSize.value + index + 1

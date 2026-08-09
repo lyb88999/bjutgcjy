@@ -20,3 +20,10 @@ export const recomputeExpertScore = (data) => {
 export const exportSearchResults = (params) => {
   return service({ url: '/expertDatabase/exportSearchResults', method: 'get', params, responseType: 'blob' })
 }
+
+// @Tags ExpertSearch
+// @Summary 分项得分是否有数据（全库是否至少一人非零），用来决定要不要显示对应的列/卡片
+// @Router /expertDatabase/scoreColumnAvailability [get]
+export const getScoreColumnAvailability = () => {
+  return service({ url: '/expertDatabase/scoreColumnAvailability', method: 'get' })
+}

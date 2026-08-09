@@ -45,6 +45,24 @@ func (expertSearchApi *ExpertSearchApi) SearchExpert(c *gin.Context) {
 	}, "检索成功", c)
 }
 
+// GetScoreColumnAvailability 成果分/决策影响分/社会贡献分是否至少有一个已发布专家非零，前端
+// 拿这个决定要不要显示对应的列/卡片，避免整列都是没意义的 0
+// @Tags ExpertSearch
+// @Summary 分项得分是否有数据
+// @Security ApiKeyAuth
+// @Produce application/json
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"获取成功"}"
+// @Router /expertDatabase/scoreColumnAvailability [get]
+func (expertSearchApi *ExpertSearchApi) GetScoreColumnAvailability(c *gin.Context) {
+	result, err := expertSearchService.GetScoreColumnAvailability()
+	if err != nil {
+		global.GVA_LOG.Error("查询分项得分可用性失败!", zap.Error(err))
+		response.FailWithMessage("查询失败", c)
+		return
+	}
+	response.OkWithData(result, c)
+}
+
 // ExportSearchResults 导出当前检索条件下命中的全部结果
 // @Tags ExpertSearch
 // @Summary 导出检索结果

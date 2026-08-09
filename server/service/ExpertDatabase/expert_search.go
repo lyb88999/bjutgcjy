@@ -297,8 +297,13 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 		realtimeScore := relevance * (rankingWeights["achievement"]*c.AchievementScore +
 			rankingWeights["influence"]*c.InfluenceScore +
 			rankingWeights["title"]*titleScore +
-			rankingWeights["social"]*c.SocialScore +
-			rankingWeights["keyword"])
+			rankingWeights["social"]*c.SocialScore)
+		// keyword 这一项是关键词匹配本身的固定加分，只在真的填了关键词时才加——默认浏览场景
+		// len(terms)==0 时 relevance 恒为 1，如果不加这个判断，浏览列表里显示的"综合实力"会比
+		// 专家详情页缓存的 compositeScore 平白多出这一整项，两个页面的数字对不上
+		if len(terms) > 0 {
+			realtimeScore += relevance * rankingWeights["keyword"]
+		}
 		items = append(items, ExpertDatabaseRes.ExpertSearchItem{
 			ExpertProfile: c,
 			Relevance:     relevance,
@@ -362,6 +367,32 @@ func (s *ExpertSearchService) Search(req ExpertDatabaseReq.ExpertSearchReq) (lis
 		end = len(items)
 	}
 	return items[start:end], total, nil
+}
+
+// GetScoreColumnAvailability 全库已发布专家里，成果分/决策影响分/社会贡献分是不是至少有一个人
+// 非零——花名册类批量导入的专家往往还没有成果/决策影响/学术兼职记录，某一项对全库所有人都是 0
+// 时，界面上继续显示一整列 0 没有意义，前端拿这个结果决定隐藏对应的列/卡片
+func (s *ExpertSearchService) GetScoreColumnAvailability() (ExpertDatabaseRes.ExpertScoreColumnAvailability, error) {
+	var result ExpertDatabaseRes.ExpertScoreColumnAvailability
+	var probe []uint
+	if err := global.GVA_DB.Model(&ExpertDatabase.ExpertProfile{}).Where("status = ? AND achievement_score > 0", "published").Limit(1).Pluck("id", &probe).Error; err != nil {
+		return result, err
+	}
+	result.HasAchievement = len(probe) > 0
+
+	probe = probe[:0]
+	if err := global.GVA_DB.Model(&ExpertDatabase.ExpertProfile{}).Where("status = ? AND influence_score > 0", "published").Limit(1).Pluck("id", &probe).Error; err != nil {
+		return result, err
+	}
+	result.HasInfluence = len(probe) > 0
+
+	probe = probe[:0]
+	if err := global.GVA_DB.Model(&ExpertDatabase.ExpertProfile{}).Where("status = ? AND social_score > 0", "published").Limit(1).Pluck("id", &probe).Error; err != nil {
+		return result, err
+	}
+	result.HasSocial = len(probe) > 0
+
+	return result, nil
 }
 
 var searchExportHeaders = []string{

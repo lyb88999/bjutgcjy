@@ -17,7 +17,8 @@ func (s *ExpertSearchRouter) InitExpertSearchRouter(Router *gin.RouterGroup) {
 		expertDatabaseRouter.POST("recomputeScore", expertSearchApi.RecomputeExpertScore) // 手动重算专家得分
 	}
 	{
-		expertDatabaseRouterWithoutRecord.GET("search", expertSearchApi.SearchExpert)                     // 综合推荐排序检索
-		expertDatabaseRouterWithoutRecord.GET("exportSearchResults", expertSearchApi.ExportSearchResults) // 导出检索结果
+		expertDatabaseRouterWithoutRecord.GET("search", expertSearchApi.SearchExpert)                                       // 综合推荐排序检索
+		expertDatabaseRouterWithoutRecord.GET("exportSearchResults", expertSearchApi.ExportSearchResults)                   // 导出检索结果
+		expertDatabaseRouterWithoutRecord.GET("scoreColumnAvailability", expertSearchApi.GetScoreColumnAvailability)        // 分项得分是否有数据
 	}
 }

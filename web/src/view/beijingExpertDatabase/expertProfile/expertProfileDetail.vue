@@ -49,15 +49,24 @@
         </div>
       </div>
       <div class="hero-scores">
-        <div class="hero-score">
+        <div
+          v-if="scoreColumnAvailability.hasAchievement"
+          class="hero-score"
+        >
           <div class="hero-score-value">{{ profile.achievementScore }}</div>
           <div class="hero-score-label">成果分</div>
         </div>
-        <div class="hero-score">
+        <div
+          v-if="scoreColumnAvailability.hasInfluence"
+          class="hero-score"
+        >
           <div class="hero-score-value">{{ profile.influenceScore }}</div>
           <div class="hero-score-label">决策影响分</div>
         </div>
-        <div class="hero-score">
+        <div
+          v-if="scoreColumnAvailability.hasSocial"
+          class="hero-score"
+        >
           <div class="hero-score-value">{{ profile.socialScore }}</div>
           <div class="hero-score-label">社会贡献分</div>
         </div>
@@ -620,6 +629,7 @@ import {
   getExpertTagsByExpertId,
   setExpertTagRelations
 } from '@/api/expertTag'
+import { getScoreColumnAvailability } from '@/api/expertSearch'
 
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, computed } from 'vue'
@@ -635,6 +645,15 @@ const route = useRoute()
 const router = useRouter()
 const expertId = Number(route.params.id)
 const userStore = useUserStore()
+
+// 决策影响分/社会贡献分在全库都还没数据支撑时（批量导入的花名册类专家还没配决策影响/学术兼职
+// 记录），展示一张清一色 0 的卡片没有意义，查一下全库有没有人非零来决定要不要显示
+const scoreColumnAvailability = ref({ hasAchievement: true, hasInfluence: true, hasSocial: true })
+getScoreColumnAvailability().then((res) => {
+  if (res.code === 0) {
+    scoreColumnAvailability.value = res.data
+  }
+})
 // 单位审核员/市级审核员/专家（纯检索用户）在后端只有只读权限，写操作一定会被 Casbin 拒绝——
 // 前端直接不展示这些按钮，避免填完一整张表单才发现白填了
 const isReadOnlyReviewer = computed(() => [9002, 9003, 9005].includes(userStore.userInfo.authorityId))

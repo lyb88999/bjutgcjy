@@ -14,3 +14,12 @@ type ExpertSearchItem struct {
 	// 关键词为空的默认浏览场景下留空。给用户一个"为什么排在前面"的直观依据，而不是只有一个百分比
 	MatchReason string `json:"matchReason"`
 }
+
+// ExpertScoreColumnAvailability 各分项得分在全库已发布专家里是否至少有一个人非零——批量导入的
+// 花名册类数据往往还没有决策影响/学术兼职记录，这种情况下相应分项对谁都是 0，界面上继续摆一列
+// 清一色的 0 没有信息量，前端拿这个标记决定要不要显示对应的列/卡片
+type ExpertScoreColumnAvailability struct {
+	HasAchievement bool `json:"hasAchievement"`
+	HasInfluence   bool `json:"hasInfluence"`
+	HasSocial      bool `json:"hasSocial"`
+}
