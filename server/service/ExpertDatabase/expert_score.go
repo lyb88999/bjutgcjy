@@ -2,6 +2,7 @@ package ExpertDatabase
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
@@ -23,7 +24,7 @@ const (
 var (
 	defaultAchievementLevelWeights = map[string]float64{"国家级": 10, "省部级": 5, "厅局级": 3, "一般级": 1}
 	defaultAdoptionLevelWeights    = map[string]float64{"国家级": 10, "中央": 10, "省部级": 5, "厅局级": 3, "区县级": 1}
-	defaultTitleLevelWeights       = map[string]float64{"教授": 5, "研究员": 5, "副教授": 3, "副研究员": 3, "讲师": 1, "助理研究员": 1}
+	defaultTitleLevelWeights       = map[string]float64{"院士": 8, "教授": 5, "研究员": 5, "副教授": 3, "副研究员": 3, "讲师": 1, "助理研究员": 1}
 	defaultSocialWeights           = map[string]float64{"academic_position": 1, "honor_title": 3}
 	// keyword 是关键词匹配本身的固定加分（w5）：整个综合得分 = relevance * (前四项 + keyword)，
 	// 这一项跟其他四项一起被 relevance 整体打折，保证哪怕成果分/决策影响分是 0 的专家（还没
@@ -80,6 +81,43 @@ func calcLeveledScore(levels []string, weights map[string]float64) float64 {
 	return score
 }
 
+// titleTierKeywords 职称原文往往是自由文本（"长聘教授"、"主任医师、教授"、"院士/教授"这种
+// 组合写法很常见），不是字典里"教授/副教授/讲师..."这几个干净标签能直接精确匹配上的。之前用
+// 精确匹配、查不到就退回最低档 1 分，实测导致 28% 的档案（含院士、讲席教授、长聘教授、主任
+// 医师等本该是中高级的头衔）被错误打到跟讲师一个分数。改成关键词匹配：
+//   1. 先查有没有"副/助理/准聘"这类降级修饰词（覆盖"研究员、准聘副教授"这种同时出现正副职称
+//      的组合，按更保守的副高级算，不高估）
+//   2. 再查初级职称关键词
+//   3. 再查院士（比普通教授更高一档，原来的字典里都没这一档）
+//   4. 最后查正高级关键词（教授/研究员/主任医师/主任药师/主任技师这些临床对应职称也算进去）
+// 都没命中的才退回最低档，跟以前的兜底行为一致
+var titleTierKeywords = []struct {
+	dictLabel string
+	fallback  float64
+	keywords  []string
+}{
+	{"副教授", 3, []string{"副教授", "副研究员", "副主任医师", "副主任药师", "副主任技师", "副主任护师", "准聘"}},
+	{"讲师", 1, []string{"讲师", "助理研究员", "助理教授", "住院医师", "研究实习员"}},
+	{"院士", 8, []string{"院士"}},
+	{"教授", 5, []string{"教授", "研究员", "主任医师", "主任药师", "主任技师", "主任护师", "首席研究员"}},
+}
+
+// matchTitleWeight 按关键词匹配职称原文对应的权重档位，找不到字典里配置的标签时退回该档位的
+// 默认权重（管理员没配置这个新档位也不会导致算分出错）
+func matchTitleWeight(techTitle string, weights map[string]float64) float64 {
+	for _, tier := range titleTierKeywords {
+		for _, kw := range tier.keywords {
+			if strings.Contains(techTitle, kw) {
+				if w, ok := weights[tier.dictLabel]; ok {
+					return w
+				}
+				return tier.fallback
+			}
+		}
+	}
+	return 1
+}
+
 // RecomputeExpertScore 重新计算某个专家的成果分/决策影响分/综合排序基础分并写回缓存字段
 // 综合排序基础分不含检索相关性（与关键词无关），检索时再乘以本次查询的 relevance 系数
 func (s *ExpertScoreService) RecomputeExpertScore(expertID uint) error {
@@ -109,10 +147,7 @@ func (s *ExpertScoreService) RecomputeExpertScore(expertID uint) error {
 	influenceScore := calcLeveledScore(adoptionLevels, s.dictWeights(DictTypeAdoptionLevel, defaultAdoptionLevelWeights))
 
 	titleWeights := s.dictWeights(DictTypeTitleLevel, defaultTitleLevelWeights)
-	titleScore, ok := titleWeights[profile.TechTitle]
-	if !ok {
-		titleScore = 1
-	}
+	titleScore := matchTitleWeight(profile.TechTitle, titleWeights)
 
 	var positionCount int64
 	if err := global.GVA_DB.Model(&ExpertDatabase.ExpertAcademicPosition{}).Where("expert_id = ?", expertID).Count(&positionCount).Error; err != nil {

@@ -293,10 +293,7 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 		if !matchedAny {
 			continue
 		}
-		titleScore, ok := titleWeights[c.TechTitle]
-		if !ok {
-			titleScore = 1
-		}
+		titleScore := matchTitleWeight(c.TechTitle, titleWeights)
 		realtimeScore := relevance * (rankingWeights["achievement"]*c.AchievementScore +
 			rankingWeights["influence"]*c.InfluenceScore +
 			rankingWeights["title"]*titleScore +
