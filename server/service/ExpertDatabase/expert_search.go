@@ -397,7 +397,7 @@ func (s *ExpertSearchService) GetScoreColumnAvailability() (ExpertDatabaseRes.Ex
 
 var searchExportHeaders = []string{
 	"姓名", "所在单位", "专业技术职称", "一级学科", "研究关键词",
-	"相关性", "命中依据", "实时综合得分", "成果分", "决策影响分", "社会贡献分",
+	"相关性", "命中依据", "实时综合得分", "成果分", "决策影响分", "职称分", "社会贡献分",
 }
 
 // ExportSearchResults 导出当前检索条件下命中的全部结果（按相关性/实时得分排好序，不分页）
@@ -424,7 +424,7 @@ func (s *ExpertSearchService) ExportSearchResults(req ExpertDatabaseReq.ExpertSe
 	for rowIdx, item := range items {
 		row := []interface{}{
 			item.Name, item.UnitName, item.TechTitle, item.DisciplineL1, item.ResearchKeywords,
-			item.Relevance, item.MatchReason, item.RealtimeScore, item.AchievementScore, item.InfluenceScore, item.SocialScore,
+			item.Relevance, item.MatchReason, item.RealtimeScore, item.AchievementScore, item.InfluenceScore, item.TitleScore, item.SocialScore,
 		}
 		for i, v := range row {
 			cell, _ := excelize.CoordinatesToCellName(i+1, rowIdx+2)

@@ -209,6 +209,10 @@
         <template #default="scope">
           <div class="sub-scores">
             <span
+              class="sub-chip"
+              title="职称分"
+            ><b>职称</b>{{ fmt(scope.row.titleScore) }}</span>
+            <span
               v-if="scoreColumnAvailability.hasAchievement"
               class="sub-chip"
               title="成果分"

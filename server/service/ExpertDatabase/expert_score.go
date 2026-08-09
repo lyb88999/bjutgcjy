@@ -169,6 +169,7 @@ func (s *ExpertScoreService) RecomputeExpertScore(expertID uint) error {
 	return global.GVA_DB.Model(&ExpertDatabase.ExpertProfile{}).Where("id = ?", expertID).Updates(map[string]interface{}{
 		"achievement_score": achievementScore,
 		"influence_score":   influenceScore,
+		"title_score":       titleScore,
 		"social_score":      socialScore,
 		"composite_score":   compositeScore,
 		"score_updated_at":  &now,

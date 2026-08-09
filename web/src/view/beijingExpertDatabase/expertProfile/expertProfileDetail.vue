@@ -49,6 +49,10 @@
         </div>
       </div>
       <div class="hero-scores">
+        <div class="hero-score">
+          <div class="hero-score-value">{{ profile.titleScore }}</div>
+          <div class="hero-score-label">职称分</div>
+        </div>
         <div
           v-if="scoreColumnAvailability.hasAchievement"
           class="hero-score"
