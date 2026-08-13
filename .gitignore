@@ -46,3 +46,9 @@ embedding-service/venv/
 embedding-service/__pycache__/
 embedding-service/.cache/
 rm_file/release-20260804/
+rm_file/release-20260804b/
+rm_file/release-20260804c/
+rm_file/release-20260806/
+rm_file/release-20260807/
+rm_file/import-20260809/
+rm_file/import-20260813/
