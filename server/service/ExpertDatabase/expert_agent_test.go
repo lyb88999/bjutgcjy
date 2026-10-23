@@ -583,3 +583,161 @@ func TestExpertAgentChat_DeniedBrowseClearsPreviousPermission(t *testing.T) {
 		t.Fatalf("refusal must revoke the prior broad-browse intent: searches=%d result=%+v err=%v", searches, second, err)
 	}
 }
+
+func assertTestExpertAgentIDSet(t *testing.T, got, want []uint) {
+	t.Helper()
+	if len(got) != len(want) {
+		t.Fatalf("unexpected expert IDs: got %v, want %v", got, want)
+	}
+	wanted := make(map[uint]bool, len(want))
+	for _, id := range want {
+		wanted[id] = true
+	}
+	for _, id := range got {
+		if !wanted[id] {
+			t.Fatalf("unexpected or duplicate expert ID %d: got %v, want %v", id, got, want)
+		}
+		delete(wanted, id)
+	}
+}
+
+func TestExpertAgentChat_RefreshDoesNotExcludeAllThirteenCandidates(t *testing.T) {
+	var calls atomic.Int32
+	service := newTestExpertAgent(t, func(w http.ResponseWriter, r *http.Request) {
+		switch calls.Add(1) {
+		case 1:
+			writeTestExpertAgentPlan(t, w, `{"keywords":["基层治理"],"count":5,"maxPerUnit":1,"diversify":false}`)
+		case 2:
+			// Regression from an actual provider response: it copied every
+			// candidate ID even though only five had been recommended.
+			writeTestExpertAgentPlan(t, w, `{"excludePrevious":true,"excludedExpertIds":[1,2,3,4,5,6,7,8,9,10,11,12,13]}`)
+		case 3:
+			// An empty model array during another refresh must not restore the
+			// first batch by clearing the server's committed exclusions.
+			writeTestExpertAgentPlan(t, w, `{"excludePrevious":true,"excludedExpertIds":[]}`)
+		default:
+			// The user's explicit refresh still applies if the model omits it.
+			writeTestExpertAgentPlan(t, w, `{}`)
+		}
+	})
+	candidates := make([]ExpertDatabaseRes.ExpertAgentCandidate, 0, 13)
+	for id := uint(1); id <= 13; id++ {
+		candidates = append(candidates, ExpertDatabaseRes.ExpertAgentCandidate{
+			ID: id, Name: "专家" + idStr(id), UnitName: "测试大学" + idStr(id), OrgID: id, Score: 100 - float64(id),
+		})
+	}
+	var plans []ExpertDatabaseRes.ExpertAgentPlan
+	service.search = func(ctx context.Context, plan ExpertDatabaseRes.ExpertAgentPlan) ([]ExpertDatabaseRes.ExpertAgentCandidate, int64, error) {
+		plans = append(plans, cloneExpertAgentPlan(plan))
+		excluded := map[uint]bool{}
+		for _, id := range plan.ExcludedExpertIDs {
+			excluded[id] = true
+		}
+		available := []ExpertDatabaseRes.ExpertAgentCandidate{}
+		for _, candidate := range candidates {
+			if !excluded[candidate.ID] {
+				available = append(available, candidate)
+			}
+		}
+		return available, int64(len(available)), nil
+	}
+	rounds := []struct {
+		message       string
+		recommended   []uint
+		excluded      []uint
+		candidateSize int
+	}{
+		{"推荐五位基层治理专家", []uint{1, 2, 3, 4, 5}, []uint{}, 13},
+		{"换一批", []uint{6, 7, 8, 9, 10}, []uint{1, 2, 3, 4, 5}, 8},
+		{"再换一组", []uint{11, 12, 13}, []uint{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 3},
+		{"换一位", []uint{}, []uint{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, 0},
+	}
+	sessionID := ""
+	for i, round := range rounds {
+		result, err := service.Chat(context.Background(), 11, ExpertDatabaseReq.ExpertAgentChatReq{SessionID: sessionID, Message: round.message})
+		if err != nil {
+			t.Fatalf("round %d failed: %v", i+1, err)
+		}
+		if sessionID != "" && result.SessionID != sessionID {
+			t.Fatalf("round %d unexpectedly changed the session", i+1)
+		}
+		sessionID = result.SessionID
+		assertTestExpertAgentIDSet(t, testExpertAgentCandidateIDs(result.Recommendations), round.recommended)
+		assertTestExpertAgentIDSet(t, result.Plan.ExcludedExpertIDs, round.excluded)
+		if len(result.Candidates) != round.candidateSize {
+			t.Fatalf("round %d excluded unrecommended candidates or restored old ones: got %d candidates, want %d", i+1, len(result.Candidates), round.candidateSize)
+		}
+		for _, candidate := range result.Candidates {
+			for _, excludedID := range round.excluded {
+				if candidate.ID == excludedID {
+					t.Fatalf("round %d returned excluded candidate %d", i+1, candidate.ID)
+				}
+			}
+		}
+		if i == 1 && len(result.Warnings) == 0 {
+			t.Fatal("ignoring the model's extra exclusions must produce a warning")
+		}
+	}
+	if calls.Load() != 4 || len(plans) != 4 {
+		t.Fatalf("expected exactly one mock model call and one search per turn: calls=%d searches=%d", calls.Load(), len(plans))
+	}
+}
+
+func TestMergeExpertAgentPlan_RefreshAndExplicitExclusionIntent(t *testing.T) {
+	cases := []struct {
+		name        string
+		message     string
+		arguments   string
+		wantIDs     []uint
+		wantWarning bool
+	}{
+		{"model excludes all candidates on refresh", "换一批", `{"excludePrevious":true,"excludedExpertIds":[1,2,3,4,5,6,7,8,9,10,11,12,13]}`, []uint{14, 15, 1, 2, 3, 4, 5}, true},
+		{"empty model list preserves refresh history", "换一批", `{"excludePrevious":true,"excludedExpertIds":[]}`, []uint{14, 15, 1, 2, 3, 4, 5}, false},
+		{"explicitly named extra exclusion", "换一批，同时排除李华", `{"excludePrevious":true,"excludedExpertIds":[6,7]}`, []uint{14, 15, 1, 2, 3, 4, 5, 6}, true},
+		{"explicit ID extra exclusion", "换一批，同时排除 ID 7", `{"excludePrevious":true,"excludedExpertIds":[6,7]}`, []uint{14, 15, 1, 2, 3, 4, 5, 7}, true},
+		{"explicit hash ID extra exclusion", "换一批，排除 #8", `{"excludePrevious":true,"excludedExpertIds":[8]}`, []uint{14, 15, 1, 2, 3, 4, 5, 8}, false},
+		{"explicit numbered extra exclusion", "换一批，排除编号9", `{"excludePrevious":true,"excludedExpertIds":[9]}`, []uint{14, 15, 1, 2, 3, 4, 5, 9}, false},
+		{"name mention is not exclusion", "换一批，我还想了解李华的研究方向", `{"excludePrevious":true,"excludedExpertIds":[6]}`, []uint{14, 15, 1, 2, 3, 4, 5}, true},
+		{"ID mention is not exclusion", "换一批，再介绍一下 ID 7", `{"excludePrevious":true,"excludedExpertIds":[7]}`, []uint{14, 15, 1, 2, 3, 4, 5}, true},
+		{"unrelated exclusion verb does not cover later mention", "换一批，排除王明，另外介绍一下李华", `{"excludePrevious":true,"excludedExpertIds":[6,7]}`, []uint{14, 15, 1, 2, 3, 4, 5, 7}, true},
+		{"ID token does not match another number prefix", "换一批，排除 #70", `{"excludePrevious":true,"excludedExpertIds":[7]}`, []uint{14, 15, 1, 2, 3, 4, 5}, true},
+		{"cancel exclusions overrides incorrect refresh flag", "取消排除", `{"excludePrevious":true,"excludedExpertIds":[1,2,3,4,5,6]}`, []uint{}, false},
+		{"clear exclusions takes precedence over refresh words", "清空排除，再换一批", `{"excludePrevious":true,"excludedExpertIds":[1,2,3,4,5]}`, []uint{}, false},
+		{"allow duplicates overrides incorrect refresh flag", "允许重复推荐", `{"excludePrevious":true,"excludedExpertIds":[1,2,3,4,5]}`, []uint{}, false},
+		{"ordinary empty patch still clears exclusions", "重新按原条件推荐", `{"excludedExpertIds":[]}`, []uint{}, false},
+		{"refresh words work when model omits flag", "换一批", `{}`, []uint{14, 15, 1, 2, 3, 4, 5}, false},
+		{"group refresh words override false model flag", "换一组", `{"excludePrevious":false}`, []uint{14, 15, 1, 2, 3, 4, 5}, false},
+		{"single refresh words work when model omits flag", "换一位", `{}`, []uint{14, 15, 1, 2, 3, 4, 5}, false},
+		{"negated refresh overrides incorrect model flag", "不要换一批", `{"excludePrevious":true}`, []uint{14, 15}, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			previous := &expertAgentSession{
+				plan:         ExpertDatabaseRes.ExpertAgentPlan{Keywords: []string{"基层治理"}, Count: 5, MaxPerUnit: 2, ExcludedExpertIDs: []uint{14, 15}},
+				candidateIDs: []uint{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
+				selectedIDs:  []uint{1, 2, 3, 4, 5},
+				hints: []expertAgentCandidateHint{
+					{ID: 6, Name: "李华"}, {ID: 7, Name: "王明"}, {ID: 8, Name: "赵平"}, {ID: 9, Name: "孙杰"},
+				},
+			}
+			var patch expertAgentPlanPatch
+			if err := json.Unmarshal([]byte(tc.arguments), &patch); err != nil {
+				t.Fatalf("invalid test plan patch: %v", err)
+			}
+			plan, warnings, err := mergeExpertAgentPlan(previous, patch, ExpertDatabaseReq.ExpertAgentChatReq{Message: tc.message})
+			if err != nil {
+				t.Fatalf("merge failed: %v", err)
+			}
+			assertTestExpertAgentIDSet(t, plan.ExcludedExpertIDs, tc.wantIDs)
+			if tc.wantWarning && len(warnings) == 0 {
+				t.Fatal("unsupported model exclusions should be ignored with a warning")
+			}
+			if !reflect.DeepEqual(plan.Keywords, []string{"基层治理"}) || plan.Count != 5 || plan.MaxPerUnit != 2 {
+				t.Fatalf("exclusion edits changed unrelated selection criteria: %+v", plan)
+			}
+			if !reflect.DeepEqual(previous.plan.ExcludedExpertIDs, []uint{14, 15}) || !reflect.DeepEqual(previous.selectedIDs, []uint{1, 2, 3, 4, 5}) {
+				t.Fatalf("merging mutated the previously committed session: %+v", previous)
+			}
+		})
+	}
+}

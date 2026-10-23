@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -208,10 +210,54 @@ func mergeExpertAgentPlan(previous *expertAgentSession, patch expertAgentPlanPat
 	for _, id := range previous.plan.ExcludedExpertIDs {
 		allowed[id] = true
 	}
-	if patch.ExcludedExpertIDs != nil {
-		if len(*patch.ExcludedExpertIDs) > 200 {
-			return plan, warnings, ErrExpertAgentUpstream
+	if patch.ExcludedExpertIDs != nil && len(*patch.ExcludedExpertIDs) > 200 {
+		return plan, warnings, ErrExpertAgentUpstream
+	}
+	batchMentioned, batchAllowed := agentAnotherBatchIntent(req.Message)
+	changeBatch := patch.ExcludePrevious != nil && *patch.ExcludePrevious
+	if batchMentioned {
+		changeBatch = batchAllowed
+	}
+	if agentClearExclusionsIntent(req.Message) {
+		// 明确取消排除比模型残留的换批标记优先，不能刚清空又把上轮名单加回来。
+		plan.ExcludedExpertIDs = []uint{}
+	} else if changeBatch || batchMentioned {
+		// “换一批”针对已推荐名单，不是全部候选。模型偶尔会把整份候选ID都塞进排除数组，
+		// 因此历史排除与上轮推荐由服务决定；额外排除须由用户本轮点名或明确ID支持。
+		plan.ExcludedExpertIDs = append([]uint{}, previous.plan.ExcludedExpertIDs...)
+		if changeBatch {
+			plan.ExcludedExpertIDs = append(plan.ExcludedExpertIDs, previous.selectedIDs...)
 		}
+		justified := map[uint]bool{}
+		for _, id := range plan.ExcludedExpertIDs {
+			justified[id] = true
+		}
+		nameCounts := map[string]int{}
+		for _, hint := range previous.hints {
+			nameCounts[strings.TrimSpace(hint.Name)]++
+		}
+		for _, hint := range previous.hints {
+			name := strings.TrimSpace(hint.Name)
+			if nameCounts[name] != 1 {
+				name = ""
+			} // 同名候选须使用明确ID，避免一并误排。
+			if allowed[hint.ID] && agentExplicitlyExcludesCandidate(req.Message, hint.ID, name) {
+				justified[hint.ID] = true
+				plan.ExcludedExpertIDs = append(plan.ExcludedExpertIDs, hint.ID)
+			}
+		}
+		ignored := false
+		if patch.ExcludedExpertIDs != nil {
+			for _, id := range *patch.ExcludedExpertIDs {
+				if !justified[id] {
+					ignored = true
+				}
+			}
+		}
+		if ignored {
+			warnings = append(warnings, "已忽略本轮未明确要求的额外排除；换批仅排除历史已排除及上轮推荐的专家。")
+		}
+	} else if patch.ExcludedExpertIDs != nil {
 		plan.ExcludedExpertIDs = []uint{}
 		ignored := false
 		for _, id := range *patch.ExcludedExpertIDs {
@@ -224,9 +270,6 @@ func mergeExpertAgentPlan(previous *expertAgentSession, patch expertAgentPlanPat
 		if ignored {
 			warnings = append(warnings, "已忽略不属于本会话真实候选的排除编号。")
 		}
-	}
-	if patch.ExcludePrevious != nil && *patch.ExcludePrevious {
-		plan.ExcludedExpertIDs = append(plan.ExcludedExpertIDs, previous.selectedIDs...)
 	}
 	seenIDs := map[uint]bool{}
 	excluded := []uint{}
@@ -241,6 +284,108 @@ func mergeExpertAgentPlan(previous *expertAgentSession, patch expertAgentPlanPat
 	}
 	plan.ExcludedExpertIDs = excluded
 	return plan, warnings, nil
+}
+
+func agentInstructionClauses(message string) []string {
+	return strings.FieldsFunc(message, func(r rune) bool { return strings.ContainsRune("，,。；;！？!?\n", r) })
+}
+
+func agentIntentNegated(prefix string) bool {
+	prefix = strings.TrimSpace(prefix)
+	// 只检查紧邻指令的否定，不把“不改人数，只换一批”里的其他否定当成拒绝换批。
+	for {
+		trimmed := false
+		for _, filler := range []string{"重新", "继续", "给我", "帮我", "再"} {
+			if strings.HasSuffix(prefix, filler) {
+				prefix = strings.TrimSpace(strings.TrimSuffix(prefix, filler))
+				trimmed = true
+				break
+			}
+		}
+		if !trimmed {
+			break
+		}
+	}
+	for _, negative := range []string{"不要", "不用", "不想", "不需要", "无需", "不必", "别", "取消", "停止", "不再", "不"} {
+		if strings.HasSuffix(prefix, negative) {
+			return true
+		}
+	}
+	return false
+}
+
+func agentPhraseIntent(message string, phrases []string) (mentioned, allowed bool) {
+	for _, clause := range agentInstructionClauses(message) {
+		last := -1
+		for _, phrase := range phrases {
+			if index := strings.LastIndex(clause, phrase); index >= 0 && index >= last {
+				last = index
+				mentioned, allowed = true, !agentIntentNegated(clause[:index])
+			}
+		}
+	}
+	return mentioned, allowed
+}
+
+func agentAnotherBatchIntent(message string) (bool, bool) {
+	return agentPhraseIntent(message, []string{"换一批", "换一组", "换一位", "换一人", "换另一批", "再来一批"})
+}
+
+func agentClearExclusionsIntent(message string) bool {
+	_, allowed := agentPhraseIntent(message, []string{"取消排除", "取消所有排除", "取消之前的排除", "清空排除", "清空所有排除", "清除排除", "重置排除", "允许重复", "可以重复", "恢复被排除的专家"})
+	return allowed
+}
+
+var agentExplicitIDPattern = regexp.MustCompile(`(?i)(?:\bid|编号|#|＃)\s*(?:[:：=]|为)?\s*([0-9]+)\b`)
+
+func agentExplicitlyExcludesCandidate(message string, id uint, name string) bool {
+	for _, clause := range agentInstructionClauses(message) {
+		var mentions [][2]int
+		if name != "" {
+			if index := strings.Index(clause, name); index >= 0 {
+				mentions = append(mentions, [2]int{index, index + len(name)})
+			}
+		}
+		for _, match := range agentExplicitIDPattern.FindAllStringSubmatchIndex(clause, -1) {
+			value, err := strconv.ParseUint(clause[match[2]:match[3]], 10, 64)
+			if err == nil && value == uint64(id) {
+				mentions = append(mentions, [2]int{match[0], match[1]})
+			}
+		}
+		for _, mention := range mentions {
+			prefix, suffix := clause[:mention[0]], clause[mention[1]:]
+			position, exclude := -1, false
+			for _, action := range []struct {
+				word    string
+				exclude bool
+			}{
+				{"排除", true}, {"不要", true}, {"别选", true}, {"不选", true}, {"不考虑", true}, {"不推荐", true}, {"剔除", true}, {"去掉", true}, {"避开", true},
+				{"保留", false}, {"包括", false}, {"看看", false}, {"介绍", false}, {"比较", false},
+			} {
+				if index := strings.LastIndex(prefix, action.word); index >= 0 && index >= position {
+					position = index
+					exclude = action.exclude && !agentIntentNegated(prefix[:index])
+				}
+			}
+			if position >= 0 {
+				if exclude {
+					return true
+				}
+				continue
+			}
+			// 后置表达如“张三也不要”。仅接受紧随该候选的指令，不把后面另一人的排除归给他。
+			suffix = strings.TrimSpace(suffix)
+			for _, filler := range []string{"也", "先", "暂时", "这次"} {
+				suffix = strings.TrimPrefix(suffix, filler)
+			}
+			for _, action := range []string{"不要", "排除", "不考虑", "不选", "不推荐", "剔除", "去掉"} {
+				if strings.HasPrefix(suffix, action) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func sanitizeExpertAgentCandidates(in []ExpertDatabaseRes.ExpertAgentCandidate, excluded []uint) []ExpertDatabaseRes.ExpertAgentCandidate {

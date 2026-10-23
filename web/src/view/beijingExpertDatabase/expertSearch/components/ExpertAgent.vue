@@ -86,6 +86,10 @@
               <p class="assistant-message">{{ turn.reply || '已完成本轮遴选，请核对右侧名单和依据。' }}</p>
             </template>
             <p
+              v-else-if="turn.status === 'expired'"
+              class="turn-note"
+            >会话已过期，请新建会话继续。</p>
+            <p
               v-else-if="turn.status === 'error'"
               class="turn-note"
             >本轮未完成，可重试或调整需求。</p>
@@ -122,7 +126,12 @@
         >
           <p>{{ errorText }}</p>
           <el-button
-            v-if="lastAttempt && configured"
+            v-if="sessionExpired"
+            link
+            @click="recoverExpiredSession"
+          >新建会话</el-button>
+          <el-button
+            v-else-if="lastAttempt && configured"
             link
             :disabled="loading"
             @click="retryLastAttempt"
@@ -370,6 +379,7 @@ const turns = ref([])
 const result = ref(null)
 const loading = ref(false)
 const errorText = ref('')
+const sessionExpired = ref(false)
 const elapsedSeconds = ref(0)
 const lastAttempt = ref(null)
 const resultView = ref('recommendations')
@@ -384,7 +394,7 @@ let requestSequence = 0
 let turnSequence = 0
 let disposed = false
 
-const canSend = computed(() => configured.value === true && !loading.value && !!message.value.trim())
+const canSend = computed(() => configured.value === true && !loading.value && !sessionExpired.value && !!message.value.trim())
 const currentExperts = computed(() => result.value?.[resultView.value] || [])
 const visibleExperts = computed(() => currentExperts.value.slice((resultPage.value - 1) * resultsPerPage, resultPage.value * resultsPerPage))
 const metrics = computed(() => {
@@ -487,7 +497,7 @@ const cancelRequest = () => {
 }
 
 const sendRequest = async(payload, retryTurnId) => {
-  if (loading.value || configured.value !== true || !props.active) return
+  if (loading.value || sessionExpired.value || configured.value !== true || !props.active) return
   const requestId = ++requestSequence
   const controller = new AbortController()
   chatController = controller
@@ -524,8 +534,11 @@ const sendRequest = async(payload, retryTurnId) => {
     lastAttempt.value = null
   } catch (error) {
     if (!disposed && !controller.signal.aborted && requestId === requestSequence) {
-      turn.status = 'error'
-      errorText.value = describeError(error) + (result.value ? ' 上一轮结果已保留。' : '')
+      const detail = describeError(error)
+      sessionExpired.value = /会话不存在或已过期|session (?:not found|expired)/i.test(detail)
+      turn.status = sessionExpired.value ? 'expired' : 'error'
+      if (sessionExpired.value) sessionId.value = ''
+      errorText.value = detail + (result.value ? ' 上一轮结果已保留。' : '')
     }
   } finally {
     if (requestId === requestSequence) {
@@ -542,11 +555,24 @@ const submitMessage = () => {
   const payload = { message: message.value.trim() }
   if (sessionId.value) payload.sessionId = sessionId.value
   if (countEdited.value && Number.isInteger(count.value)) payload.count = count.value
-  if (maxPerUnitEdited.value && Number.isInteger(maxPerUnit.value)) payload.maxPerUnit = maxPerUnit.value
+  if (maxPerUnitEdited.value && Number.isInteger(maxPerUnit.value)) {
+    if (maxPerUnit.value > 0) {
+      payload.maxPerUnit = maxPerUnit.value
+    } else if (maxPerUnit.value === 0) {
+      // 接口中的0表示沿用条件；新会话保留“不限”时，用可见需求明确表达，不能发送0覆盖。
+      const unlimitedInstruction = '每单位人数不限。'
+      if (!payload.message.includes(unlimitedInstruction)) payload.message += `\n${unlimitedInstruction}`
+      if (payload.message.length > 2000) {
+        errorText.value = '保留“不限单位”设置需要补充一行条件，请缩短需求后再发送（最多2000字）。'
+        return
+      }
+      message.value = payload.message
+    }
+  }
   sendRequest(payload)
 }
 const retryLastAttempt = () => {
-  if (lastAttempt.value) sendRequest({ ...lastAttempt.value.payload }, lastAttempt.value.turnId)
+  if (!sessionExpired.value && lastAttempt.value) sendRequest({ ...lastAttempt.value.payload }, lastAttempt.value.turnId)
 }
 const onComposerKeydown = (event) => {
   if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !event.isComposing) {
@@ -571,12 +597,32 @@ const newSession = () => {
   message.value = ''
   lastAttempt.value = null
   errorText.value = ''
+  sessionExpired.value = false
   count.value = 5
   maxPerUnit.value = 2
   countEdited.value = false
   maxPerUnitEdited.value = false
   resultPage.value = 1
   messageInputRef.value?.focus()
+}
+const recoverExpiredSession = () => {
+  const previousResult = result.value
+  const previousAttempt = lastAttempt.value?.payload
+  const unfinishedMessage = message.value || previousAttempt?.message || ''
+  const recoverSetting = (edited, current, attempted, minimum, fallback) =>
+    [edited ? current : undefined, attempted, current]
+      .find((value) => Number.isInteger(value) && value >= minimum && value <= 30) ?? fallback
+  const pendingCount = recoverSetting(countEdited.value, count.value, previousAttempt?.count, 1, 5)
+  const pendingMaxPerUnit = recoverSetting(maxPerUnitEdited.value, maxPerUnit.value, previousAttempt?.maxPerUnit, 0, 2)
+  newSession()
+  // 新会话不携带旧上下文，但保留已完成的名单和未发送需求，供用户核对、补充后再发送。
+  result.value = previousResult
+  message.value = unfinishedMessage
+  count.value = pendingCount
+  countEdited.value = true
+  maxPerUnit.value = pendingMaxPerUnit
+  maxPerUnitEdited.value = true
+  errorText.value = '已准备新会话，请完整描述本轮需求后发送。' + (previousResult ? ' 上一轮结果已保留供核对。' : '')
 }
 const exportRecommendations = () => {
   if (!result.value?.recommendations.length) return
