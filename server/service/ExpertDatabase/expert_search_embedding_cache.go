@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase"
 )
@@ -68,6 +70,18 @@ func (s *ExpertSearchService) embeddingItemsByExpert(ids []uint) (map[uint][]par
 	embeddingCache.mu.Unlock()
 
 	return collectByIDs(byExpert, ids), nil
+}
+
+// WarmEmbeddingCache 服务启动时主动把语义向量全表缓存建好，不用等第一个真实检索请求触发才现建。
+// 实测生产规模（3万+条向量、每条都是 JSON 编码的 512 维浮点数组）下这个冷启动重建要 10 秒+，
+// 每次发版重启后第一个搜索用户会平白多等 10 秒——这个耗时跟查了哪个关键词无关（embedTexts 调用/
+// termMatch 循环都在这一步之后），纯粹是"进程刚启动、缓存还没人填过"的一次性代价，放到启动阶段
+// 后台跑掉，真实用户永远撞不上冷缓存。传 nil 就够：embeddingItemsByExpert 内部本来就是整表重建
+// 缓存本身，参数只影响这次调用返回值，不影响缓存整体有没有建好
+func (s *ExpertSearchService) WarmEmbeddingCache() {
+	if _, err := s.embeddingItemsByExpert(nil); err != nil {
+		global.GVA_LOG.Error("预热检索语义向量缓存失败，将在第一个真实检索请求时按原逻辑重试", zap.Error(err))
+	}
 }
 
 func collectByIDs(src map[uint][]parsedEmbeddingItem, ids []uint) map[uint][]parsedEmbeddingItem {

@@ -32,9 +32,8 @@ func (expertAdoptionRecordApi *ExpertAdoptionRecordApi) CreateExpertAdoptionReco
 		return
 	}
 	record.CreatedBy = utils.GetUserID(c)
-	if err := expertAdoptionRecordService.CreateExpertAdoptionRecord(&record); err != nil {
-		global.GVA_LOG.Error("创建失败!", zap.Error(err))
-		response.FailWithMessage("创建失败", c)
+	if err := expertAdoptionRecordService.CreateExpertAdoptionRecord(&record, record.CreatedBy); err != nil {
+		respondSubResourceError(c, err, "创建")
 	} else {
 		response.OkWithMessage("创建成功", c)
 	}
@@ -52,8 +51,7 @@ func (expertAdoptionRecordApi *ExpertAdoptionRecordApi) DeleteExpertAdoptionReco
 	ID := c.Query("ID")
 	userID := utils.GetUserID(c)
 	if err := expertAdoptionRecordService.DeleteExpertAdoptionRecord(ID, userID); err != nil {
-		global.GVA_LOG.Error("删除失败!", zap.Error(err))
-		response.FailWithMessage("删除失败", c)
+		respondSubResourceError(c, err, "删除")
 	} else {
 		response.OkWithMessage("删除成功", c)
 	}
@@ -71,8 +69,7 @@ func (expertAdoptionRecordApi *ExpertAdoptionRecordApi) DeleteExpertAdoptionReco
 	IDs := c.QueryArray("IDs[]")
 	userID := utils.GetUserID(c)
 	if err := expertAdoptionRecordService.DeleteExpertAdoptionRecordByIds(IDs, userID); err != nil {
-		global.GVA_LOG.Error("批量删除失败!", zap.Error(err))
-		response.FailWithMessage("批量删除失败", c)
+		respondSubResourceError(c, err, "批量删除")
 	} else {
 		response.OkWithMessage("批量删除成功", c)
 	}
@@ -95,9 +92,8 @@ func (expertAdoptionRecordApi *ExpertAdoptionRecordApi) UpdateExpertAdoptionReco
 		return
 	}
 	record.UpdatedBy = utils.GetUserID(c)
-	if err := expertAdoptionRecordService.UpdateExpertAdoptionRecord(record); err != nil {
-		global.GVA_LOG.Error("更新失败!", zap.Error(err))
-		response.FailWithMessage("更新失败", c)
+	if err := expertAdoptionRecordService.UpdateExpertAdoptionRecord(record, record.UpdatedBy); err != nil {
+		respondSubResourceError(c, err, "更新")
 	} else {
 		response.OkWithMessage("更新成功", c)
 	}

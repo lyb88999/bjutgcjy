@@ -6,6 +6,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/core"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/initialize"
+	ExpertDatabaseService "github.com/flipped-aurora/gin-vue-admin/server/service/ExpertDatabase"
 )
 
 //go:generate go env -w GO111MODULE=on
@@ -30,6 +31,10 @@ func main() {
 	initialize.DBList()
 	if global.GVA_DB != nil {
 		initialize.RegisterTables() // 初始化表
+		// 专家库检索语义向量缓存启动时后台预热一下，不阻塞服务起来——避免每次发版重启后第一个
+		// 真实检索用户撞上现建缓存的 10 秒+冷启动代价
+		expertSearchSvc := ExpertDatabaseService.ExpertSearchService{}
+		go expertSearchSvc.WarmEmbeddingCache()
 		// 程序结束前关闭数据库链接
 		db, _ := global.GVA_DB.DB()
 		defer db.Close()

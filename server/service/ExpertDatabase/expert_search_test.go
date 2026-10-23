@@ -258,6 +258,56 @@ func TestRankedCandidates_SortByUpdatedAtOrdersMostRecentFirstWhenNoKeyword(t *t
 	}
 }
 
+// TestSearch_BrowseModeUsesSQLPaginationWithoutDuplicatesOrGaps 浏览模式（不带关键词）改成了
+// 数据库层分页，不再是把全部候选读进内存切片——这个测试锁定分页结果不重不漏：3 条记录，
+// pageSize=2 分两页拿全，两页的 ID 并起来应该正好是全部 3 条，互相没有重叠
+func TestSearch_BrowseModeUsesSQLPaginationWithoutDuplicatesOrGaps(t *testing.T) {
+	db := setupTestDB(t)
+	var created []ExpertDatabase.ExpertProfile
+	for i := 0; i < 3; i++ {
+		p := ExpertDatabase.ExpertProfile{Name: "专家", Status: StatusPublished}
+		if err := db.Create(&p).Error; err != nil {
+			t.Fatalf("建档案失败: %v", err)
+		}
+		created = append(created, p)
+	}
+
+	svc := &ExpertSearchService{}
+	page1, total, err := svc.Search(ExpertDatabaseReq.ExpertSearchReq{Page: 1, PageSize: 2})
+	if err != nil {
+		t.Fatalf("检索不应该报错: %v", err)
+	}
+	if total != 3 {
+		t.Fatalf("总数应该是 3，实际 %d", total)
+	}
+	if len(page1) != 2 {
+		t.Fatalf("第一页 pageSize=2 应该返回 2 条，实际 %d", len(page1))
+	}
+	page2, _, err := svc.Search(ExpertDatabaseReq.ExpertSearchReq{Page: 2, PageSize: 2})
+	if err != nil {
+		t.Fatalf("检索不应该报错: %v", err)
+	}
+	if len(page2) != 1 {
+		t.Fatalf("第二页应该返回剩下的 1 条，实际 %d", len(page2))
+	}
+
+	seen := map[uint]bool{}
+	for _, it := range page1 {
+		seen[it.ID] = true
+	}
+	for _, it := range page2 {
+		if seen[it.ID] {
+			t.Fatalf("id=%d 在两页里都出现了，分页有重复", it.ID)
+		}
+		seen[it.ID] = true
+	}
+	for _, p := range created {
+		if !seen[p.ID] {
+			t.Fatalf("id=%d 没有出现在任何一页里，分页漏了记录", p.ID)
+		}
+	}
+}
+
 // TestRankedCandidates_SortByIgnoredWhenKeywordGiven 带关键词检索时必须按相关性/综合得分排序，
 // SortBy 不该生效——不然搜索结果的顺序跟检索意图脱节。
 func TestRankedCandidates_SortByIgnoredWhenKeywordGiven(t *testing.T) {
@@ -275,5 +325,46 @@ func TestRankedCandidates_SortByIgnoredWhenKeywordGiven(t *testing.T) {
 	}
 	if len(items) != 1 || items[0].Name != "关键词命中" {
 		t.Fatalf("带关键词时应该正常按相关性走命中筛选逻辑，不受 SortBy 影响，实际 %v", items)
+	}
+}
+
+// TestRankedCandidates_KeywordMatchesNameUnitAndTechTitle 复现并回归验证一个真实反馈：前端检索条
+// "全部字段"这个选项名字上就该覆盖姓名/单位/职称，但 buildSearchCorpusMap 最早只拼了研究方向/
+// 成果/标签这几类语料，没把 Name/UnitName/TechTitle 本身塞进去——导致"全部字段"模式下按姓名
+// 精确检索一个人，只要这个名字没有巧合出现在研究方向文本里，就完全搜不到，跟"检索范围选'全部
+// 字段'时应该什么都能搜到"的预期不符。三个字段都补个断言，一次性锁死
+func TestRankedCandidates_KeywordMatchesNameUnitAndTechTitle(t *testing.T) {
+	db := setupTestDB(t)
+
+	target := ExpertDatabase.ExpertProfile{
+		Name: "陈曼华", Status: StatusPublished,
+		UnitName: "北京师范大学", TechTitle: "教授",
+	}
+	other := ExpertDatabase.ExpertProfile{
+		Name: "无关专家", Status: StatusPublished,
+		UnitName: "清华大学", TechTitle: "讲师",
+	}
+	if err := db.Create(&target).Error; err != nil {
+		t.Fatalf("建档案失败: %v", err)
+	}
+	if err := db.Create(&other).Error; err != nil {
+		t.Fatalf("建档案失败: %v", err)
+	}
+
+	svc := &ExpertSearchService{}
+	for _, kw := range []string{"陈曼华", "北京师范大学", "教授"} {
+		items, err := svc.rankedCandidates(ExpertDatabaseReq.ExpertSearchReq{Keyword: kw})
+		if err != nil {
+			t.Fatalf("检索「%s」不应该报错: %v", kw, err)
+		}
+		found := false
+		for _, it := range items {
+			if it.Name == "陈曼华" {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatalf("全部字段模式下检索「%s」应该能命中姓名/单位/职称匹配的候选人，实际结果 %v", kw, items)
+		}
 	}
 }

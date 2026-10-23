@@ -12,15 +12,19 @@ import (
 // 检索结果里可以直接告诉用户"具体是命中了哪一条"，不只是一个相关性百分比。
 // corpus_hash 是这一条语料的指纹，语料没变就跳过、不重新调用 embedding 服务
 type ExpertSearchEmbeddingItem struct {
-	ID         uint      `json:"id" gorm:"column:id;primaryKey;autoIncrement;comment:自增ID"`
-	ExpertId   uint      `json:"expertId" gorm:"column:expert_id;index;comment:专家ID"`
-	ItemType   string    `json:"itemType" gorm:"column:item_type;index;comment:语料条目类型:profile/achievement/tag"`
-	ItemRefId  uint      `json:"itemRefId" gorm:"column:item_ref_id;comment:关联的原始记录ID(比如成果ID);profile/tag类型固定为0"`
-	ItemLabel  string    `json:"itemLabel" gorm:"column:item_label;comment:这条语料的展示文本,用于检索结果的命中原因提示"`
-	Model      string    `json:"model" gorm:"column:model;comment:生成向量用的embedding模型名"`
-	Vector     string    `json:"vector" gorm:"column:vector;type:json;comment:归一化后的向量,JSON浮点数组"`
-	CorpusHash string    `json:"corpusHash" gorm:"column:corpus_hash;comment:生成向量时的语料指纹"`
-	UpdatedAt  time.Time `json:"updatedAt" gorm:"column:updated_at;comment:向量更新时间"`
+	ID         uint   `json:"id" gorm:"column:id;primaryKey;autoIncrement;comment:自增ID"`
+	ExpertId   uint   `json:"expertId" gorm:"column:expert_id;index;comment:专家ID"`
+	ItemType   string `json:"itemType" gorm:"column:item_type;index;comment:语料条目类型:profile/achievement/tag"`
+	ItemRefId  uint   `json:"itemRefId" gorm:"column:item_ref_id;comment:关联的原始记录ID(比如成果ID);profile/tag类型固定为0"`
+	ItemLabel  string `json:"itemLabel" gorm:"column:item_label;comment:这条语料的展示文本,用于检索结果的命中原因提示"`
+	Model      string `json:"model" gorm:"column:model;comment:生成向量用的embedding模型名"`
+	Vector     string `json:"vector" gorm:"column:vector;type:json;comment:归一化后的向量,JSON浮点数组"`
+	CorpusHash string `json:"corpusHash" gorm:"column:corpus_hash;comment:生成向量时的语料指纹"`
+	// UpdatedAt 上的索引是2026-08-26排查检索变慢时补的——expert_search_embedding_cache.go
+	// 每次检索都要 SELECT MAX(updated_at) 判断内存缓存是不是还新鲜，这张表涨到16万+行/1.2GB后，
+	// 没有索引的这条"判断要不要重建缓存"的检查本身变成了全表扫描，实测单条查询要9秒+，
+	// 比它想避免的"重新拉全表建缓存"还贵，完全违背了这个检查存在的意义
+	UpdatedAt time.Time `json:"updatedAt" gorm:"column:updated_at;index;comment:向量更新时间"`
 }
 
 // TableName 专家检索语义向量条目 ExpertSearchEmbeddingItem自定义表名 expert_search_embedding_item

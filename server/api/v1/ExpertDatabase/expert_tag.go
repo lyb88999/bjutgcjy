@@ -148,9 +148,8 @@ func (expertTagApi *ExpertTagApi) SetExpertTagRelations(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	if err := expertTagService.SetExpertTags(req.ExpertId, req.TagIds); err != nil {
-		global.GVA_LOG.Error("设置失败!", zap.Error(err))
-		response.FailWithMessage("设置失败", c)
+	if err := expertTagService.SetExpertTags(req.ExpertId, req.TagIds, utils.GetUserID(c)); err != nil {
+		respondSubResourceError(c, err, "设置")
 	} else {
 		response.OkWithMessage("设置成功", c)
 	}

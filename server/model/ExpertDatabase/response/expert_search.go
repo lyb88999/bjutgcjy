@@ -23,3 +23,23 @@ type ExpertScoreColumnAvailability struct {
 	HasInfluence   bool `json:"hasInfluence"`
 	HasSocial      bool `json:"hasSocial"`
 }
+
+// ExpertFacetCount 分面检索侧栏里某个维度下的一个可选值
+type ExpertFacetCount struct {
+	Value string `json:"value"` // 单位分面是 org_id 的字符串形式；其余维度是原始文本值
+	Label string `json:"label"`
+	Count int64  `json:"count"`
+}
+
+// ExpertFacetCounts 分面检索侧栏一次性拿到的全部维度计数。每个维度的计数口径：只按"结构化
+// 筛选"（其余分面维度当前选中的值）收窄，不按关键词收窄——关键词相关性要对每个候选人跑一次
+// embedding 匹配，四个维度各跑一次的开销扛不住，所以侧栏数字反映的是"这些筛选条件在全库范围
+// 的分布"，不是"在关键词命中范围内的分布"
+type ExpertFacetCounts struct {
+	Org             []ExpertFacetCount `json:"org"`
+	DisciplineL1    []ExpertFacetCount `json:"disciplineL1"`
+	TitleTier       []ExpertFacetCount `json:"titleTier"`
+	RegionExpertise []ExpertFacetCount `json:"regionExpertise"`
+	// Total 应用当前全部结构化筛选后的候选总数（不含关键词）
+	Total int64 `json:"total"`
+}

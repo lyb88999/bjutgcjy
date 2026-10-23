@@ -234,8 +234,16 @@ func (s *ExpertSearchService) RecomputeExpertEmbeddings() error {
 			staleIDs = append(staleIDs, e.ID)
 		}
 	}
-	if len(staleIDs) > 0 {
-		if err := global.GVA_DB.Delete(&ExpertDatabase.ExpertSearchEmbeddingItem{}, staleIDs).Error; err != nil {
+	// 分批删除：一条 SQL 里 staleIDs 全部展开成 `id IN (?,?,...)`，MySQL 预处理语句的占位符数量
+	// 有上限（65535），大批量数据变更后待清理的旧向量条目数量完全可能超过这个上限（实测导入
+	// 一批新数据后碰到过 "Prepared statement contains too many placeholders" 报错），分批规避
+	const deleteBatchSize = 1000
+	for start := 0; start < len(staleIDs); start += deleteBatchSize {
+		end := start + deleteBatchSize
+		if end > len(staleIDs) {
+			end = len(staleIDs)
+		}
+		if err := global.GVA_DB.Delete(&ExpertDatabase.ExpertSearchEmbeddingItem{}, staleIDs[start:end]).Error; err != nil {
 			return err
 		}
 	}

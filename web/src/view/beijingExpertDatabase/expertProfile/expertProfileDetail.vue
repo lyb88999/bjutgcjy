@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="expert-detail-page">
     <div class="hero-card">
       <div class="hero-main">
         <el-button
@@ -86,67 +86,68 @@
       style="margin-bottom: 16px"
     >
       <el-divider content-position="left">背景信息</el-divider>
-      <el-descriptions
-        :column="3"
-        border
-      >
-        <el-descriptions-item label="姓名">{{ dv(profile.name) }}</el-descriptions-item>
-        <el-descriptions-item label="性别">{{ dv(profile.gender) }}</el-descriptions-item>
-        <el-descriptions-item label="民族">{{ dv(profile.ethnicity) }}</el-descriptions-item>
-        <el-descriptions-item label="政治面貌">{{ dv(profile.politicalStatus) }}</el-descriptions-item>
-        <el-descriptions-item label="所在单位">{{ dv(profile.unitName) }}</el-descriptions-item>
-        <el-descriptions-item label="院系/部门">{{ dv(profile.department) }}</el-descriptions-item>
-        <el-descriptions-item label="行政职务">{{ dv(profile.adminTitle) }}</el-descriptions-item>
-        <el-descriptions-item label="专业技术职称">{{ dv(profile.techTitle) }}</el-descriptions-item>
-        <el-descriptions-item label="办公电话">{{ dv(profile.phone) }}</el-descriptions-item>
-        <el-descriptions-item label="手机号码">{{ dv(profile.mobile) }}</el-descriptions-item>
-        <el-descriptions-item label="电子邮箱">{{ dv(profile.email) }}</el-descriptions-item>
-        <el-descriptions-item label="通讯地址">{{ dv(profile.address) }}</el-descriptions-item>
-        <el-descriptions-item label="最高学历">{{ dv(profile.highestEducation) }}</el-descriptions-item>
-        <el-descriptions-item label="最高学位">{{ dv(profile.highestDegree) }}</el-descriptions-item>
-        <el-descriptions-item label="毕业院校">{{ dv(profile.graduateSchool) }}</el-descriptions-item>
-        <el-descriptions-item label="所学专业">{{ dv(profile.major) }}</el-descriptions-item>
-        <el-descriptions-item label="人才计划">{{ dv(profile.talentProgram) }}</el-descriptions-item>
-        <el-descriptions-item label="荣誉称号">{{ dv(profile.honorTitle) }}</el-descriptions-item>
-      </el-descriptions>
+      <div class="info-grid">
+        <div
+          v-for="group in backgroundGroups"
+          :key="group.title"
+          class="info-card"
+        >
+          <div class="info-card-title">{{ group.title }}</div>
+          <div
+            v-for="[label, key] in group.fields"
+            :key="key"
+            class="info-row"
+          >
+            <span class="info-label">{{ label }}</span>
+            <span class="info-value">{{ dv(profile[key]) }}</span>
+          </div>
+        </div>
+      </div>
 
       <el-divider content-position="left">学科领域 / 研究主题</el-divider>
-      <el-descriptions
-        :column="2"
-        border
-      >
-        <el-descriptions-item label="一级学科">{{ dv(profile.disciplineL1) }}</el-descriptions-item>
-        <el-descriptions-item label="二级学科">{{ dv(profile.disciplineL2) }}</el-descriptions-item>
-        <el-descriptions-item label="交叉学科领域">{{ dv(profile.crossDiscipline) }}</el-descriptions-item>
-        <el-descriptions-item label="学科平台/研究基地">{{ dv(profile.disciplinePlatform) }}</el-descriptions-item>
-        <el-descriptions-item
-          label="重点研究方向"
-          :span="2"
-        >{{ dv(profile.researchDirections) }}</el-descriptions-item>
-        <el-descriptions-item
-          label="研究关键词"
-          :span="2"
+      <div class="info-grid">
+        <div
+          v-for="group in disciplineGroups"
+          :key="group.title"
+          class="info-card"
         >
-          <template v-if="keywordList.length">
-            <el-tag
-              v-for="kw in keywordList"
-              :key="kw"
-              size="small"
-              effect="plain"
-              class="kw-tag"
-            >{{ kw }}</el-tag>
-          </template>
-          <span v-else>—</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="所属政策领域">{{ dv(profile.policyFields) }}</el-descriptions-item>
-        <el-descriptions-item label="主要研究对象">{{ dv(profile.researchObjects) }}</el-descriptions-item>
-        <el-descriptions-item label="当前关注议题">{{ dv(profile.focusTopics) }}</el-descriptions-item>
-        <el-descriptions-item label="区域/国别研究专长">{{ dv(profile.regionExpertise) }}</el-descriptions-item>
-        <el-descriptions-item
-          label="研究方法专长"
-          :span="2"
-        >{{ dv(profile.methodExpertise) }}</el-descriptions-item>
-      </el-descriptions>
+          <div class="info-card-title">{{ group.title }}</div>
+          <div
+            v-for="[label, key] in group.fields"
+            :key="key"
+            class="info-row"
+          >
+            <span class="info-label">{{ label }}</span>
+            <span class="info-value">{{ dv(profile[key]) }}</span>
+          </div>
+        </div>
+
+        <div class="info-card info-card-wide">
+          <div class="info-card-title">研究方向</div>
+          <div class="info-block">
+            <span class="info-label">重点研究方向</span>
+            <p class="info-paragraph">{{ dv(profile.researchDirections) }}</p>
+          </div>
+          <div class="info-block">
+            <span class="info-label">研究关键词</span>
+            <div class="kw-tag-wrap">
+              <template v-if="keywordList.length">
+                <el-tag
+                  v-for="kw in keywordList"
+                  :key="kw"
+                  size="small"
+                  effect="plain"
+                  class="kw-tag"
+                >{{ kw }}</el-tag>
+              </template>
+              <span
+                v-else
+                class="info-value"
+              >—</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="gva-table-box">
@@ -213,68 +214,6 @@
                   link
                   icon="delete"
                   @click="deleteAchievement(scope.row)"
-                >删除</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-tab-pane>
-
-        <el-tab-pane
-          :label="`决策影响记录 (${adoptionData.length})`"
-          name="adoption"
-        >
-          <div
-            v-if="!isReadOnlyReviewer"
-            class="gva-btn-list"
-          >
-            <el-button
-              type="primary"
-              icon="plus"
-              @click="openAdoptionDialog"
-            >新增</el-button>
-          </div>
-          <el-table
-            :data="adoptionData"
-            style="width: 100%"
-          >
-            <el-table-column
-              align="left"
-              label="采纳类型"
-              prop="adoptionType"
-              width="180"
-            />
-            <el-table-column
-              align="left"
-              label="采纳/批示单位级别"
-              prop="adoptingUnitLevel"
-              width="140"
-            />
-            <el-table-column
-              align="left"
-              label="采纳/批示单位名称"
-              prop="adoptingUnitName"
-              min-width="180"
-              show-overflow-tooltip
-            />
-            <el-table-column
-              v-if="!isReadOnlyReviewer"
-              align="left"
-              label="操作"
-              fixed="right"
-              width="150"
-            >
-              <template #default="scope">
-                <el-button
-                  type="primary"
-                  link
-                  icon="edit"
-                  @click="openAdoptionDialog(scope.row)"
-                >编辑</el-button>
-                <el-button
-                  type="primary"
-                  link
-                  icon="delete"
-                  @click="deleteAdoption(scope.row)"
                 >删除</el-button>
               </template>
             </el-table-column>
@@ -467,80 +406,6 @@
       </template>
     </el-dialog>
 
-    <!-- 决策影响记录 弹窗 -->
-    <el-dialog
-      v-model="adoptionDialogVisible"
-      :title="adoptionForm.ID ? '编辑决策影响记录' : '添加决策影响记录'"
-      width="50%"
-    >
-      <el-form
-        ref="adoptionFormRef"
-        :model="adoptionForm"
-        label-width="140px"
-      >
-        <el-form-item
-          label="采纳类型"
-          prop="adoptionType"
-          required
-        >
-          <el-select
-            v-model="adoptionForm.adoptionType"
-            placeholder="请选择"
-            style="width:100%"
-          >
-            <el-option
-              v-for="item in adoptionTypeOptions"
-              :key="item"
-              :label="item"
-              :value="item"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item
-          label="采纳/批示单位级别"
-          prop="adoptingUnitLevel"
-        ><el-input
-          v-model="adoptionForm.adoptingUnitLevel"
-          placeholder="如：国家级/省部级/厅局级/区县级"
-        /></el-form-item>
-        <el-form-item
-          label="采纳/批示单位名称"
-          prop="adoptingUnitName"
-        ><el-input v-model="adoptionForm.adoptingUnitName" /></el-form-item>
-        <el-form-item
-          label="采纳/批示时间"
-          prop="adoptionDate"
-        >
-          <el-date-picker
-            v-model="adoptionForm.adoptionDate"
-            type="date"
-            style="width:100%"
-          />
-        </el-form-item>
-        <el-form-item
-          label="佐证材料描述"
-          prop="evidenceDesc"
-        ><el-input
-          v-model="adoptionForm.evidenceDesc"
-          type="textarea"
-        /></el-form-item>
-        <el-form-item
-          label="佐证材料附件"
-          prop="attachmentUrl"
-        ><el-input
-          v-model="adoptionForm.attachmentUrl"
-          placeholder="附件链接"
-        /></el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="adoptionDialogVisible = false">取消</el-button>
-        <el-button
-          type="primary"
-          @click="submitAdoption"
-        >确定</el-button>
-      </template>
-    </el-dialog>
-
     <!-- 学术兼职 弹窗 -->
     <el-dialog
       v-model="positionDialogVisible"
@@ -617,12 +482,6 @@ import {
   getExpertAchievementList
 } from '@/api/expertAchievement'
 import {
-  createExpertAdoptionRecord,
-  updateExpertAdoptionRecord,
-  deleteExpertAdoptionRecord,
-  getExpertAdoptionRecordList
-} from '@/api/expertAdoptionRecord'
-import {
   createExpertAcademicPosition,
   updateExpertAcademicPosition,
   deleteExpertAcademicPosition,
@@ -659,12 +518,41 @@ getScoreColumnAvailability().then((res) => {
   }
 })
 // 单位审核员/市级审核员/专家（纯检索用户）在后端只有只读权限，写操作一定会被 Casbin 拒绝——
-// 前端直接不展示这些按钮，避免填完一整张表单才发现白填了
-const isReadOnlyReviewer = computed(() => [9002, 9003, 9005].includes(userStore.userInfo.authorityId))
-
+// 前端直接不展示这些按钮，避免填完一整张表单才发现白填了。个人申报人比较特殊：casbin 层面
+// 有写权限（因为要能编辑自己申报的档案），但后端 canModifyProfile 只放行"自己创建的档案"，
+// 别人的档案一样会被拒绝——这里补上跟后端一致的归属判断，不然从专家检索点进别人已发布的档案，
+// 个人申报人账号还是会看到一整套编辑按钮，点了才发现后端拒绝，体验很差（这正是这次要修的问题：
+// 专家检索本该是纯查询入口，点进去却看得到一堆其实点不动的编辑控件）
+const isReadOnlyReviewer = computed(() => {
+  const authorityId = userStore.userInfo.authorityId
+  if ([9002, 9003, 9005].includes(authorityId)) return true
+  if (authorityId === 9001) return profile.value.CreatedBy !== userStore.userInfo.ID
+  return false
+})
 
 // 空字段统一显示占位符，避免整块描述表里大片空白格看起来像渲染出错
 const dv = (v) => (v === undefined || v === null || v === '' ? '—' : v)
+
+// 原来是两张 17/11 字段的巨型 el-descriptions 大表，字段挤在一起不好扫读；按语义分成小卡片
+// 网格（跟检索页结果卡片一样的卡片化观感），每组字段数量不多，一眼能扫完。字段本身一个都没删，
+// 只是重新分组+换了渲染方式（label/value 行而不是表格单元格）
+// 2026-08-25 统计全库23661位已发布专家的字段填充率后，从这个页面去掉了民族/政治面貌/手机号码/
+// 荣誉称号/交叉学科领域/所属政策领域/主要研究对象/当前关注议题/区域国别研究专长这9个字段——
+// 全部是0%~1%填充，展示出来只有一整屏"—"占位符，没有信息量。字段本身在数据模型和编辑表单
+// （expertProfile.vue）里都已经同步去掉，不是只藏了展示，数据本身没删
+const backgroundGroups = [
+  { title: '基本信息', fields: [['姓名', 'name'], ['性别', 'gender']] },
+  { title: '任职信息', fields: [['所在单位', 'unitName'], ['院系/部门', 'department'], ['行政职务', 'adminTitle'], ['专业技术职称', 'techTitle']] },
+  { title: '联系方式', fields: [['办公电话', 'phone'], ['电子邮箱', 'email'], ['通讯地址', 'address']] },
+  { title: '教育背景', fields: [['最高学历', 'highestEducation'], ['最高学位', 'highestDegree'], ['毕业院校', 'graduateSchool'], ['所学专业', 'major']] },
+  { title: '人才计划', fields: [['人才计划', 'talentProgram']] }
+]
+// 重点研究方向/研究关键词是长文本或标签列表，不适合塞进 label/value 行，单独用一张
+// "研究方向"卡片渲染（见模板），不在这个数据驱动的分组列表里。"政策与专长"整组（所属政策领域/
+// 主要研究对象/当前关注议题/区域国别研究专长）四个字段全是0%填充，整组一起去掉了
+const disciplineGroups = [
+  { title: '学科归属', fields: [['一级学科', 'disciplineL1'], ['二级学科', 'disciplineL2'], ['学科平台/研究基地', 'disciplinePlatform']] }
+]
 
 const keywordList = computed(() =>
   (profile.value.researchKeywords || '')
@@ -715,41 +603,6 @@ const deleteAchievement = (row) => {
     if (res.code === 0) {
       ElMessage({ type: 'success', message: '删除成功' })
       fetchAchievements()
-    }
-  })
-}
-
-// ============ 决策影响记录 ============
-const adoptionData = ref([])
-const fetchAdoptionRecords = async() => {
-  const res = await getExpertAdoptionRecordList({ expertId, page: 1, pageSize: 100 })
-  if (res.code === 0) adoptionData.value = res.data.list
-}
-fetchAdoptionRecords()
-
-const adoptionTypeOptions = ['内参/专报采用', '部门采纳', '领导批示', '进入政策文件', '参与政策起草/咨询论证']
-const adoptionDialogVisible = ref(false)
-const adoptionFormRef = ref()
-const adoptionForm = ref({})
-const openAdoptionDialog = (row) => {
-  adoptionForm.value = row ? { ...row } : { expertId, adoptionType: '', adoptingUnitLevel: '', adoptingUnitName: '', adoptionDate: null, evidenceDesc: '', attachmentUrl: '' }
-  adoptionDialogVisible.value = true
-}
-const submitAdoption = async() => {
-  const payload = { ...adoptionForm.value, expertId }
-  const res = payload.ID ? await updateExpertAdoptionRecord(payload) : await createExpertAdoptionRecord(payload)
-  if (res.code === 0) {
-    ElMessage({ type: 'success', message: '保存成功' })
-    adoptionDialogVisible.value = false
-    fetchAdoptionRecords()
-  }
-}
-const deleteAdoption = (row) => {
-  ElMessageBox.confirm('确定要删除吗?', '提示', { type: 'warning' }).then(async() => {
-    const res = await deleteExpertAdoptionRecord({ ID: row.ID })
-    if (res.code === 0) {
-      ElMessage({ type: 'success', message: '删除成功' })
-      fetchAdoptionRecords()
     }
   })
 }
@@ -810,12 +663,30 @@ const fetchAllTags = async() => {
   const res = await getExpertTagList({ page: 1, pageSize: 500 })
   if (res.code === 0) allTags.value = res.data.list || []
 }
+// 标签字典这次导入之后从几十条暴涨到2.7万+条，fetchAllTags 只拉第一页500条（按id倒序），
+// 专家自己已选的标签 ID 很可能不落在这最新500条里——这才是"已选标签显示数字ID"的真正原因
+// （不是异步时序问题：就算等字典加载完再设置已选标签，只要那个 ID 本来就不在这500条里，
+// el-select 一样找不到对应 label）。getExpertTagsByExpertId 本身返回的就是完整标签对象
+// （含 tagValue），所以直接把专家已选的这些标签对象补进字典，不管它们是否在字典分页窗口内，
+// 保证选中态一定能解析出真实文字；下拉框仍然只是字典的一页，不受影响
 const fetchExpertTags = async() => {
   const res = await getExpertTagsByExpertId({ expertId })
-  if (res.code === 0) selectedTagIds.value = (res.data.tags || []).map(t => t.ID)
+  if (res.code === 0) {
+    const tags = res.data.tags || []
+    const known = new Set(allTags.value.map(t => t.ID))
+    const missing = tags.filter(t => !known.has(t.ID))
+    if (missing.length) allTags.value = [...allTags.value, ...missing]
+    selectedTagIds.value = tags.map(t => t.ID)
+  }
 }
-fetchAllTags()
-fetchExpertTags()
+// 先等字典加载完再取已选标签：fetchAllTags 是整体覆盖式赋值(allTags.value = res.data.list)，
+// 如果反过来 fetchExpertTags 先跑完把缺失的标签对象合并进 allTags，字典请求晚一步返回时会把
+// 这次合并直接覆盖掉，等于白合并
+const initTags = async() => {
+  await fetchAllTags()
+  await fetchExpertTags()
+}
+initTags()
 
 const submitTags = async() => {
   const res = await setExpertTagRelations({ expertId, tagIds: selectedTagIds.value })
@@ -826,6 +697,16 @@ const submitTags = async() => {
 </script>
 
 <style scoped>
+/* 跟检索页/结果卡片（expertSearch.vue、ExpertResultCard.vue）同一套品牌色，只做局部
+   视觉换肤——信息结构（hero + 两张大表 + tabs + 三个弹窗）完全不动，只换配色/字体/间距，
+   不碰全局 el-color-primary，弹窗里的按钮仍用默认 Element 蓝，跟全站操作类控件保持一致 */
+.expert-detail-page {
+  --brand-navy: #16407a;
+  --brand-navy-dark: #0c2a54;
+  --brand-red: #b5272d;
+  --brand-gold: #d4a017;
+}
+
 .hero-card {
   display: flex;
   align-items: center;
@@ -834,6 +715,7 @@ const submitTags = async() => {
   flex-wrap: wrap;
   background: var(--el-bg-color);
   border: 1px solid var(--el-border-color-lighter);
+  border-top: 3px solid var(--brand-navy);
   border-radius: 12px;
   padding: 20px 24px;
   margin-bottom: 16px;
@@ -856,10 +738,11 @@ const submitTags = async() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: "Songti SC", "Noto Serif SC", "SimSun", serif;
   font-size: 24px;
   font-weight: 700;
   color: #fff;
-  background: linear-gradient(135deg, #1677ff, #69b1ff);
+  background: linear-gradient(155deg, var(--brand-navy), var(--brand-red));
 }
 .hero-name-row {
   display: flex;
@@ -868,6 +751,7 @@ const submitTags = async() => {
   flex-wrap: wrap;
 }
 .hero-name {
+  font-family: "Songti SC", "Noto Serif SC", "SimSun", serif;
   font-size: 22px;
   font-weight: 700;
   color: var(--el-text-color-primary);
@@ -896,7 +780,7 @@ const submitTags = async() => {
   text-align: center;
 }
 .hero-score-primary {
-  background: linear-gradient(135deg, #1677ff, #4096ff);
+  background: linear-gradient(135deg, var(--brand-navy-dark), var(--brand-navy));
 }
 .hero-score-primary .hero-score-value,
 .hero-score-primary .hero-score-label {
@@ -917,5 +801,111 @@ const submitTags = async() => {
 .kw-tag {
   margin-right: 6px;
   margin-bottom: 4px;
+  color: var(--brand-navy);
+  background-color: rgba(22, 64, 122, 0.06);
+  border-color: rgba(22, 64, 122, 0.22);
+}
+.kw-tag-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* 背景信息/学科领域两块原来的巨型 el-descriptions，改成小卡片网格——宽屏自动摆 2-3 列，
+   窄屏自动收成 1 列，卡片本身比表格单元格更透气，标题用金色小竖条做重点标记，不是纯装饰，
+   是跟"重点研究方向/研究关键词"合并的宽卡片（.info-card-wide）做视觉区分 */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.info-card {
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: var(--el-fill-color-blank);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.info-card:hover {
+  border-color: var(--brand-navy);
+  box-shadow: 0 2px 10px rgba(22, 64, 122, 0.08);
+}
+.info-card-wide {
+  grid-column: 1 / -1;
+}
+.info-card-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: "Songti SC", "Noto Serif SC", "SimSun", serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--brand-navy);
+  margin-bottom: 10px;
+}
+.info-card-title::before {
+  content: '';
+  width: 3px;
+  height: 13px;
+  border-radius: 2px;
+  background: var(--brand-gold);
+}
+.info-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--el-border-color-lighter);
+  font-size: 13px;
+}
+.info-row:last-child {
+  border-bottom: none;
+}
+.info-label {
+  flex-shrink: 0;
+  color: var(--el-text-color-secondary);
+}
+.info-value {
+  color: var(--el-text-color-primary);
+  text-align: right;
+  word-break: break-word;
+}
+.info-block {
+  margin-bottom: 12px;
+}
+.info-block:last-child {
+  margin-bottom: 0;
+}
+.info-block > .info-label {
+  display: block;
+  margin-bottom: 4px;
+}
+.info-paragraph {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--el-text-color-primary);
+}
+
+/* 两块 el-descriptions 前面的分节标题（背景信息/学科领域），跟检索页卡片名同一套宋体，
+   颜色改成品牌藏青而不是默认灰黑，让这两大块表格看起来是同一个产品的一部分 */
+.expert-detail-page :deep(.el-divider__text) {
+  font-family: "Songti SC", "Noto Serif SC", "SimSun", serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--brand-navy);
+}
+
+/* tabs 的选中态跟检索页排序 tab（expertSearch.vue .sort-tab.active）用一样的藏青，
+   不动全局 el-tabs 默认样式，只在这个页面局部生效 */
+.expert-detail-page :deep(.el-tabs__item.is-active) {
+  color: var(--brand-navy);
+}
+.expert-detail-page :deep(.el-tabs__item:hover) {
+  color: var(--brand-navy);
+}
+.expert-detail-page :deep(.el-tabs__active-bar) {
+  background-color: var(--brand-navy);
 }
 </style>

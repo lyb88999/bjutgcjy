@@ -9,13 +9,23 @@ import (
 
 type ExpertAcademicPositionService struct{}
 
-// CreateExpertAcademicPosition 创建专家学术兼职
-func (expertAcademicPositionService *ExpertAcademicPositionService) CreateExpertAcademicPosition(position *ExpertDatabase.ExpertAcademicPosition) (err error) {
+// CreateExpertAcademicPosition 创建专家学术兼职；数据域规则同 checkCanModifyExpertSubResource
+func (expertAcademicPositionService *ExpertAcademicPositionService) CreateExpertAcademicPosition(position *ExpertDatabase.ExpertAcademicPosition, operatorID uint) (err error) {
+	if err = checkCanModifyExpertSubResource(operatorID, position.ExpertId); err != nil {
+		return err
+	}
 	return global.GVA_DB.Create(position).Error
 }
 
 // DeleteExpertAcademicPosition 删除专家学术兼职
 func (expertAcademicPositionService *ExpertAcademicPositionService) DeleteExpertAcademicPosition(ID string, userID uint) (err error) {
+	var position ExpertDatabase.ExpertAcademicPosition
+	if err := global.GVA_DB.Where("id = ?", ID).First(&position).Error; err != nil {
+		return err
+	}
+	if err := checkCanModifyExpertSubResource(userID, position.ExpertId); err != nil {
+		return err
+	}
 	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&ExpertDatabase.ExpertAcademicPosition{}).Where("id = ?", ID).Update("deleted_by", userID).Error; err != nil {
 			return err
@@ -24,8 +34,17 @@ func (expertAcademicPositionService *ExpertAcademicPositionService) DeleteExpert
 	})
 }
 
-// DeleteExpertAcademicPositionByIds 批量删除专家学术兼职
+// DeleteExpertAcademicPositionByIds 批量删除专家学术兼职；只要有一条越出数据域就整体拒绝
 func (expertAcademicPositionService *ExpertAcademicPositionService) DeleteExpertAcademicPositionByIds(IDs []string, deletedBy uint) (err error) {
+	var positions []ExpertDatabase.ExpertAcademicPosition
+	if err := global.GVA_DB.Where("id in ?", IDs).Find(&positions).Error; err != nil {
+		return err
+	}
+	for _, p := range positions {
+		if err := checkCanModifyExpertSubResource(deletedBy, p.ExpertId); err != nil {
+			return err
+		}
+	}
 	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&ExpertDatabase.ExpertAcademicPosition{}).Where("id in ?", IDs).Update("deleted_by", deletedBy).Error; err != nil {
 			return err
@@ -34,8 +53,18 @@ func (expertAcademicPositionService *ExpertAcademicPositionService) DeleteExpert
 	})
 }
 
-// UpdateExpertAcademicPosition 更新专家学术兼职
-func (expertAcademicPositionService *ExpertAcademicPositionService) UpdateExpertAcademicPosition(position ExpertDatabase.ExpertAcademicPosition) (err error) {
+// UpdateExpertAcademicPosition 更新专家学术兼职；expertId 以库里现值为准，理由同成果表的更新
+func (expertAcademicPositionService *ExpertAcademicPositionService) UpdateExpertAcademicPosition(position ExpertDatabase.ExpertAcademicPosition, operatorID uint) (err error) {
+	var existing ExpertDatabase.ExpertAcademicPosition
+	if err = global.GVA_DB.Where("id = ?", position.ID).First(&existing).Error; err != nil {
+		return err
+	}
+	if err = checkCanModifyExpertSubResource(operatorID, existing.ExpertId); err != nil {
+		return err
+	}
+	position.ExpertId = existing.ExpertId
+	position.CreatedAt = existing.CreatedAt
+	position.CreatedBy = existing.CreatedBy
 	return global.GVA_DB.Save(&position).Error
 }
 

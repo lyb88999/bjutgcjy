@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase"
+	ExpertDatabaseReq "github.com/flipped-aurora/gin-vue-admin/server/model/ExpertDatabase/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
 )
 
@@ -116,7 +117,10 @@ func TestUpdateExpertProfile_OwnershipAndFieldProtection(t *testing.T) {
 	// 自己的档案：允许，但请求体里夹带的状态/得分字段必须被库里现值覆盖
 	tampered := profile
 	tampered.Name = "正常改名"
+	tampered.TechTitle = "副教授"
 	tampered.Status = StatusPublished
+	tampered.TitleScore = 99
+	tampered.TitleTier = "院士"
 	tampered.CompositeScore = 99
 	tampered.ReviewBypassed = true
 	if err := svc.UpdateExpertProfile(tampered, applicant.ID); err != nil {
@@ -130,6 +134,68 @@ func TestUpdateExpertProfile_OwnershipAndFieldProtection(t *testing.T) {
 	if reloaded.Status != StatusDraft || reloaded.CompositeScore != 0 || reloaded.ReviewBypassed {
 		t.Fatalf("状态机/得分字段不应被更新接口改动，实际 status=%s score=%v bypassed=%v",
 			reloaded.Status, reloaded.CompositeScore, reloaded.ReviewBypassed)
+	}
+	if reloaded.TechTitle != "副教授" || reloaded.TitleScore != 0 || reloaded.TitleTier != "" || reloaded.ScoreUpdatedAt != nil {
+		t.Fatalf("草稿可改职称原文，但不能写入或重算派生得分，实际 title=%s titleScore=%v tier=%q scoreUpdatedAt=%v",
+			reloaded.TechTitle, reloaded.TitleScore, reloaded.TitleTier, reloaded.ScoreUpdatedAt)
+	}
+}
+
+func TestUpdateExpertProfile_PublishedRecomputesTitleAndScores(t *testing.T) {
+	db := setupTestDB(t)
+	applicant := createTestUser(t, db, authorityIndividualApplicant, 0)
+	profile := ExpertDatabase.ExpertProfile{
+		Name: "已发布专家", Status: StatusPublished, TechTitle: "教授", CreatedBy: applicant.ID,
+	}
+	if err := db.Create(&profile).Error; err != nil {
+		t.Fatalf("创建档案失败: %v", err)
+	}
+	achievement := ExpertDatabase.ExpertAchievement{ExpertId: profile.ID, AchievementType: "课题项目", Title: "已有成果", Level: "国家级"}
+	if err := db.Create(&achievement).Error; err != nil {
+		t.Fatalf("创建成果失败: %v", err)
+	}
+	if err := expertScoreSvc.RecomputeExpertScore(profile.ID); err != nil {
+		t.Fatalf("初始化得分失败: %v", err)
+	}
+	if err := db.First(&profile, profile.ID).Error; err != nil {
+		t.Fatalf("读取档案失败: %v", err)
+	}
+
+	// 更新普通画像字段时夹带伪造派生值，最终结果必须来自更新后的职称、荣誉及已有成果。
+	profile.TechTitle = "副教授"
+	profile.HonorTitle = "测试荣誉"
+	profile.TitleTier = "院士"
+	profile.TitleScore = 99
+	profile.AchievementScore = 99
+	profile.SocialScore = 99
+	profile.CompositeScore = 99
+	profile.Status = StatusDraft
+	profile.ScoreUpdatedAt = nil
+	svc := &ExpertProfileService{}
+	if err := svc.UpdateExpertProfile(profile, applicant.ID); err != nil {
+		t.Fatalf("已发布档案更新不应报错: %v", err)
+	}
+
+	var reloaded ExpertDatabase.ExpertProfile
+	if err := db.First(&reloaded, profile.ID).Error; err != nil {
+		t.Fatalf("读取更新后的档案失败: %v", err)
+	}
+	if reloaded.Status != StatusPublished || reloaded.TitleTier != "副教授" || reloaded.TitleScore != 3 {
+		t.Fatalf("更新后应保持已发布并按实际职称派生档位，实际 status=%s tier=%q titleScore=%v",
+			reloaded.Status, reloaded.TitleTier, reloaded.TitleScore)
+	}
+	if reloaded.AchievementScore != 10 || reloaded.SocialScore != 3 || reloaded.CompositeScore != 16 || reloaded.ScoreUpdatedAt == nil {
+		t.Fatalf("成果、荣誉与职称应立即重算为综合分16，实际 achievement=%v social=%v composite=%v scoreUpdatedAt=%v",
+			reloaded.AchievementScore, reloaded.SocialScore, reloaded.CompositeScore, reloaded.ScoreUpdatedAt)
+	}
+	search := &ExpertSearchService{}
+	list, total, err := search.Search(ExpertDatabaseReq.ExpertSearchReq{TitleTier: "副教授", Page: 1, PageSize: 10})
+	if err != nil || total != 1 || len(list) != 1 || list[0].ID != profile.ID || list[0].RealtimeScore != 16 {
+		t.Fatalf("新职称分面应立即命中，并使用更新后的缓存得分，实际 total=%d list=%v err=%v", total, list, err)
+	}
+	_, oldTotal, err := search.Search(ExpertDatabaseReq.ExpertSearchReq{TitleTier: "教授", Page: 1, PageSize: 10})
+	if err != nil || oldTotal != 0 {
+		t.Fatalf("旧职称分面不应继续命中，实际 total=%d err=%v", oldTotal, err)
 	}
 }
 

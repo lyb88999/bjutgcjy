@@ -63,6 +63,30 @@ func (expertSearchApi *ExpertSearchApi) GetScoreColumnAvailability(c *gin.Contex
 	response.OkWithData(result, c)
 }
 
+// GetFacetCounts 分面检索侧栏各维度计数（所在单位/一级学科/职称档位/区域国别专长），每个维度
+// 按"除自身外的其余结构化筛选"收窄，不按关键词收窄（详见 service 层注释）
+// @Tags ExpertSearch
+// @Summary 分面检索侧栏各维度计数
+// @Security ApiKeyAuth
+// @Produce application/json
+// @Param data query ExpertDatabaseReq.ExpertSearchReq true "当前生效的筛选条件"
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"获取成功"}"
+// @Router /expertDatabase/facetCounts [get]
+func (expertSearchApi *ExpertSearchApi) GetFacetCounts(c *gin.Context) {
+	var req ExpertDatabaseReq.ExpertSearchReq
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	result, err := expertSearchService.GetFacetCounts(req)
+	if err != nil {
+		global.GVA_LOG.Error("查询分面计数失败!", zap.Error(err))
+		response.FailWithMessage("查询失败", c)
+		return
+	}
+	response.OkWithData(result, c)
+}
+
 // ExportSearchResults 导出当前检索条件下命中的全部结果
 // @Tags ExpertSearch
 // @Summary 导出检索结果

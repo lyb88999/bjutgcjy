@@ -70,6 +70,8 @@ INSERT IGNORE INTO casbin_rule (ptype, v0, v1, v2, v3, v4, v5) VALUES
 ('p','1','/expertDatabase/recomputeScore','POST','','',''),
 ('p','1','/expertDatabase/search','GET','','',''),
 ('p','1','/expertDatabase/exportSearchResults','GET','','',''),
+('p','1','/expertDatabase/scoreColumnAvailability','GET','','',''),
+('p','1','/expertDatabase/facetCounts','GET','','',''),
 
 ('p','1','/expertProfile/downloadImportTemplate','GET','','',''),
 ('p','1','/expertProfile/importBatch','POST','','',''),

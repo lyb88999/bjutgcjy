@@ -32,9 +32,8 @@ func (expertAcademicPositionApi *ExpertAcademicPositionApi) CreateExpertAcademic
 		return
 	}
 	position.CreatedBy = utils.GetUserID(c)
-	if err := expertAcademicPositionService.CreateExpertAcademicPosition(&position); err != nil {
-		global.GVA_LOG.Error("创建失败!", zap.Error(err))
-		response.FailWithMessage("创建失败", c)
+	if err := expertAcademicPositionService.CreateExpertAcademicPosition(&position, position.CreatedBy); err != nil {
+		respondSubResourceError(c, err, "创建")
 	} else {
 		response.OkWithMessage("创建成功", c)
 	}
@@ -52,8 +51,7 @@ func (expertAcademicPositionApi *ExpertAcademicPositionApi) DeleteExpertAcademic
 	ID := c.Query("ID")
 	userID := utils.GetUserID(c)
 	if err := expertAcademicPositionService.DeleteExpertAcademicPosition(ID, userID); err != nil {
-		global.GVA_LOG.Error("删除失败!", zap.Error(err))
-		response.FailWithMessage("删除失败", c)
+		respondSubResourceError(c, err, "删除")
 	} else {
 		response.OkWithMessage("删除成功", c)
 	}
@@ -71,8 +69,7 @@ func (expertAcademicPositionApi *ExpertAcademicPositionApi) DeleteExpertAcademic
 	IDs := c.QueryArray("IDs[]")
 	userID := utils.GetUserID(c)
 	if err := expertAcademicPositionService.DeleteExpertAcademicPositionByIds(IDs, userID); err != nil {
-		global.GVA_LOG.Error("批量删除失败!", zap.Error(err))
-		response.FailWithMessage("批量删除失败", c)
+		respondSubResourceError(c, err, "批量删除")
 	} else {
 		response.OkWithMessage("批量删除成功", c)
 	}
@@ -95,9 +92,8 @@ func (expertAcademicPositionApi *ExpertAcademicPositionApi) UpdateExpertAcademic
 		return
 	}
 	position.UpdatedBy = utils.GetUserID(c)
-	if err := expertAcademicPositionService.UpdateExpertAcademicPosition(position); err != nil {
-		global.GVA_LOG.Error("更新失败!", zap.Error(err))
-		response.FailWithMessage("更新失败", c)
+	if err := expertAcademicPositionService.UpdateExpertAcademicPosition(position, position.UpdatedBy); err != nil {
+		respondSubResourceError(c, err, "更新")
 	} else {
 		response.OkWithMessage("更新成功", c)
 	}

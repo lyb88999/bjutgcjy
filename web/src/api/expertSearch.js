@@ -27,3 +27,11 @@ export const exportSearchResults = (params) => {
 export const getScoreColumnAvailability = () => {
   return service({ url: '/expertDatabase/scoreColumnAvailability', method: 'get' })
 }
+
+// @Tags ExpertSearch
+// @Summary 分面检索侧栏各维度计数（所在单位/一级学科/职称档位/区域国别专长），每个维度按"除自身外
+// 的其余筛选条件"联动收窄，不按关键词收窄
+// @Router /expertDatabase/facetCounts [get]
+export const getFacetCounts = (params) => {
+  return service({ url: '/expertDatabase/facetCounts', method: 'get', params })
+}

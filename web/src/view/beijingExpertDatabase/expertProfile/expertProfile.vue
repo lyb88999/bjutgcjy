@@ -106,14 +106,6 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8"><el-form-item label="民族" prop="ethnicity"><el-input v-model="formData.ethnicity" placeholder="请输入民族" /></el-form-item></el-col>
-          <el-col :span="8">
-            <el-form-item label="政治面貌" prop="politicalStatus">
-              <el-select v-model="formData.politicalStatus" clearable placeholder="请选择" style="width: 100%;">
-                <el-option v-for="p in POLITICAL_STATUS_OPTIONS" :key="p" :label="p" :value="p" />
-              </el-select>
-            </el-form-item>
-          </el-col>
           <el-col :span="8">
             <el-form-item label="所在单位" prop="unitName">
               <el-select
@@ -136,7 +128,6 @@
             </el-form-item>
           </el-col>
           <el-col :span="8"><el-form-item label="办公电话" prop="phone"><el-input v-model="formData.phone" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="手机号码" prop="mobile"><el-input v-model="formData.mobile" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="电子邮箱" prop="email"><el-input v-model="formData.email" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="通讯地址" prop="address"><el-input v-model="formData.address" /></el-form-item></el-col>
           <el-col :span="8">
@@ -156,7 +147,6 @@
           <el-col :span="8"><el-form-item label="毕业院校" prop="graduateSchool"><el-input v-model="formData.graduateSchool" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="所学专业" prop="major"><el-input v-model="formData.major" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="人才计划" prop="talentProgram"><el-input v-model="formData.talentProgram" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="荣誉称号" prop="honorTitle"><el-input v-model="formData.honorTitle" /></el-form-item></el-col>
         </el-row>
 
         <el-divider content-position="left">学科领域</el-divider>
@@ -169,7 +159,6 @@
             </el-form-item>
           </el-col>
           <el-col :span="8"><el-form-item label="二级学科" prop="disciplineL2"><el-input v-model="formData.disciplineL2" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="交叉学科领域" prop="crossDiscipline"><el-input v-model="formData.crossDiscipline" /></el-form-item></el-col>
           <el-col :span="24"><el-form-item label="学科平台/研究基地" prop="disciplinePlatform"><el-input v-model="formData.disciplinePlatform" /></el-form-item></el-col>
         </el-row>
 
@@ -177,11 +166,6 @@
         <el-row :gutter="20">
           <el-col :span="24"><el-form-item label="重点研究方向" prop="researchDirections"><el-input v-model="formData.researchDirections" type="textarea" /></el-form-item></el-col>
           <el-col :span="24"><el-form-item label="研究关键词" prop="researchKeywords"><el-input v-model="formData.researchKeywords" placeholder="多个关键词用逗号分隔" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="所属政策领域" prop="policyFields"><el-input v-model="formData.policyFields" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="主要研究对象" prop="researchObjects"><el-input v-model="formData.researchObjects" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="当前关注议题" prop="focusTopics"><el-input v-model="formData.focusTopics" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="区域/国别研究专长" prop="regionExpertise"><el-input v-model="formData.regionExpertise" /></el-form-item></el-col>
-          <el-col :span="24"><el-form-item label="研究方法专长" prop="methodExpertise"><el-input v-model="formData.methodExpertise" /></el-form-item></el-col>
         </el-row>
       </el-form>
       <template #footer>
@@ -263,7 +247,6 @@ import {
   statusLabel,
   statusTagType,
   GENDER_OPTIONS,
-  POLITICAL_STATUS_OPTIONS,
   EDUCATION_OPTIONS,
   DEGREE_OPTIONS
 } from '../expertStatus'
@@ -304,18 +287,20 @@ getExpertTagList({ page: 1, pageSize: 500 }).then((res) => {
   }
 })
 
+// 政治面貌/民族/手机号码/交叉学科领域/所属政策领域/主要研究对象/当前关注议题/区域国别研究
+// 专长/研究方法专长/荣誉称号这10个字段2026-08-25统计填充率后从表单里去掉了（全库23661位
+// 已发布专家里普遍是0%~1%填充，不是"暂时缺"，是从没被任何数据来源采集过）——字段在数据库
+// 模型和后端接口里都还在，历史数据没丢，只是不再提供录入入口，避免继续采集一批注定填不满的
+// 空字段。出生年月这一列这次统计时确认此前也从来没有过录入入口，本来就不在这份表单里
 const initFormData = () => ({
   name: '',
   gender: '',
-  ethnicity: '',
-  politicalStatus: '',
   unitName: '',
   orgId: null,
   department: '',
   adminTitle: '',
   techTitle: '',
   phone: '',
-  mobile: '',
   email: '',
   address: '',
   highestEducation: '',
@@ -323,18 +308,11 @@ const initFormData = () => ({
   graduateSchool: '',
   major: '',
   talentProgram: '',
-  honorTitle: '',
   disciplineL1: '',
   disciplineL2: '',
-  crossDiscipline: '',
   disciplinePlatform: '',
   researchDirections: '',
-  researchKeywords: '',
-  policyFields: '',
-  researchObjects: '',
-  focusTopics: '',
-  regionExpertise: '',
-  methodExpertise: ''
+  researchKeywords: ''
 })
 
 const formData = ref(initFormData())

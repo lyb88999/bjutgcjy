@@ -15,11 +15,15 @@ import (
 
 type ExpertSearchService struct{}
 
-// buildSearchCorpusMap 一次性预取一批候选专家的检索语料。语料来源三块：① 专家档案自己填的
-// 研究方向/关键词/关注议题等字段——这块以前漏掉了，导致专家档案里明明白白写着的主题词都搜不到，
-// 是最基础的召回缺口；② 成果标题/关键词；③ 关联标签。②③整批只发两条 SQL——替代原先逐个专家
-// 各查两次的写法，候选集几百上千条时检索耗时不再随人数线性膨胀。标签 JOIN 只认未解除的关联
-// （relation 是软删除，解除过的标签不该再计入语料）
+// buildSearchCorpusMap 一次性预取一批候选专家的检索语料。语料来源四块：① 姓名/所在单位/专业
+// 技术职称——检索条"全部字段"这个选项名字上就该覆盖这几个最基础的身份字段，之前漏了，导致
+// "全部字段"模式下按姓名/单位搜人反而搜不到（除非名字碰巧出现在研究方向文本里），跟"姓名"/
+// "所在单位"两个独立检索范围选项（前端 el-select，走 name/unitName 精确+模糊结构化过滤）
+// 是两条互补的路——那两个是精确的结构化过滤，这里是"全部字段"关键词检索也能顺带命中同一批
+// 信息，两者不冲突；② 专家档案自己填的研究方向/关键词/关注议题等字段；③ 成果标题/关键词；
+// ④ 关联标签。③④整批只发两条 SQL——替代原先逐个专家各查两次的写法，候选集几百上千条时检索
+// 耗时不再随人数线性膨胀。标签 JOIN 只认未解除的关联（relation 是软删除，解除过的标签不该再
+// 计入语料）
 func (s *ExpertSearchService) buildSearchCorpusMap(candidates []ExpertDatabase.ExpertProfile) (map[uint]string, error) {
 	builders := make(map[uint]*strings.Builder, len(candidates))
 	appendTerm := func(expertID uint, term string) {
@@ -39,6 +43,7 @@ func (s *ExpertSearchService) buildSearchCorpusMap(candidates []ExpertDatabase.E
 	for _, p := range candidates {
 		expertIDs = append(expertIDs, p.ID)
 		for _, f := range []string{
+			p.Name, p.UnitName, p.TechTitle,
 			p.ResearchDirections, p.ResearchKeywords, p.FocusTopics, p.ResearchObjects,
 			p.MethodExpertise, p.RegionExpertise, p.DisciplineL1, p.DisciplineL2,
 			p.CrossDiscipline, p.PolicyFields,
@@ -173,36 +178,42 @@ func (s *ExpertSearchService) termMatch(corpus string, embItems []parsedEmbeddin
 // 本身的固定加分（默认 10，权重 key 是 keyword），同样被 relevance 乘着，纯粹没匹配上关键词
 // 的候选人在筛选阶段已经被跳过，不会拿到这一项
 func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearchReq) (items []ExpertDatabaseRes.ExpertSearchItem, err error) {
-	db := global.GVA_DB.Model(&ExpertDatabase.ExpertProfile{}).Where("status = ?", "published")
-	if req.Name != "" {
-		db = db.Where("name LIKE ?", "%"+req.Name+"%")
-	}
-	if req.UnitName != "" {
-		db = db.Where("unit_name LIKE ?", "%"+req.UnitName+"%")
-	}
-	if req.DisciplineL1 != "" {
-		db = db.Where("discipline_l1 = ?", req.DisciplineL1)
-	}
-	if req.RegionExpertise != "" {
-		db = db.Where("region_expertise LIKE ?", "%"+req.RegionExpertise+"%")
-	}
-	if req.TechTitle != "" {
-		db = db.Where("tech_title = ?", req.TechTitle)
-	}
-
 	var candidates []ExpertDatabase.ExpertProfile
-	if err = db.Find(&candidates).Error; err != nil {
+	if err = applyStructuralFilters(req).Find(&candidates).Error; err != nil {
 		return
 	}
 
 	rankingWeights := expertScoreSvc.dictWeights(DictTypeRankingWeight, defaultRankingWeights)
 	titleWeights := expertScoreSvc.dictWeights(DictTypeTitleLevel, defaultTitleLevelWeights)
 
-	// 检索词按常见分隔符拆成多个独立词（比如"人工智能 京津冀"拆成两个），下面按词分别判断命中——
-	// 命中任意一个词就收录（OR），相关性按"命中词的平均得分"算，命中的词越多平均分越高，天然做到
-	// "命中越多排名越靠前"，不要求整句原样命中（几乎不可能，之前多关键词检索基本搜不出东西的
-	// 根源就在这——旧实现把整个输入串当一个词去比对）
-	terms := splitKeyword(req.Keyword)
+	// 高级检索（多行且/或/不含，见 expert_search_advanced.go）优先于简单关键词：AdvancedRows
+	// 非空且过滤掉空词后还剩至少一行时，terms 从这些行的原文取；否则落回简单关键词的空格分词。
+	// 两条路径共享下面同一套语料构建/同义词展开/单次批量 embedding 调用，只在下方判定循环里
+	// 按 useAdvanced 分叉——不会因为走了高级检索就多打好几次 embedding 服务请求
+	var terms []string
+	var advancedRows []ExpertDatabaseReq.AdvancedSearchRow
+	useAdvanced := false
+	if req.AdvancedRows != "" {
+		rows, parseErr := parseAdvancedRows(req.AdvancedRows)
+		if parseErr != nil {
+			return nil, parseErr
+		}
+		if len(rows) > 0 {
+			advancedRows = rows
+			useAdvanced = true
+			terms = make([]string, len(rows))
+			for i, r := range rows {
+				terms[i] = r.Term
+			}
+		}
+	}
+	if !useAdvanced {
+		// 检索词按常见分隔符拆成多个独立词（比如"人工智能 京津冀"拆成两个），下面按词分别判断
+		// 命中——命中任意一个词就收录（OR），相关性按"命中词的平均得分"算，命中的词越多平均分
+		// 越高，天然做到"命中越多排名越靠前"，不要求整句原样命中（几乎不可能，之前多关键词检索
+		// 基本搜不出东西的根源就在这——旧实现把整个输入串当一个词去比对）
+		terms = splitKeyword(req.Keyword)
+	}
 	corpus := map[uint]string{}
 	itemsByExpert := map[uint][]parsedEmbeddingItem{}
 	keywordTerms := make([]keywordTerm, len(terms))
@@ -264,24 +275,62 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 		matchedAny := len(terms) == 0
 		if !matchedAny {
 			embItems := itemsByExpert[c.ID]
-			bestTermRelevance := -1.0
-			matchedCount := 0
-			var relevanceSum float64
-			for _, kt := range keywordTerms {
-				termRel, termMatched, reason := s.termMatch(corpus[c.ID], embItems, kt, useSemanticMatch)
-				relevanceSum += termRel
-				if termMatched {
-					matchedAny = true
-					matchedCount++
+			if useAdvanced {
+				// 高级检索：按连接词把每一行的判定结果从左到右折叠（见 combineTermResults），
+				// 不是简单的"命中任意一个就算"。matchReason 只拼命中的/排除生效的那几行，
+				// 不列进没起作用的判断，读起来接近自然语言
+				var acc termResult
+				var reasonParts []string
+				for i, kt := range keywordTerms {
+					termRel, termMatched, reason := s.termMatch(corpus[c.ID], embItems, kt, useSemanticMatch)
+					row := termResult{matched: termMatched, relevance: termRel}
+					if i == 0 {
+						acc = row
+						if termMatched {
+							reasonParts = append(reasonParts, reason)
+						}
+						continue
+					}
+					connector := advancedRows[i].Connector
+					acc = combineTermResults(acc, connector, row)
+					switch connector {
+					case "not":
+						if !termMatched {
+							reasonParts = append(reasonParts, "不含「"+advancedRows[i].Term+"」")
+						}
+					case "and":
+						if termMatched {
+							reasonParts = append(reasonParts, "且"+reason)
+						}
+					default:
+						if termMatched {
+							reasonParts = append(reasonParts, "或"+reason)
+						}
+					}
 				}
-				if termRel > bestTermRelevance {
-					bestTermRelevance = termRel
-					matchReason = reason
+				matchedAny = acc.matched
+				relevance = acc.relevance
+				matchReason = strings.Join(reasonParts, "")
+			} else {
+				bestTermRelevance := -1.0
+				matchedCount := 0
+				var relevanceSum float64
+				for _, kt := range keywordTerms {
+					termRel, termMatched, reason := s.termMatch(corpus[c.ID], embItems, kt, useSemanticMatch)
+					relevanceSum += termRel
+					if termMatched {
+						matchedAny = true
+						matchedCount++
+					}
+					if termRel > bestTermRelevance {
+						bestTermRelevance = termRel
+						matchReason = reason
+					}
 				}
-			}
-			relevance = relevanceSum / float64(len(terms))
-			if len(terms) > 1 && matchedAny {
-				matchReason = fmt.Sprintf("%s（命中 %d/%d 个关键词）", matchReason, matchedCount, len(terms))
+				relevance = relevanceSum / float64(len(terms))
+				if len(terms) > 1 && matchedAny {
+					matchReason = fmt.Sprintf("%s（命中 %d/%d 个关键词）", matchReason, matchedCount, len(terms))
+				}
 			}
 		} else {
 			relevance = 1
@@ -342,8 +391,72 @@ func (s *ExpertSearchService) rankedCandidates(req ExpertDatabaseReq.ExpertSearc
 	return items, nil
 }
 
-// Search 专家综合推荐排序检索：圈定候选集、排好序之后再分页返回
+// browseModeQuery 没填关键词时的浏览路径：筛选和排序全部下推到数据库，配一条不带 LIMIT 的
+// COUNT 拿总数——不像 rankedCandidates 那样把整个候选集读进 Go 内存再排序切片。relevance 恒为
+// 1（浏览模式无所谓相关性），realtimeScore 直接用持久化的 composite_score：浏览模式下
+// realtimeScore 的算法跟 RecomputeExpertScore 写 composite_score 时用的是同一个公式（relevance=1
+// 时两者代数上相等），不用为了排序重新拉字典权重、重新跑一遍职称匹配——前提是得分缓存是新的，
+// 如果字典权重改过还没跑 cmd/recompute，浏览模式的顺序会短暂跟专家详情页的缓存值一样"滞后"，
+// 这跟这个项目里其它读 composite_score 缓存的地方（比如专家详情页）是同一种、已经存在的行为，
+// 不是这次改造新引入的不一致。
+//
+// 排序上，同分的情况用 id 做稳定 tiebreak（ORDER BY composite_score DESC, id DESC），替代原来
+// rankedCandidates 里 Go 算的哈希打散——这是一个小的、有意接受的行为变化：完全同分且没填关键词
+// 时，结果相对顺序会比原来更贴近 id 顺序，不再是打散的。只在这一种情况下才会体现，影响面很小，
+// 换来的是真正的数据库分页（不用整表读进内存）。
+//
+// forExport=true 时不分页，返回全部命中记录，供 ExportSearchResults 的浏览模式分支使用
+func (s *ExpertSearchService) browseModeQuery(req ExpertDatabaseReq.ExpertSearchReq, forExport bool) (items []ExpertDatabaseRes.ExpertSearchItem, total int64, err error) {
+	if err = applyStructuralFilters(req).Count(&total).Error; err != nil {
+		return
+	}
+
+	q := applyStructuralFilters(req)
+	switch req.SortBy {
+	case "updatedAt":
+		q = q.Order("updated_at DESC")
+	case "name":
+		q = q.Order("name ASC")
+	default:
+		q = q.Order("composite_score DESC, id DESC")
+	}
+	if !forExport {
+		pageSize := req.PageSize
+		if pageSize == 0 {
+			pageSize = 10
+		}
+		page := req.Page
+		if page == 0 {
+			page = 1
+		}
+		q = q.Limit(pageSize).Offset((page - 1) * pageSize)
+	}
+
+	var profiles []ExpertDatabase.ExpertProfile
+	if err = q.Find(&profiles).Error; err != nil {
+		return
+	}
+	items = make([]ExpertDatabaseRes.ExpertSearchItem, 0, len(profiles))
+	for _, p := range profiles {
+		items = append(items, ExpertDatabaseRes.ExpertSearchItem{
+			ExpertProfile: p,
+			Relevance:     1,
+			RealtimeScore: p.CompositeScore,
+		})
+	}
+	return
+}
+
+// Search 专家综合推荐排序检索：有关键词走 rankedCandidates（相关性排序要对候选集整体做语义匹配，
+// 排完序才能分页，没法在数据库层直接 LIMIT），没填关键词走 browseModeQuery（结构化筛选+排序+
+// 分页全部下推到数据库，不用把整个候选集读进内存）
 func (s *ExpertSearchService) Search(req ExpertDatabaseReq.ExpertSearchReq) (list []ExpertDatabaseRes.ExpertSearchItem, total int64, err error) {
+	// AdvancedRows 非空时哪怕 Keyword 是空的，也得走 rankedCandidates 做关键词匹配——
+	// 不能因为 Keyword 恰好没填就误判成浏览模式，跳过高级检索的过滤条件
+	if req.Keyword == "" && req.AdvancedRows == "" {
+		return s.browseModeQuery(req, false)
+	}
+
 	items, err := s.rankedCandidates(req)
 	if err != nil {
 		return
@@ -400,9 +513,17 @@ var searchExportHeaders = []string{
 	"相关性", "命中依据", "实时综合得分", "成果分", "决策影响分", "职称分", "社会贡献分",
 }
 
-// ExportSearchResults 导出当前检索条件下命中的全部结果（按相关性/实时得分排好序，不分页）
+// ExportSearchResults 导出当前检索条件下命中的全部结果（按相关性/实时得分排好序，不分页）。
+// 跟 Search 一样按有无关键词分支：浏览模式走 browseModeQuery 的不分页路径（导出顺序变成
+// ORDER BY composite_score DESC, id DESC，是浏览模式排序调整的自然延伸，不是单独的行为差异）
 func (s *ExpertSearchService) ExportSearchResults(req ExpertDatabaseReq.ExpertSearchReq) (*excelize.File, error) {
-	items, err := s.rankedCandidates(req)
+	var items []ExpertDatabaseRes.ExpertSearchItem
+	var err error
+	if req.Keyword == "" && req.AdvancedRows == "" {
+		items, _, err = s.browseModeQuery(req, true)
+	} else {
+		items, err = s.rankedCandidates(req)
+	}
 	if err != nil {
 		return nil, err
 	}

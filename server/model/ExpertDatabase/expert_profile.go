@@ -10,25 +10,38 @@ import (
 type ExpertProfile struct {
 	global.GVA_MODEL
 	// 一、背景信息画像
-	Name             string     `json:"name" form:"name" gorm:"column:name;comment:姓名;" binding:"required"`                     //姓名
-	Gender           string     `json:"gender" form:"gender" gorm:"column:gender;comment:性别;"`                                  //性别
-	BirthDate        *time.Time `json:"birthDate" form:"birthDate" gorm:"column:birth_date;comment:出生年月;"`                      //出生年月
-	Ethnicity        string     `json:"ethnicity" form:"ethnicity" gorm:"column:ethnicity;comment:民族;"`                         //民族
-	PoliticalStatus  string     `json:"politicalStatus" form:"politicalStatus" gorm:"column:political_status;comment:政治面貌;"`    //政治面貌
-	UnitName         string     `json:"unitName" form:"unitName" gorm:"column:unit_name;comment:所在单位;"`                         //所在单位
-	Department       string     `json:"department" form:"department" gorm:"column:department;comment:所属院系或部门;"`                 //所属院系或部门
-	AdminTitle       string     `json:"adminTitle" form:"adminTitle" gorm:"column:admin_title;comment:行政职务;"`                   //行政职务
-	TechTitle        string     `json:"techTitle" form:"techTitle" gorm:"column:tech_title;index;comment:专业技术职称;"`              //专业技术职称
-	Phone            string     `json:"phone" form:"phone" gorm:"column:phone;comment:办公电话;"`                                   //办公电话
-	Mobile           string     `json:"mobile" form:"mobile" gorm:"column:mobile;comment:手机号码;"`                                //手机号码
-	Email            string     `json:"email" form:"email" gorm:"column:email;comment:电子邮箱;"`                                   //电子邮箱
-	Address          string     `json:"address" form:"address" gorm:"column:address;comment:通讯地址;"`                             //通讯地址
-	HighestDegree    string     `json:"highestDegree" form:"highestDegree" gorm:"column:highest_degree;comment:最高学位;"`          //最高学位
-	HighestEducation string     `json:"highestEducation" form:"highestEducation" gorm:"column:highest_education;comment:最高学历;"` //最高学历
-	GraduateSchool   string     `json:"graduateSchool" form:"graduateSchool" gorm:"column:graduate_school;comment:毕业院校;"`       //毕业院校
-	Major            string     `json:"major" form:"major" gorm:"column:major;comment:所学专业;"`                                   //所学专业
-	TalentProgram    string     `json:"talentProgram" form:"talentProgram" gorm:"column:talent_program;comment:人才计划;"`          //人才计划
-	HonorTitle       string     `json:"honorTitle" form:"honorTitle" gorm:"column:honor_title;comment:荣誉称号;"`                   //荣誉称号
+	// Name/UnitName/Department 三个字段上的联合索引 idx_name_unit_dept 是批量导入判重
+	// （name+unit_name+department 精确匹配）这条查询路径专用的——实测生产库 2.2万+行规模下这条
+	// 查询单条要 120ms+，明显是全表/大范围扫描没走索引，这里补上
+	Name            string     `json:"name" form:"name" gorm:"column:name;comment:姓名;index:idx_name_unit_dept,priority:1;" binding:"required"`  //姓名
+	Gender          string     `json:"gender" form:"gender" gorm:"column:gender;comment:性别;"`                                                    //性别
+	BirthDate       *time.Time `json:"birthDate" form:"birthDate" gorm:"column:birth_date;comment:出生年月;"`                                        //出生年月
+	Ethnicity       string     `json:"ethnicity" form:"ethnicity" gorm:"column:ethnicity;comment:民族;"`                                           //民族
+	PoliticalStatus string     `json:"politicalStatus" form:"politicalStatus" gorm:"column:political_status;comment:政治面貌;"`                      //政治面貌
+	UnitName        string     `json:"unitName" form:"unitName" gorm:"column:unit_name;comment:所在单位;index:idx_name_unit_dept,priority:2;"`       //所在单位
+	Department      string     `json:"department" form:"department" gorm:"column:department;comment:所属院系或部门;index:idx_name_unit_dept,priority:3;"` //所属院系或部门
+	AdminTitle      string     `json:"adminTitle" form:"adminTitle" gorm:"column:admin_title;comment:行政职务;"`                //行政职务
+	TechTitle       string     `json:"techTitle" form:"techTitle" gorm:"column:tech_title;index;comment:专业技术职称;"`           //专业技术职称
+	// TitleTier 职称原文（TechTitle）是不受控的自由文本，跟 matchTitleWeight/matchTitleTier
+	// 用的是同一份关键词分档表算出来的档位标签（院士/教授/副教授/讲师/未分类），在 RecomputeExpertScore
+	// 里跟 TitleScore 一起写入，两者永远同源，不会出现档位和算分权重对不上的情况
+	TitleTier        string `json:"titleTier" form:"titleTier" gorm:"column:title_tier;index;comment:职称档位（院士/教授/副教授/讲师/未分类）;"`
+	Phone            string `json:"phone" form:"phone" gorm:"column:phone;comment:办公电话;"`                                   //办公电话
+	Mobile           string `json:"mobile" form:"mobile" gorm:"column:mobile;comment:手机号码;"`                                //手机号码
+	Email            string `json:"email" form:"email" gorm:"column:email;comment:电子邮箱;"`                                   //电子邮箱
+	Address          string `json:"address" form:"address" gorm:"column:address;comment:通讯地址;"`                             //通讯地址
+	HighestDegree    string `json:"highestDegree" form:"highestDegree" gorm:"column:highest_degree;comment:最高学位;"`          //最高学位
+	HighestEducation string `json:"highestEducation" form:"highestEducation" gorm:"column:highest_education;comment:最高学历;"` //最高学历
+	GraduateSchool   string `json:"graduateSchool" form:"graduateSchool" gorm:"column:graduate_school;comment:毕业院校;"`       //毕业院校
+	Major            string `json:"major" form:"major" gorm:"column:major;comment:所学专业;"`                                   //所学专业
+	TalentProgram    string `json:"talentProgram" form:"talentProgram" gorm:"column:talent_program;comment:人才计划;"`          //人才计划
+	HonorTitle       string `json:"honorTitle" form:"honorTitle" gorm:"column:honor_title;comment:荣誉称号;"`                   //荣誉称号
+	// MentorCategory/CourseOffered/ProfileLink 是 2026-08-20 批量导入北京人文社科教授花名册时新加的
+	// 三个字段——花名册里"导师类别""开设课程""个人详情页链接"这三列在此之前没有对应的库表字段，
+	// 内容本身是真实采集到的信息，不该被导入时直接丢弃
+	MentorCategory string `json:"mentorCategory" form:"mentorCategory" gorm:"column:mentor_category;comment:导师类别（博导/硕导等）;"`             //导师类别
+	CourseOffered  string `json:"courseOffered" form:"courseOffered" gorm:"column:course_offered;size:500;comment:开设课程;"`               //开设课程，实测花名册里个别行超过默认191字符上限
+	ProfileLink    string `json:"profileLink" form:"profileLink" gorm:"column:profile_link;comment:个人详情页链接（数据采集来源，供核实用）;"` //个人详情页链接
 
 	// 二、学科领域画像
 	DisciplineL1       string `json:"disciplineL1" form:"disciplineL1" gorm:"column:discipline_l1;index;comment:一级学科;"`                    //一级学科
@@ -38,18 +51,18 @@ type ExpertProfile struct {
 
 	// 三、研究主题画像
 	ResearchDirections string `json:"researchDirections" form:"researchDirections" gorm:"column:research_directions;size:2000;comment:近五年重点研究方向;"` //近五年重点研究方向
-	ResearchKeywords   string `json:"researchKeywords" form:"researchKeywords" gorm:"column:research_keywords;comment:研究关键词;"`           //研究关键词，逗号分隔
-	PolicyFields       string `json:"policyFields" form:"policyFields" gorm:"column:policy_fields;comment:所属政策领域;"`                      //所属政策领域
-	ResearchObjects    string `json:"researchObjects" form:"researchObjects" gorm:"column:research_objects;comment:主要研究对象;"`             //主要研究对象
-	FocusTopics        string `json:"focusTopics" form:"focusTopics" gorm:"column:focus_topics;comment:当前关注议题;"`                         //当前关注议题
-	RegionExpertise    string `json:"regionExpertise" form:"regionExpertise" gorm:"column:region_expertise;comment:区域或国别研究专长;"`          //区域或国别研究专长
-	MethodExpertise    string `json:"methodExpertise" form:"methodExpertise" gorm:"column:method_expertise;comment:研究方法专长;"`             //研究方法专长
+	ResearchKeywords   string `json:"researchKeywords" form:"researchKeywords" gorm:"column:research_keywords;comment:研究关键词;"`                     //研究关键词，逗号分隔
+	PolicyFields       string `json:"policyFields" form:"policyFields" gorm:"column:policy_fields;comment:所属政策领域;"`                                //所属政策领域
+	ResearchObjects    string `json:"researchObjects" form:"researchObjects" gorm:"column:research_objects;comment:主要研究对象;"`                       //主要研究对象
+	FocusTopics        string `json:"focusTopics" form:"focusTopics" gorm:"column:focus_topics;comment:当前关注议题;"`                                   //当前关注议题
+	RegionExpertise    string `json:"regionExpertise" form:"regionExpertise" gorm:"column:region_expertise;comment:区域或国别研究专长;"`                    //区域或国别研究专长
+	MethodExpertise    string `json:"methodExpertise" form:"methodExpertise" gorm:"column:method_expertise;comment:研究方法专长;"`                       //研究方法专长
 
 	// 审核工作流字段（状态机逻辑在里程碑 B 补充，这里先建列）
 	Status      string `json:"status" form:"status" gorm:"column:status;index;default:draft;comment:审核状态;"` //draft/pending_org_review/org_rejected/pending_city_review/city_rejected/published
-	OrgId       *uint  `json:"orgId" form:"orgId" gorm:"column:org_id;index;comment:申报单位ID;"`              //申报单位ID
-	SubmittedBy *uint  `json:"submittedBy" form:"submittedBy" gorm:"column:submitted_by;comment:申报人用户ID;"` //申报人用户ID
-	CurrentStep string `json:"currentStep" form:"currentStep" gorm:"column:current_step;comment:当前审核环节;"`  //当前审核环节
+	OrgId       *uint  `json:"orgId" form:"orgId" gorm:"column:org_id;index;comment:申报单位ID;"`               //申报单位ID
+	SubmittedBy *uint  `json:"submittedBy" form:"submittedBy" gorm:"column:submitted_by;comment:申报人用户ID;"`  //申报人用户ID
+	CurrentStep string `json:"currentStep" form:"currentStep" gorm:"column:current_step;comment:当前审核环节;"`   //当前审核环节
 
 	// ReviewBypassed 标记这条记录变成"已发布"的这一次，是不是靠专家库审核开关关闭时绕过三级审核
 	// 直接发布的（而不是真的走完单位审核+市级审核）。只在"审核开关关闭期间新建/导入/提交"时置为

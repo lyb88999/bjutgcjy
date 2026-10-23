@@ -83,6 +83,26 @@ func loadOperator(operatorID uint) (operator system.SysUser, err error) {
 	return
 }
 
+// checkCanModifyExpertSubResource 给研究成果/学术兼职/决策影响/标签这些"挂在专家档案下面"的
+// 子资源复用同一套数据域规则：子资源本身不记归属，能不能改由它所属的那条专家档案说了算——
+// 跟直接改档案字段用的是同一个 canModifyProfile，不能出现"档案本身个人申报人改不了别人的，
+// 档案下面的成果/兼职/决策影响记录反而谁都能改"这种不一致（这正是本次修复前的真实状态：
+// UpdateExpertProfile 一直有数据域校验，但四个子资源的 Create/Update/Delete 完全没有）
+func checkCanModifyExpertSubResource(operatorID uint, expertId uint) error {
+	operator, err := loadOperator(operatorID)
+	if err != nil {
+		return err
+	}
+	var profile ExpertDatabase.ExpertProfile
+	if err := global.GVA_DB.Where("id = ?", expertId).First(&profile).Error; err != nil {
+		return err
+	}
+	if !canModifyProfile(operator, profile) {
+		return ErrProfileAccessDenied
+	}
+	return nil
+}
+
 // DeleteExpertProfile 删除专家主档；操作人对这条档案没有修改权时整体拒绝
 func (expertProfileService *ExpertProfileService) DeleteExpertProfile(ID string, operatorID uint) (err error) {
 	return expertProfileService.DeleteExpertProfileByIds([]string{ID}, operatorID)
@@ -135,12 +155,21 @@ func (expertProfileService *ExpertProfileService) UpdateExpertProfile(profile Ex
 	profile.ReviewBypassed = existing.ReviewBypassed
 	profile.AchievementScore = existing.AchievementScore
 	profile.InfluenceScore = existing.InfluenceScore
+	profile.TitleScore = existing.TitleScore
+	profile.TitleTier = existing.TitleTier
 	profile.SocialScore = existing.SocialScore
 	profile.CompositeScore = existing.CompositeScore
 	profile.ScoreUpdatedAt = existing.ScoreUpdatedAt
 	profile.CreatedBy = existing.CreatedBy
 	profile.DeletedBy = existing.DeletedBy
-	return global.GVA_DB.Save(&profile).Error
+	if err = global.GVA_DB.Save(&profile).Error; err != nil {
+		return err
+	}
+	// 已发布档案修改职称或荣誉后，立即同步检索使用的派生档位和得分；草稿等状态仍等发布时重算。
+	if profile.Status == StatusPublished {
+		return expertScoreSvc.RecomputeExpertScore(profile.ID)
+	}
+	return nil
 }
 
 // GetExpertProfile 根据ID获取专家主档，按操作人角色做数据域校验（规则见 canViewProfile）

@@ -9,8 +9,12 @@ import (
 
 type ExpertAchievementService struct{}
 
-// CreateExpertAchievement 创建专家成果
-func (expertAchievementService *ExpertAchievementService) CreateExpertAchievement(achievement *ExpertDatabase.ExpertAchievement) (err error) {
+// CreateExpertAchievement 创建专家成果；能不能给这个专家挂成果，跟能不能改这个专家档案本身
+// 是同一套数据域规则（见 checkCanModifyExpertSubResource）
+func (expertAchievementService *ExpertAchievementService) CreateExpertAchievement(achievement *ExpertDatabase.ExpertAchievement, operatorID uint) (err error) {
+	if err = checkCanModifyExpertSubResource(operatorID, achievement.ExpertId); err != nil {
+		return err
+	}
 	if err = global.GVA_DB.Create(achievement).Error; err != nil {
 		return err
 	}
@@ -22,6 +26,9 @@ func (expertAchievementService *ExpertAchievementService) CreateExpertAchievemen
 func (expertAchievementService *ExpertAchievementService) DeleteExpertAchievement(ID string, userID uint) (err error) {
 	var achievement ExpertDatabase.ExpertAchievement
 	if err = global.GVA_DB.Where("id = ?", ID).First(&achievement).Error; err != nil {
+		return err
+	}
+	if err = checkCanModifyExpertSubResource(userID, achievement.ExpertId); err != nil {
 		return err
 	}
 	if err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
@@ -36,11 +43,16 @@ func (expertAchievementService *ExpertAchievementService) DeleteExpertAchievemen
 	return nil
 }
 
-// DeleteExpertAchievementByIds 批量删除专家成果
+// DeleteExpertAchievementByIds 批量删除专家成果；跟批量删档案一样，只要有一条越出数据域就整体拒绝
 func (expertAchievementService *ExpertAchievementService) DeleteExpertAchievementByIds(IDs []string, deletedBy uint) (err error) {
 	var achievements []ExpertDatabase.ExpertAchievement
 	if err = global.GVA_DB.Where("id in ?", IDs).Find(&achievements).Error; err != nil {
 		return err
+	}
+	for _, a := range achievements {
+		if err = checkCanModifyExpertSubResource(deletedBy, a.ExpertId); err != nil {
+			return err
+		}
 	}
 	if err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&ExpertDatabase.ExpertAchievement{}).Where("id in ?", IDs).Update("deleted_by", deletedBy).Error; err != nil {
@@ -56,8 +68,19 @@ func (expertAchievementService *ExpertAchievementService) DeleteExpertAchievemen
 	return nil
 }
 
-// UpdateExpertAchievement 更新专家成果
-func (expertAchievementService *ExpertAchievementService) UpdateExpertAchievement(achievement ExpertDatabase.ExpertAchievement) (err error) {
+// UpdateExpertAchievement 更新专家成果；expertId 以库里现值为准，不允许通过更新请求把一条成果
+// 挪去挂在别的专家名下（既没有这个使用场景，放开了也会绕过数据域校验）
+func (expertAchievementService *ExpertAchievementService) UpdateExpertAchievement(achievement ExpertDatabase.ExpertAchievement, operatorID uint) (err error) {
+	var existing ExpertDatabase.ExpertAchievement
+	if err = global.GVA_DB.Where("id = ?", achievement.ID).First(&existing).Error; err != nil {
+		return err
+	}
+	if err = checkCanModifyExpertSubResource(operatorID, existing.ExpertId); err != nil {
+		return err
+	}
+	achievement.ExpertId = existing.ExpertId
+	achievement.CreatedAt = existing.CreatedAt
+	achievement.CreatedBy = existing.CreatedBy
 	if err = global.GVA_DB.Save(&achievement).Error; err != nil {
 		return err
 	}

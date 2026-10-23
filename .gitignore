@@ -35,6 +35,7 @@ gcjy.sql
 # 演示准备材料：含明文初始密码，仅本地留存
 docs/expert-database-demo-script.md
 docs/expert-database-org-reviewer-accounts.md
+docs/expert-database-expert-role-accounts.md
 # 2026-07-28 专家库汇总表导入的备份/清单：含真实个人信息，仅本地留存
 rm_file/import-20260728/
 rm_file/release-20260728/
@@ -52,3 +53,13 @@ rm_file/release-20260806/
 rm_file/release-20260807/
 rm_file/import-20260809/
 rm_file/import-20260813/
+rm_file/release-20260815/
+rm_file/import-20260820/
+rm_file/import-20260824/
+rm_file/fix-20260827/
+
+# 本地编译的维护工具和文档渲染中间文件，仅本地留存
+/server/bench_search
+/server/create_expert_accounts
+/server/fix_enrich_v2_conflicts
+/tmp/

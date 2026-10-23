@@ -9,8 +9,11 @@ import (
 
 type ExpertAdoptionRecordService struct{}
 
-// CreateExpertAdoptionRecord 创建专家决策影响记录
-func (expertAdoptionRecordService *ExpertAdoptionRecordService) CreateExpertAdoptionRecord(record *ExpertDatabase.ExpertAdoptionRecord) (err error) {
+// CreateExpertAdoptionRecord 创建专家决策影响记录；数据域规则同 checkCanModifyExpertSubResource
+func (expertAdoptionRecordService *ExpertAdoptionRecordService) CreateExpertAdoptionRecord(record *ExpertDatabase.ExpertAdoptionRecord, operatorID uint) (err error) {
+	if err = checkCanModifyExpertSubResource(operatorID, record.ExpertId); err != nil {
+		return err
+	}
 	if err = global.GVA_DB.Create(record).Error; err != nil {
 		return err
 	}
@@ -22,6 +25,9 @@ func (expertAdoptionRecordService *ExpertAdoptionRecordService) CreateExpertAdop
 func (expertAdoptionRecordService *ExpertAdoptionRecordService) DeleteExpertAdoptionRecord(ID string, userID uint) (err error) {
 	var record ExpertDatabase.ExpertAdoptionRecord
 	if err = global.GVA_DB.Where("id = ?", ID).First(&record).Error; err != nil {
+		return err
+	}
+	if err = checkCanModifyExpertSubResource(userID, record.ExpertId); err != nil {
 		return err
 	}
 	if err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
@@ -36,11 +42,16 @@ func (expertAdoptionRecordService *ExpertAdoptionRecordService) DeleteExpertAdop
 	return nil
 }
 
-// DeleteExpertAdoptionRecordByIds 批量删除专家决策影响记录
+// DeleteExpertAdoptionRecordByIds 批量删除专家决策影响记录；只要有一条越出数据域就整体拒绝
 func (expertAdoptionRecordService *ExpertAdoptionRecordService) DeleteExpertAdoptionRecordByIds(IDs []string, deletedBy uint) (err error) {
 	var records []ExpertDatabase.ExpertAdoptionRecord
 	if err = global.GVA_DB.Where("id in ?", IDs).Find(&records).Error; err != nil {
 		return err
+	}
+	for _, r := range records {
+		if err = checkCanModifyExpertSubResource(deletedBy, r.ExpertId); err != nil {
+			return err
+		}
 	}
 	if err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&ExpertDatabase.ExpertAdoptionRecord{}).Where("id in ?", IDs).Update("deleted_by", deletedBy).Error; err != nil {
@@ -56,8 +67,18 @@ func (expertAdoptionRecordService *ExpertAdoptionRecordService) DeleteExpertAdop
 	return nil
 }
 
-// UpdateExpertAdoptionRecord 更新专家决策影响记录
-func (expertAdoptionRecordService *ExpertAdoptionRecordService) UpdateExpertAdoptionRecord(record ExpertDatabase.ExpertAdoptionRecord) (err error) {
+// UpdateExpertAdoptionRecord 更新专家决策影响记录；expertId 以库里现值为准，理由同成果表的更新
+func (expertAdoptionRecordService *ExpertAdoptionRecordService) UpdateExpertAdoptionRecord(record ExpertDatabase.ExpertAdoptionRecord, operatorID uint) (err error) {
+	var existing ExpertDatabase.ExpertAdoptionRecord
+	if err = global.GVA_DB.Where("id = ?", record.ID).First(&existing).Error; err != nil {
+		return err
+	}
+	if err = checkCanModifyExpertSubResource(operatorID, existing.ExpertId); err != nil {
+		return err
+	}
+	record.ExpertId = existing.ExpertId
+	record.CreatedAt = existing.CreatedAt
+	record.CreatedBy = existing.CreatedBy
 	if err = global.GVA_DB.Save(&record).Error; err != nil {
 		return err
 	}

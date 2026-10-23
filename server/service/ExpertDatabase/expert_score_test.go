@@ -83,3 +83,47 @@ func TestRecomputeExpertScore_WritesCompositeScoreAndTimestamp(t *testing.T) {
 		t.Fatalf("没有成果/决策影响/学术兼职时，综合得分应该只有职称分 5，实际是 %v", updated.CompositeScore)
 	}
 }
+
+// TestRecomputeExpertScore_WritesTitleTier 职称档位要跟 RecomputeExpertScore 一起写入，不能只有
+// 算分权重、没有档位标签——分面检索的"职称档位"筛选就是靠 title_tier 这一列
+func TestRecomputeExpertScore_WritesTitleTier(t *testing.T) {
+	db := setupTestDB(t)
+	profile := createTestProfile(t, db, StatusPublished, 0)
+	profile.TechTitle = "副教授"
+	if err := db.Save(&profile).Error; err != nil {
+		t.Fatalf("更新档案失败: %v", err)
+	}
+
+	svc := &ExpertScoreService{}
+	if err := svc.RecomputeExpertScore(profile.ID); err != nil {
+		t.Fatalf("重算得分不应该报错: %v", err)
+	}
+
+	var updated ExpertDatabase.ExpertProfile
+	db.First(&updated, profile.ID)
+	if updated.TitleTier != "副教授" {
+		t.Fatalf("职称原文「副教授」应该判到「副教授」档位，实际写入了 %q", updated.TitleTier)
+	}
+}
+
+// TestMatchTitleTier_MatchesSameTierAsMatchTitleWeight matchTitleTier 和 matchTitleWeight
+// 必须永远对同一个原始职称给出一致的档位——防止以后谁改了其中一个函数、忘了另一个，导致分面
+// 显示的档位和算分用的权重档位分裂
+func TestMatchTitleTier_MatchesSameTierAsMatchTitleWeight(t *testing.T) {
+	for _, tier := range titleTierKeywords {
+		for _, kw := range tier.keywords {
+			gotTier := matchTitleTier(kw)
+			if gotTier != tier.dictLabel {
+				t.Fatalf("职称原文 %q 应该判到档位 %q，实际判到 %q", kw, tier.dictLabel, gotTier)
+			}
+			gotWeight := matchTitleWeight(kw, defaultTitleLevelWeights)
+			wantWeight := defaultTitleLevelWeights[tier.dictLabel]
+			if gotWeight != wantWeight {
+				t.Fatalf("职称原文 %q 判到档位 %q，对应权重应该是 %v，实际算出 %v", kw, tier.dictLabel, wantWeight, gotWeight)
+			}
+		}
+	}
+	if got := matchTitleTier("说不清是啥的头衔"); got != "未分类" {
+		t.Fatalf("匹配不上任何关键词的职称原文应该判到「未分类」，实际 %q", got)
+	}
+}

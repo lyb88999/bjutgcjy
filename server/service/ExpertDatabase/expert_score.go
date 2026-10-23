@@ -85,11 +85,12 @@ func calcLeveledScore(levels []string, weights map[string]float64) float64 {
 // 组合写法很常见），不是字典里"教授/副教授/讲师..."这几个干净标签能直接精确匹配上的。之前用
 // 精确匹配、查不到就退回最低档 1 分，实测导致 28% 的档案（含院士、讲席教授、长聘教授、主任
 // 医师等本该是中高级的头衔）被错误打到跟讲师一个分数。改成关键词匹配：
-//   1. 先查有没有"副/助理/准聘"这类降级修饰词（覆盖"研究员、准聘副教授"这种同时出现正副职称
-//      的组合，按更保守的副高级算，不高估）
-//   2. 再查初级职称关键词
-//   3. 再查院士（比普通教授更高一档，原来的字典里都没这一档）
-//   4. 最后查正高级关键词（教授/研究员/主任医师/主任药师/主任技师这些临床对应职称也算进去）
+//  1. 先查有没有"副/助理/准聘"这类降级修饰词（覆盖"研究员、准聘副教授"这种同时出现正副职称
+//     的组合，按更保守的副高级算，不高估）
+//  2. 再查初级职称关键词
+//  3. 再查院士（比普通教授更高一档，原来的字典里都没这一档）
+//  4. 最后查正高级关键词（教授/研究员/主任医师/主任药师/主任技师这些临床对应职称也算进去）
+//
 // 都没命中的才退回最低档，跟以前的兜底行为一致
 var titleTierKeywords = []struct {
 	dictLabel string
@@ -102,17 +103,33 @@ var titleTierKeywords = []struct {
 	{"教授", 5, []string{"教授", "研究员", "主任医师", "主任药师", "主任技师", "主任护师", "首席研究员"}},
 }
 
-// matchTitleWeight 按关键词匹配职称原文对应的权重档位，找不到字典里配置的标签时退回该档位的
-// 默认权重（管理员没配置这个新档位也不会导致算分出错）
-func matchTitleWeight(techTitle string, weights map[string]float64) float64 {
+// matchTitleTier 按关键词匹配职称原文对应的档位标签（院士/教授/副教授/讲师），匹配不上就是
+// "未分类"。这是 matchTitleWeight 和分面检索"职称档位"筛选共用的唯一一次关键词匹配——两边
+// 永远从同一次判断里取值，不会出现分面显示的档位和算分用的权重对不上号的情况
+func matchTitleTier(techTitle string) string {
 	for _, tier := range titleTierKeywords {
 		for _, kw := range tier.keywords {
 			if strings.Contains(techTitle, kw) {
-				if w, ok := weights[tier.dictLabel]; ok {
-					return w
-				}
-				return tier.fallback
+				return tier.dictLabel
 			}
+		}
+	}
+	return "未分类"
+}
+
+// matchTitleWeight 按 matchTitleTier 判出的档位查权重，找不到字典里配置的标签时退回该档位的
+// 默认权重（管理员没配置这个新档位也不会导致算分出错）；档位是"未分类"时退回原来的兜底最低分
+func matchTitleWeight(techTitle string, weights map[string]float64) float64 {
+	tier := matchTitleTier(techTitle)
+	if tier == "未分类" {
+		return 1
+	}
+	for _, t := range titleTierKeywords {
+		if t.dictLabel == tier {
+			if w, ok := weights[tier]; ok {
+				return w
+			}
+			return t.fallback
 		}
 	}
 	return 1
@@ -148,6 +165,7 @@ func (s *ExpertScoreService) RecomputeExpertScore(expertID uint) error {
 
 	titleWeights := s.dictWeights(DictTypeTitleLevel, defaultTitleLevelWeights)
 	titleScore := matchTitleWeight(profile.TechTitle, titleWeights)
+	titleTier := matchTitleTier(profile.TechTitle)
 
 	var positionCount int64
 	if err := global.GVA_DB.Model(&ExpertDatabase.ExpertAcademicPosition{}).Where("expert_id = ?", expertID).Count(&positionCount).Error; err != nil {
@@ -170,6 +188,7 @@ func (s *ExpertScoreService) RecomputeExpertScore(expertID uint) error {
 		"achievement_score": achievementScore,
 		"influence_score":   influenceScore,
 		"title_score":       titleScore,
+		"title_tier":        titleTier,
 		"social_score":      socialScore,
 		"composite_score":   compositeScore,
 		"score_updated_at":  &now,

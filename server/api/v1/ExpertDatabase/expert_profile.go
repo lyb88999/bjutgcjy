@@ -17,6 +17,18 @@ import (
 
 type ExpertProfileApi struct{}
 
+// respondSubResourceError 研究成果/学术兼职/决策影响/标签这几个"挂在专家档案下"的子资源控制器
+// 复用同一套报错处理：数据域校验没过时把 ErrProfileAccessDenied 的具体文案原样返回给前端
+// （而不是笼统的"XX失败"），跟专家主档自己的错误处理保持一致
+func respondSubResourceError(c *gin.Context, err error, action string) {
+	global.GVA_LOG.Error(action+"失败!", zap.Error(err))
+	if errors.Is(err, ExpertDatabaseService.ErrProfileAccessDenied) {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.FailWithMessage(action+"失败", c)
+}
+
 var expertProfileService = service.ServiceGroupApp.ExpertDatabaseServiceGroup.ExpertProfileService
 
 // CreateExpertProfile 创建专家主档

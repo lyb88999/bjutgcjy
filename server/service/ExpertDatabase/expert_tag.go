@@ -59,8 +59,12 @@ func (expertTagService *ExpertTagService) GetExpertTagInfoList(info ExpertDataba
 	return tags, total, err
 }
 
-// SetExpertTags 覆盖式设置某专家的标签关联（先清空再写入）
-func (expertTagService *ExpertTagService) SetExpertTags(expertId uint, tagIds []uint) (err error) {
+// SetExpertTags 覆盖式设置某专家的标签关联（先清空再写入）；数据域规则同 checkCanModifyExpertSubResource——
+// 标签关联本身不记归属，能不能改由它挂的那条专家档案说了算
+func (expertTagService *ExpertTagService) SetExpertTags(expertId uint, tagIds []uint, operatorID uint) (err error) {
+	if err := checkCanModifyExpertSubResource(operatorID, expertId); err != nil {
+		return err
+	}
 	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("expert_id = ?", expertId).Delete(&ExpertDatabase.ExpertTagRelation{}).Error; err != nil {
 			return err

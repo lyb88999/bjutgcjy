@@ -17,13 +17,5 @@ export const statusTagType = (value) => byValue[value]?.tagType || 'info'
 // 档案编辑表单里的枚举选项。职称不在这里——它直接决定打分，选项以
 // expert_title_level 权重字典为准（getDict 取），保证表单里能选的和打分认的完全一致
 export const GENDER_OPTIONS = ['男', '女']
-export const POLITICAL_STATUS_OPTIONS = [
-  '中共党员',
-  '中共预备党员',
-  '共青团员',
-  '民主党派',
-  '无党派人士',
-  '群众'
-]
 export const EDUCATION_OPTIONS = ['博士研究生', '硕士研究生', '大学本科', '大专及以下']
 export const DEGREE_OPTIONS = ['博士', '硕士', '学士', '无']
