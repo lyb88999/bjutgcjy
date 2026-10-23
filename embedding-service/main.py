@@ -5,9 +5,10 @@ from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = os.environ.get("EMBEDDING_MODEL", "BAAI/bge-small-zh-v1.5")
+MODEL_PATH = os.environ.get("EMBEDDING_MODEL_PATH", MODEL_NAME)
 
 app = FastAPI()
-model = SentenceTransformer(MODEL_NAME)
+model = SentenceTransformer(MODEL_PATH)
 
 
 class EmbedRequest(BaseModel):
@@ -17,6 +18,7 @@ class EmbedRequest(BaseModel):
 class EmbedResponse(BaseModel):
     embeddings: list[list[float]]
     dim: int
+    model: str = MODEL_NAME
 
 
 @app.get("/health")

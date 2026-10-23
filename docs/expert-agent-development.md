@@ -11,9 +11,10 @@
 ## 本地启动
 
 1. 将 `server/.env.example` 复制为 `server/.env.local`，填写自己的 `EXPERT_AGENT_API_KEY`。该文件已被 Git 忽略。进程中的同名环境变量优先。
-2. 从 `server/` 运行后端。若使用 `-c` 指定 YAML 文件，则本地 `.env.local` 应放在该 YAML 同一目录。
-3. 在开发数据库执行 `docs/expert-agent-permission-seed.sql`，将助手接口授予已有专家检索权限的角色，随后重启后端以刷新权限。
-4. 从 `web/` 运行 `npm run serve`，登录后打开“专家检索推荐 → 智能遴选”。
+2. 按 [语义服务说明](../embedding-service/README.md) 准备模型并运行 `sh embedding-service/start-local.sh`。
+3. 从 `server/` 运行后端。若使用 `-c` 指定 YAML 文件，则本地 `.env.local` 应放在该 YAML 同一目录。后端会后台预热已有向量缓存，首次预热约需二十多秒。
+4. 在开发数据库执行 `docs/expert-agent-permission-seed.sql`，将助手接口授予已有专家检索权限的角色，随后重启后端以刷新权限。
+5. 从 `web/` 运行 `npm run serve`，登录后打开“专家检索推荐 → 智能遴选”。
 
 默认模型按当前使用选择设为 `glm-4.7`，服务地址为 `https://open.bigmodel.cn/api/paas/v4`，调用费用按平台计费规则计算。可以通过 `EXPERT_AGENT_MODEL` 和 `EXPERT_AGENT_BASE_URL` 切换模型；若希望使用免费模型，请显式设置 `glm-4.7-flash`。服务不会自动切换模型，返回 429 时可稍后重试。
 
@@ -29,6 +30,8 @@
 ## 第一版边界
 
 本版本用于开发与用户试用。模型识别的条件会直接显示，便于核对；模型能力、语义检索覆盖和资料完整度仍影响推荐效果。研究方向互补是基于已有学科和资料的辅助选择，不代表正式专家能力评定。
+
+语义命中会按真实原始记录 ID 展示依据；推荐先保证主题相关性，再在相近人选间考虑多样性。具体对照结果和局限见 [语义检索验收](expert-agent-semantic-acceptance.md)。
 
 ## 验证记录（2026-10-23）
 

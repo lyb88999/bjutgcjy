@@ -127,9 +127,25 @@ type keywordTerm struct {
 // cmd/recompute-embeddings）时整体退回字面子串匹配，不能让语义检索的故障/数据缺失拖垮
 // 基本检索能力
 func (s *ExpertSearchService) termMatch(corpus string, embItems []parsedEmbeddingItem, kt keywordTerm, useSemanticMatch bool) (relevance float64, matched bool, reason string) {
+	relevance, matched, reason, _ = s.termMatchWithSource(corpus, embItems, kt, useSemanticMatch)
+	return
+}
+
+// termMatchWithSource 额外保留纯语义命中的原始条目身份。展示标签可能被截断或重名，不能用它反查成果ID。
+// source 是条目元数据的独立拷贝，不带向量切片；字面命中或未达到语义阈值时不返回语义来源。
+func (s *ExpertSearchService) termMatchWithSource(corpus string, embItems []parsedEmbeddingItem, kt keywordTerm, useSemanticMatch bool) (relevance float64, matched bool, reason string, source *parsedEmbeddingItem) {
 	literalHit := s.anyLiteralHit(corpus, kt.expanded)
 	if literalHit {
-		reason = "包含关键词「" + kt.term + "」"
+		if strings.Contains(corpus, kt.term) {
+			reason = "包含关键词「" + kt.term + "」"
+		} else {
+			for _, alias := range kt.expanded {
+				if strings.Contains(corpus, alias) {
+					reason = "命中关键词「" + kt.term + "」的同义词「" + alias + "」"
+					break
+				}
+			}
+		}
 	}
 	if !useSemanticMatch || len(embItems) == 0 {
 		if literalHit {
@@ -139,12 +155,14 @@ func (s *ExpertSearchService) termMatch(corpus string, embItems []parsedEmbeddin
 		return
 	}
 	bestSim := -1.0
+	var bestSource parsedEmbeddingItem
 	for _, it := range embItems {
 		for _, kwVec := range kt.vectors {
 			if sim := cosineSim(kwVec, it.Vector); sim > bestSim {
 				bestSim = sim
 				if !literalHit {
 					reason = it.ItemLabel
+					bestSource = parsedEmbeddingItem{ItemType: it.ItemType, ItemRefID: it.ItemRefID, ItemLabel: it.ItemLabel}
 				}
 			}
 		}
@@ -159,6 +177,7 @@ func (s *ExpertSearchService) termMatch(corpus string, embItems []parsedEmbeddin
 	case bestSim >= minSemanticRelevance:
 		relevance = bestSim
 		matched = true
+		source = &bestSource
 	}
 	return
 }

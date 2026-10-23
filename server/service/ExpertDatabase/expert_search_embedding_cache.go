@@ -14,6 +14,8 @@ import (
 // parsedEmbeddingItem 是 ExpertSearchEmbeddingItem 的检索期形态：向量已经从 JSON 文本解析成
 // []float32，不用每次检索都重新反序列化一遍
 type parsedEmbeddingItem struct {
+	ItemType  string
+	ItemRefID uint
 	ItemLabel string
 	Vector    []float32
 }
@@ -57,7 +59,9 @@ func (s *ExpertSearchService) embeddingItemsByExpert(ids []uint) (map[uint][]par
 		if json.Unmarshal([]byte(r.Vector), &v) != nil {
 			continue
 		}
-		byExpert[r.ExpertId] = append(byExpert[r.ExpertId], parsedEmbeddingItem{ItemLabel: r.ItemLabel, Vector: v})
+		byExpert[r.ExpertId] = append(byExpert[r.ExpertId], parsedEmbeddingItem{
+			ItemType: r.ItemType, ItemRefID: r.ItemRefId, ItemLabel: r.ItemLabel, Vector: v,
+		})
 	}
 
 	embeddingCache.mu.Lock()

@@ -28,6 +28,10 @@ var (
 
 const agentMaxCandidates = 200
 
+// agentTopicRelevanceBand 是可调整的遴选启发式，尚未经过科学标定：只有主题相关性接近
+// 本轮可选最高值的人，才比较多样性和基础得分。它不改变检索的语义命中阈值。
+const agentTopicRelevanceBand = 0.05
+
 type ExpertAgentService struct {
 	client   *http.Client
 	sessions *expertAgentSessionStore
@@ -447,10 +451,21 @@ func selectExpertAgentCandidates(candidates []ExpertDatabaseRes.ExpertAgentCandi
 	selected := make([]ExpertDatabaseRes.ExpertAgentCandidate, 0, plan.Count)
 	units, disciplines, used := map[string]int{}, map[string]int{}, map[uint]bool{}
 	for len(selected) < plan.Count {
+		eligible := func(c ExpertDatabaseRes.ExpertAgentCandidate) bool {
+			return !used[c.ID] && (plan.MaxPerUnit <= 0 || units[agentCandidateUnitKey(c)] < plan.MaxPerUnit)
+		}
+		// 单位达到上限后，其剩余人选不再决定相关性窗口。旧mock全为0、浏览模式全为1时，
+		// 所有人仍在同一窗口，保留既有的多样性/分数行为。
+		highestRelevance := 0.0
+		for _, c := range candidates {
+			if eligible(c) && c.TopicRelevance > highestRelevance {
+				highestRelevance = c.TopicRelevance
+			}
+		}
 		best, bestNovelty := -1, -1
 		for i, c := range candidates {
 			unit := agentCandidateUnitKey(c)
-			if used[c.ID] || (plan.MaxPerUnit > 0 && units[unit] >= plan.MaxPerUnit) {
+			if !eligible(c) || highestRelevance-c.TopicRelevance > agentTopicRelevanceBand+1e-9 {
 				continue
 			}
 			novelty := 0

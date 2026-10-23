@@ -741,3 +741,149 @@ func TestMergeExpertAgentPlan_RefreshAndExplicitExclusionIntent(t *testing.T) {
 		})
 	}
 }
+
+func TestSelectExpertAgentCandidates_TopicRelevanceWindow(t *testing.T) {
+	cases := []struct {
+		name       string
+		candidates []ExpertDatabaseRes.ExpertAgentCandidate
+		plan       ExpertDatabaseRes.ExpertAgentPlan
+		want       []uint
+	}{
+		{
+			name: "new discipline cannot displace much more relevant candidate",
+			candidates: []ExpertDatabaseRes.ExpertAgentCandidate{
+				{ID: 1, OrgID: 1, DisciplineL1: "政治学", TopicRelevance: .82, Score: 100},
+				{ID: 2, OrgID: 1, DisciplineL1: "政治学", TopicRelevance: .80, Score: 50},
+				{ID: 3, OrgID: 2, DisciplineL1: "经济学", TopicRelevance: .61, Score: 1},
+			},
+			plan: ExpertDatabaseRes.ExpertAgentPlan{Count: 2, Diversify: true},
+			want: []uint{1, 2},
+		},
+		{
+			name: "nearby relevance still permits discipline diversity",
+			candidates: []ExpertDatabaseRes.ExpertAgentCandidate{
+				{ID: 1, OrgID: 1, DisciplineL1: "政治学", TopicRelevance: .84, Score: 100},
+				{ID: 2, OrgID: 1, DisciplineL1: "政治学", TopicRelevance: .80, Score: 50},
+				{ID: 3, OrgID: 2, DisciplineL1: "经济学", TopicRelevance: .78, Score: 1},
+			},
+			plan: ExpertDatabaseRes.ExpertAgentPlan{Count: 2, Diversify: true},
+			want: []uint{1, 3},
+		},
+		{
+			name: "relevance maximum is recomputed after unit quota filtering",
+			candidates: []ExpertDatabaseRes.ExpertAgentCandidate{
+				{ID: 1, OrgID: 1, TopicRelevance: .90, Score: 100},
+				{ID: 2, OrgID: 1, TopicRelevance: .89, Score: 99},
+				{ID: 3, OrgID: 2, TopicRelevance: .70, Score: 1},
+			},
+			plan: ExpertDatabaseRes.ExpertAgentPlan{Count: 2, MaxPerUnit: 1, Diversify: true},
+			want: []uint{1, 3},
+		},
+		{
+			name: "without diversity low relevance cannot win through high score",
+			candidates: []ExpertDatabaseRes.ExpertAgentCandidate{
+				{ID: 1, TopicRelevance: .80, Score: 10},
+				{ID: 2, TopicRelevance: .61, Score: 10000},
+			},
+			plan: ExpertDatabaseRes.ExpertAgentPlan{Count: 2, Diversify: false},
+			want: []uint{1, 2},
+		},
+		{
+			name: "without diversity score decides within relevance window",
+			candidates: []ExpertDatabaseRes.ExpertAgentCandidate{
+				{ID: 1, TopicRelevance: .80, Score: 10},
+				{ID: 2, TopicRelevance: .78, Score: 20},
+			},
+			plan: ExpertDatabaseRes.ExpertAgentPlan{Count: 2, Diversify: false},
+			want: []uint{2, 1},
+		},
+		{
+			name: "exact five-hundredths boundary tolerates floating point rounding",
+			candidates: []ExpertDatabaseRes.ExpertAgentCandidate{
+				{ID: 1, TopicRelevance: .80, Score: 10},
+				{ID: 2, TopicRelevance: .75, Score: 20},
+			},
+			plan: ExpertDatabaseRes.ExpertAgentPlan{Count: 1, Diversify: false},
+			want: []uint{2},
+		},
+		{
+			name: "outside relevance window does not receive boundary tolerance",
+			candidates: []ExpertDatabaseRes.ExpertAgentCandidate{
+				{ID: 1, TopicRelevance: .80, Score: 10},
+				{ID: 2, TopicRelevance: .7499, Score: 20},
+			},
+			plan: ExpertDatabaseRes.ExpertAgentPlan{Count: 1, Diversify: false},
+			want: []uint{1},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			before := append([]ExpertDatabaseRes.ExpertAgentCandidate(nil), tc.candidates...)
+			selected := selectExpertAgentCandidates(tc.candidates, tc.plan)
+			if got := testExpertAgentCandidateIDs(selected); !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("wrong selection order: got %v, want %v", got, tc.want)
+			}
+			if !reflect.DeepEqual(tc.candidates, before) {
+				t.Fatal("selection must not alter the candidate pool or its relevance scores")
+			}
+		})
+	}
+}
+
+func TestSelectExpertAgentCandidates_EqualTopicRelevancePreservesExistingBehavior(t *testing.T) {
+	for _, relevance := range []float64{0, 1} {
+		for _, diversify := range []bool{false, true} {
+			name := "legacy zero relevance"
+			if relevance == 1 {
+				name = "browse-all unit relevance"
+			}
+			if diversify {
+				name += " with diversity"
+			} else {
+				name += " by score"
+			}
+			t.Run(name, func(t *testing.T) {
+				candidates := []ExpertDatabaseRes.ExpertAgentCandidate{
+					{ID: 1, OrgID: 1, DisciplineL1: "政治学", TopicRelevance: relevance, Score: 10},
+					{ID: 2, OrgID: 1, DisciplineL1: "政治学", TopicRelevance: relevance, Score: 9},
+					{ID: 3, OrgID: 2, DisciplineL1: "经济学", TopicRelevance: relevance, Score: 1},
+				}
+				want := []uint{1, 2}
+				if diversify {
+					want = []uint{1, 3}
+				}
+				selected := selectExpertAgentCandidates(candidates, ExpertDatabaseRes.ExpertAgentPlan{Count: 2, Diversify: diversify})
+				if got := testExpertAgentCandidateIDs(selected); !reflect.DeepEqual(got, want) {
+					t.Fatalf("equal relevance changed existing selection behavior: got %v, want %v", got, want)
+				}
+			})
+		}
+	}
+}
+
+func TestExpertAgentCandidate_TopicRelevanceIsNotExposedInJSON(t *testing.T) {
+	candidate := ExpertDatabaseRes.ExpertAgentCandidate{ID: 7, Name: "测试专家", Score: 12.3, TopicRelevance: .823456789}
+	encoded, err := json.Marshal(ExpertDatabaseRes.ExpertAgentChatResult{
+		Candidates: []ExpertDatabaseRes.ExpertAgentCandidate{candidate}, Recommendations: []ExpertDatabaseRes.ExpertAgentCandidate{candidate},
+	})
+	if err != nil {
+		t.Fatalf("marshal chat result: %v", err)
+	}
+	var decoded struct {
+		Candidates      []map[string]any `json:"candidates"`
+		Recommendations []map[string]any `json:"recommendations"`
+	}
+	if err := json.Unmarshal(encoded, &decoded); err != nil {
+		t.Fatalf("decode chat result: %v", err)
+	}
+	for _, list := range [][]map[string]any{decoded.Candidates, decoded.Recommendations} {
+		if len(list) != 1 || list[0]["id"] != float64(7) || list[0]["score"] != 12.3 {
+			t.Fatalf("public candidate data was not preserved: %s", encoded)
+		}
+		for key := range list[0] {
+			if strings.Contains(strings.ToLower(key), "relevance") {
+				t.Fatalf("internal topic relevance exposed as JSON field %q", key)
+			}
+		}
+	}
+}

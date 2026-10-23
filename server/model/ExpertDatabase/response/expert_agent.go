@@ -27,6 +27,7 @@ type ExpertAgentEvidence struct {
 // 候选用独立DTO，不能嵌入含联系方式和其他个人信息的ExpertProfile。
 type ExpertAgentCandidate struct {
 	OrgID              uint                  `json:"-"`
+	TopicRelevance     float64               `json:"-"` // 内部主题相关性，只用于遴选，不作为概率展示
 	ID                 uint                  `json:"id"`
 	Name               string                `json:"name"`
 	UnitName           string                `json:"unitName"`

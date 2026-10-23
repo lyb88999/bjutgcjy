@@ -33,6 +33,8 @@ type embedRequestBody struct {
 
 type embedResponseBody struct {
 	Embeddings [][]float32 `json:"embeddings"`
+	Dim        int         `json:"dim"`
+	Model      string      `json:"model"`
 }
 
 // embedTexts 调用本地自建的轻量语义向量服务（仓库根目录 embedding-service/），把文本转成

@@ -61,6 +61,7 @@ func searchExpertAgentCandidates(ctx context.Context, plan ExpertDatabaseRes.Exp
 		corpus[p.ID] = strings.Join([]string{p.Name, p.UnitName, p.TechTitle, buildProfileChunkText(p)}, " ")
 	}
 	achievements := map[uint][]ExpertDatabase.ExpertAchievement{}
+	tagValues := map[uint][]string{}
 	if len(plan.Keywords) > 0 {
 		var rows []ExpertDatabase.ExpertAchievement
 		if err := global.GVA_DB.WithContext(ctx).Select("id,expert_id,title,keywords").Where("expert_id IN ?", ids).Order("id DESC").Limit(250001).Find(&rows).Error; err != nil {
@@ -87,6 +88,7 @@ func searchExpertAgentCandidates(ctx context.Context, plan ExpertDatabaseRes.Exp
 		}
 		for _, tag := range tags {
 			corpus[tag.ExpertID] += " " + tag.TagValue
+			tagValues[tag.ExpertID] = append(tagValues[tag.ExpertID], tag.TagValue)
 		}
 	}
 	terms := make([]keywordTerm, 0, len(plan.Keywords))
@@ -162,15 +164,19 @@ func searchExpertAgentCandidates(ctx context.Context, plan ExpertDatabaseRes.Exp
 		}
 		relevance, matchReason := 1.0, "符合已选结构化条件，按库内基础分排序"
 		matchedTerms := []keywordTerm{}
+		semanticMatches := []expertAgentSemanticMatch{}
 		if len(terms) > 0 {
 			sum, best := 0.0, -1.0
 			for _, term := range terms {
-				rel, matched, reason := search.termMatch(corpus[p.ID], embeddings[p.ID], term, useSemantic)
+				rel, matched, reason, source := search.termMatchWithSource(corpus[p.ID], embeddings[p.ID], term, useSemantic)
 				if !matched {
 					continue
 				}
 				matchedTerms = append(matchedTerms, term)
 				rel = math.Min(1, math.Max(0, rel))
+				if source != nil {
+					semanticMatches = append(semanticMatches, expertAgentSemanticMatch{Source: *source, Relevance: rel})
+				}
 				sum += rel
 				if rel > best {
 					best = rel
@@ -201,39 +207,11 @@ func searchExpertAgentCandidates(ctx context.Context, plan ExpertDatabaseRes.Exp
 			unitName = orgNames[*p.OrgId]
 		}
 		link := agentSafeURL(p.ProfileLink)
-		evidence := []ExpertDatabaseRes.ExpertAgentEvidence{}
-		if p.ResearchDirections != "" {
-			evidence = append(evidence, ExpertDatabaseRes.ExpertAgentEvidence{Kind: "researchDirection", Title: truncateLabel(p.ResearchDirections, 300), SourceID: p.ID, URL: link})
-		}
-		for _, a := range achievements[p.ID] {
-			matched := false
-			for _, term := range matchedTerms {
-				if search.anyLiteralHit(a.Title+" "+a.Keywords, term.expanded) {
-					matched = true
-					break
-				}
-			}
-			// 语义命中的成果标题同样可以回溯到真实记录；不能把模型文案作为证据。
-			if !matched && strings.HasPrefix(matchReason, "成果：《"+truncateLabel(strings.Join(strings.Fields(a.Title), " "), 30)+"》") {
-				matched = true
-			}
-			if matched && a.Title != "" {
-				evidence = append(evidence, ExpertDatabaseRes.ExpertAgentEvidence{Kind: "achievement", Title: truncateLabel(a.Title, 300), SourceID: a.ID})
-			}
-			if len(evidence) >= 4 {
-				break
-			}
-		}
-		if len(evidence) == 0 {
-			if topic := buildProfileChunkText(p); topic != "" {
-				evidence = append(evidence, ExpertDatabaseRes.ExpertAgentEvidence{Kind: "profile", Title: truncateLabel(topic, 300), SourceID: p.ID, URL: link})
-			}
-		}
-		if len(evidence) == 0 {
-			evidence = append(evidence, ExpertDatabaseRes.ExpertAgentEvidence{Kind: "profile", Title: strings.TrimSpace(p.Name + " " + unitName + " " + p.TechTitle), SourceID: p.ID, URL: link})
-		}
+		evidenceProfile := p
+		evidenceProfile.UnitName = unitName
+		evidence := buildExpertAgentEvidence(evidenceProfile, achievements[p.ID], tagValues[p.ID], matchedTerms, semanticMatches)
 		reason := matchReason + "；依据已发布档案及库内记录推荐。"
-		candidates = append(candidates, ExpertDatabaseRes.ExpertAgentCandidate{OrgID: orgID, ID: p.ID, Name: p.Name, UnitName: unitName, Department: p.Department, TechTitle: p.TechTitle, DisciplineL1: p.DisciplineL1, ResearchDirections: p.ResearchDirections, ProfileLink: link, MatchReason: matchReason, Score: math.Round(score*100) / 100, Evidence: evidence, Reason: reason})
+		candidates = append(candidates, ExpertDatabaseRes.ExpertAgentCandidate{OrgID: orgID, TopicRelevance: relevance, ID: p.ID, Name: p.Name, UnitName: unitName, Department: p.Department, TechTitle: p.TechTitle, DisciplineL1: p.DisciplineL1, ResearchDirections: p.ResearchDirections, ProfileLink: link, MatchReason: matchReason, Score: math.Round(score*100) / 100, Evidence: evidence, Reason: reason})
 	}
 	sort.Slice(candidates, func(i, j int) bool {
 		if candidates[i].Score != candidates[j].Score {
@@ -246,6 +224,82 @@ func searchExpertAgentCandidates(ctx context.Context, plan ExpertDatabaseRes.Exp
 		candidates = candidates[:agentMaxCandidates]
 	}
 	return candidates, total, warnings, nil
+}
+
+type expertAgentSemanticMatch struct {
+	Source    parsedEmbeddingItem
+	Relevance float64
+}
+
+// buildExpertAgentEvidence 优先放入真正参与本轮语义命中的原始记录，再补字面匹配及档案背景。
+// 最多展示四条；先按相关性排列语义来源，避免最佳来源被较新的字面成果或背景信息挤掉。
+func buildExpertAgentEvidence(profile ExpertDatabase.ExpertProfile, achievements []ExpertDatabase.ExpertAchievement, tags []string, matchedTerms []keywordTerm, semanticMatches []expertAgentSemanticMatch) []ExpertDatabaseRes.ExpertAgentEvidence {
+	const maxEvidence = 4
+	evidence := make([]ExpertDatabaseRes.ExpertAgentEvidence, 0, maxEvidence)
+	seen := map[string]bool{}
+	add := func(entry ExpertDatabaseRes.ExpertAgentEvidence) {
+		if len(evidence) >= maxEvidence || strings.TrimSpace(entry.Title) == "" {
+			return
+		}
+		key := fmt.Sprintf("%s:%d", entry.Kind, entry.SourceID)
+		if entry.SourceID == 0 {
+			key += ":" + entry.Title
+		}
+		if !seen[key] {
+			seen[key] = true
+			evidence = append(evidence, entry)
+		}
+	}
+	byID := make(map[uint]ExpertDatabase.ExpertAchievement, len(achievements))
+	for _, achievement := range achievements {
+		if achievement.ID > 0 && achievement.ExpertId == profile.ID {
+			byID[achievement.ID] = achievement
+		}
+	}
+	link := agentSafeURL(profile.ProfileLink)
+	orderedMatches := append([]expertAgentSemanticMatch{}, semanticMatches...)
+	sort.SliceStable(orderedMatches, func(i, j int) bool {
+		return orderedMatches[i].Relevance > orderedMatches[j].Relevance
+	})
+	for _, match := range orderedMatches {
+		switch match.Source.ItemType {
+		case embeddingItemTypeAchievement:
+			// 必须能在本专家本轮读取的真实成果中按ID找到；不以相同或截断标题猜测来源。
+			if achievement, ok := byID[match.Source.ItemRefID]; ok {
+				add(ExpertDatabaseRes.ExpertAgentEvidence{Kind: "achievement", Title: truncateLabel(achievement.Title, 300), SourceID: achievement.ID})
+			}
+		case embeddingItemTypeProfile:
+			add(ExpertDatabaseRes.ExpertAgentEvidence{Kind: "profile", Title: truncateLabel(buildProfileChunkText(profile), 300), SourceID: profile.ID, URL: link})
+		case embeddingItemTypeTag:
+			// 标签向量是本专家全部标签的合并条目，refID为0，不伪造某个标签记录ID。
+			add(ExpertDatabaseRes.ExpertAgentEvidence{Kind: "tag", Title: truncateLabel(strings.Join(tags, "、"), 300), URL: link})
+		}
+	}
+	if profile.ResearchDirections != "" {
+		add(ExpertDatabaseRes.ExpertAgentEvidence{Kind: "researchDirection", Title: truncateLabel(profile.ResearchDirections, 300), SourceID: profile.ID, URL: link})
+	}
+	search := &ExpertSearchService{}
+	for _, achievement := range achievements {
+		if len(evidence) >= maxEvidence {
+			break
+		}
+		if achievement.ID == 0 || achievement.ExpertId != profile.ID {
+			continue
+		}
+		for _, term := range matchedTerms {
+			if search.anyLiteralHit(achievement.Title+" "+achievement.Keywords, term.expanded) {
+				add(ExpertDatabaseRes.ExpertAgentEvidence{Kind: "achievement", Title: truncateLabel(achievement.Title, 300), SourceID: achievement.ID})
+				break
+			}
+		}
+	}
+	if len(evidence) == 0 {
+		add(ExpertDatabaseRes.ExpertAgentEvidence{Kind: "profile", Title: truncateLabel(buildProfileChunkText(profile), 300), SourceID: profile.ID, URL: link})
+	}
+	if len(evidence) == 0 {
+		add(ExpertDatabaseRes.ExpertAgentEvidence{Kind: "profile", Title: strings.TrimSpace(profile.Name + " " + profile.UnitName + " " + profile.TechTitle), SourceID: profile.ID, URL: link})
+	}
+	return evidence
 }
 
 func agentSearchDictionaries(ctx context.Context) (map[string]float64, map[string]float64, [][]string, error) {
@@ -348,6 +402,9 @@ func agentEmbedTexts(ctx context.Context, texts []string) ([][]float32, error) {
 	var decoded embedResponseBody
 	if json.Unmarshal(raw, &decoded) != nil || len(decoded.Embeddings) != len(texts) {
 		return nil, fmt.Errorf("语义向量格式无效")
+	}
+	if err := validateAgentEmbeddingResponse(decoded, len(texts)); err != nil {
+		return nil, err
 	}
 	return decoded.Embeddings, nil
 }
