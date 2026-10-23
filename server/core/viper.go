@@ -49,6 +49,9 @@ func Viper(path ...string) *viper.Viper {
 		fmt.Printf("您正在使用func Viper()传递的值,config的路径为%s\n", config)
 	}
 
+	if err := loadExpertAgentEnv(config); err != nil {
+		fmt.Println(err)
+	}
 	v := viper.New()
 	v.SetConfigFile(config)
 	v.SetConfigType("yaml")

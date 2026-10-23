@@ -73,6 +73,9 @@ service.interceptors.response.use(
       }
       return response.data
     } else {
+      if (response.config.donNotShowError) {
+        return response.data
+      }
       ElMessage({
         showClose: true,
         message: response.data.msg || decodeURI(response.headers.msg),
@@ -87,8 +90,12 @@ service.interceptors.response.use(
     }
   },
   error => {
-    if (!error.config.donNotShowLoading) {
+    if (!error.config?.donNotShowLoading) {
       closeLoading()
+    }
+
+    if (axios.isCancel(error) || error.code === 'ERR_CANCELED' || error.config?.donNotShowError) {
+      return Promise.reject(error)
     }
 
     if (!error.response) {

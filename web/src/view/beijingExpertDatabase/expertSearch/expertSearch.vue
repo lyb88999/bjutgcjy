@@ -1,11 +1,27 @@
 <template>
   <div class="gva-table-box">
+    <el-radio-group
+      v-model="searchMode"
+      class="expert-search-mode"
+      aria-label="选择查找专家的方式"
+    >
+      <el-radio-button label="search">专家检索</el-radio-button>
+      <el-radio-button label="agent">智能遴选</el-radio-button>
+    </el-radio-group>
+    <ExpertAgent
+      v-if="agentOpened"
+      v-show="searchMode === 'agent'"
+      :active="searchMode === 'agent'"
+    />
     <!-- 原来这里有一整块蓝底的 hero 横幅（图标+机构名+"专家检索"标题）。去掉了：机构全称
          其实已经显示在常驻的侧边栏（$GIN_VUE_ADMIN.appName），"专家检索"这个页面标题也已经
          在顶部面包屑里（route.meta.title），横幅完全是在重复展示已经存在的信息。同目录下
          其它管理页（比如 expertProfile.vue）也都是直接进内容，没有另起一块横幅——去掉之后
          跟这些页面才是同一套页面结构，不是给这一个页面单独加的"落地页感"装饰 -->
-    <div class="gva-search-box">
+    <div
+      v-show="searchMode === 'search'"
+      class="gva-search-box"
+    >
       <!-- 知网的检索框是一整块独立的、视觉上焊死在一起的检索工具：左边是选检索条件的下拉框，
            不是又一个单独的输入框——字段选择+输入+提交按钮没有缝隙，拼成一个白色胶囊容器
            （.search-bar），右端红色按钮跟容器边界严丝合缝；高级检索/重置/导出这些次要操作
@@ -149,12 +165,16 @@
     </div>
 
     <AppliedFilterChips
+      v-show="searchMode === 'search'"
       :chips="appliedChips"
       @remove="removeChip"
       @clear-all="clearAllFacets"
     />
 
-    <div class="result-toolbar">
+    <div
+      v-show="searchMode === 'search'"
+      class="result-toolbar"
+    >
       <span class="result-count">共 <b>{{ total }}</b> 位专家</span>
       <div
         v-if="!hasKeyword"
@@ -171,7 +191,10 @@
       </div>
     </div>
 
-    <div class="search-layout">
+    <div
+      v-show="searchMode === 'search'"
+      class="search-layout"
+    >
       <FacetSidebar
         :facet-counts="facetCounts"
         :model-value="facetSelection"
@@ -222,13 +245,20 @@
 
 <script setup>
 import { searchExpert, exportSearchResults, getScoreColumnAvailability, getFacetCounts } from '@/api/expertSearch'
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import FacetSidebar from './components/FacetSidebar.vue'
 import AppliedFilterChips from './components/AppliedFilterChips.vue'
 import ExpertResultCard from './components/ExpertResultCard.vue'
+import ExpertAgent from './components/ExpertAgent.vue'
 
 defineOptions({
   name: 'ExpertSearch'
+})
+
+const searchMode = ref('search')
+const agentOpened = ref(false)
+watch(searchMode, (mode) => {
+  if (mode === 'agent') agentOpened.value = true
 })
 
 // 检索条只有一个输入框，靠左边的下拉框决定这个词是当"全部字段"关键词（模糊相关性检索）还是
@@ -470,6 +500,9 @@ runSearch()
 </script>
 
 <style scoped>
+.expert-search-mode {
+  margin-bottom: 24px;
+}
 /* 挂在检索条正下方的抽屉，跟检索条共用同一条左右边框、同一个圆角半径，中间 margin-top 用负值
    把两者的边框叠在一起，看起来是检索条本身长出来的一块，不是另一张浮动卡片 */
 .advanced-panel {

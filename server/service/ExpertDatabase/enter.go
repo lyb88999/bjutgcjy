@@ -11,4 +11,5 @@ type ServiceGroup struct {
 	ExpertSearchService
 	ExpertOrgUserService
 	ExpertDashboardService
+	ExpertAgentService
 }

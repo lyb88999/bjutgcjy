@@ -104,6 +104,7 @@ func Routers() *gin.Engine {
 		ExpertDatabaseRouter.InitExpertAcademicPositionRouter(PrivateGroup)
 		ExpertDatabaseRouter.InitExpertApprovalRouter(PrivateGroup)
 		ExpertDatabaseRouter.InitExpertSearchRouter(PrivateGroup)
+		ExpertDatabaseRouter.InitExpertAgentRouter(PrivateGroup)
 		ExpertDatabaseRouter.InitExpertOrgUserRouter(PrivateGroup)
 		ExpertDatabaseRouter.InitExpertDashboardRouter(PrivateGroup)
 	}

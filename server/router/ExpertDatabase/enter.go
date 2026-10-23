@@ -10,4 +10,5 @@ type RouterGroup struct {
 	ExpertSearchRouter
 	ExpertOrgUserRouter
 	ExpertDashboardRouter
+	ExpertAgentRouter
 }

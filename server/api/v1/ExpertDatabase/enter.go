@@ -10,4 +10,5 @@ type ApiGroup struct {
 	ExpertSearchApi
 	ExpertOrgUserApi
 	ExpertDashboardApi
+	ExpertAgentApi
 }
